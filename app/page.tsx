@@ -25,7 +25,7 @@ export default function Home() {
       // The "Instant Checkout" redirect
       // Replace with the link your dad generated
       setTimeout(() => {
-        window.location.href = "https://buy.stripe.com/6oUaEXctt4KffAwgcX0x201";
+        window.location.href = "https://buy.stripe.com/aFa8wPfFF1y3ews7Gr0x200";
       }, 1500); 
     } else {
       alert("Error: " + res.error);
