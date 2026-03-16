@@ -21,7 +21,8 @@ export async function submitLead(formData: FormData) {
       { 
         email, 
         website_url, 
-        status: 'pending' 
+        status: 'pending',          
+        payment_status: 'pending'   
       },
     ]);
 
