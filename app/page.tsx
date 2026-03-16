@@ -20,8 +20,13 @@ export default function Home() {
 
     if (res.success) {
       setSubmitted(true);
-      // Force scroll to top so the success message is centered
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // The "Instant Checkout" redirect
+      // Replace with the link your dad generated
+      setTimeout(() => {
+        window.location.href = "https://buy.stripe.com/aFa8wPfFF1y3ews7Gr0x200";
+      }, 1500); 
     } else {
       alert("Error: " + res.error);
     }
@@ -50,9 +55,10 @@ export default function Home() {
 
         {!submitted ? (
           <form action={handleSubmit} className="max-w-md mx-auto space-y-6 text-left">
-          <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+          {/* Honeypot for bots */}
+          <input type="text" name="honeypot" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
 
-          {/* Paid Audit Card - Feedback Focused */}
+          {/* Paid Audit Card */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl shadow-blue-500/5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -87,6 +93,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-3">
+            {/* Email Field */}
             <input
               name="email"
               type="email"
@@ -95,15 +102,27 @@ export default function Home() {
               disabled={isSubmitting}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white"
             />
+            
+            {/* Website URL Field - NEW */}
+            <input
+              name="website_url"
+              type="url"
+              placeholder="https://yourstartup.com"
+              required
+              disabled={isSubmitting}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white"
+            />
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-white text-black font-bold px-6 py-4 rounded-xl hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-lg shadow-white/5"
+              className="w-full bg-white text-black font-bold px-6 py-4 rounded-xl hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-lg shadow-white/5 mt-2"
             >
               {isSubmitting ? "Processing..." : "Get My Audit — $49"}
             </button>
-            <p className="text-[10px] text-center text-gray-300 uppercase tracking-widest font-bold">
-              Manual review by Me • 24hr Turnaround
+            
+            <p className="text-[10px] text-center text-gray-500 uppercase tracking-widest font-bold">
+              Manual review by Me • 24hr-48hr Turnaround
             </p>
           </div>
         </form>
@@ -153,7 +172,7 @@ export default function Home() {
                 <Zap className="w-8 h-8 text-blue-400" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="text-2xl font-bold">First-Check</h3>
+                <h3 className="text-2xl font-bold">First Check</h3>
                 <p className="text-sm text-gray-500">The Startup Standard</p>
               </div>
             </div>
@@ -203,6 +222,10 @@ export default function Home() {
           ))}
         </div>
 
+          <p className="text-center text-[10px] text-gray-500 uppercase tracking-widest font-bold pb-12">
+          Data based on 2026 public pricing for entry-level "Lite/Pro" plans.
+        </p>
+
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-white/10 text-center opacity-80">
             {[
                 {icon: Zap, title: "Speed to Clarity", desc: "Get a prioritized checklist in 60s, not hours parsing giant spreadsheets."},
@@ -216,10 +239,6 @@ export default function Home() {
                 </div>
             ))}
         </div>
-
-        <p className="text-center text-[10px] text-gray-700 uppercase tracking-widest font-bold pb-12">
-          Data based on 2026 public pricing for entry-level "Lite/Pro" plans.
-        </p>
       </div>
     </main>
   );
