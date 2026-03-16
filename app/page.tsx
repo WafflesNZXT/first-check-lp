@@ -8,9 +8,6 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  
-  const [priceType, setPriceType] = useState<'monthly' | 'one-time'>('one-time');
-  const [priceValue, setPriceValue] = useState(29);
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +20,8 @@ export default function Home() {
 
     if (res.success) {
       setSubmitted(true);
+      // Force scroll to top so the success message is centered
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       alert("Error: " + res.error);
     }
@@ -34,7 +33,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-blue-600/20 blur-[120px] -z-10" />
 
-      <div className="max-w-2xl w-full text-center space-y-8 relative z-10">
+      <div className="max-w-2xl w-full text-center space-y-8 relative z-10 pt-12">
         <div className="space-y-4">
           <span className="px-3 py-1 text-xs font-medium border border-blue-500/30 bg-blue-500/10 text-blue-400 rounded-full inline-block">
             {submitted ? "Success" : "Coming Soon: The Compliance Standard for Startups"}
@@ -48,11 +47,88 @@ export default function Home() {
               : "Stop guessing your SEO and Accessibility scores. Get a professional roadmap in 60 seconds."}
           </p>
         </div>
-        {/* Close the small intro container so the comparison grid can be full-width */}
+
+        {!submitted ? (
+          <form action={handleSubmit} className="max-w-md mx-auto space-y-6 text-left">
+          <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
+          {/* Paid Audit Card - Feedback Focused */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4 shadow-2xl shadow-blue-500/5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600/20 p-2 rounded-lg">
+                  <Zap className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="font-bold text-white text-lg">Priority Audit</h3>
+              </div>
+              <div className="text-right">
+                <span className="text-white font-bold text-xl">$49</span>
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">One-time</p>
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Get a <span className="text-white font-bold">Manual "Ruthless" Audit</span>. I’ll tear down your site and give you the exact 5 fixes you need to be investor-ready.
+            </p>
+
+            <div className="pt-2">
+              <ul className="space-y-2">
+                <li className="flex items-center gap-2 text-xs text-gray-300">
+                  <Check className="w-3.5 h-3.5 text-blue-500" strokeWidth={3} /> Detailed SEO & UX Tear-down
+                </li>
+                <li className="flex items-center gap-2 text-xs text-gray-300">
+                  <Check className="w-3.5 h-3.5 text-blue-500" strokeWidth={3} /> Critical Security & Accessibility Gaps
+                </li>
+                <li className="flex items-center gap-2 text-xs text-gray-300">
+                  <Check className="w-3.5 h-3.5 text-blue-500" strokeWidth={3} /> Actionable "Fix-It" Roadmap
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <input
+              name="email"
+              type="email"
+              placeholder="Your work email"
+              required
+              disabled={isSubmitting}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white"
+            />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-white text-black font-bold px-6 py-4 rounded-xl hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-lg shadow-white/5"
+            >
+              {isSubmitting ? "Processing..." : "Get My Audit — $49"}
+            </button>
+            <p className="text-[10px] text-center text-gray-300 uppercase tracking-widest font-bold">
+              Manual review by Me • 24hr Turnaround
+            </p>
+          </div>
+        </form>
+        ) : (
+          <div className="animate-in zoom-in duration-500 flex flex-col items-center pt-8">
+            <div className="h-20 w-20 bg-blue-500/20 border border-blue-500/50 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-10 h-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+        )}
+
+        <div className="pt-4 text-xs text-gray-100 flex items-center justify-center gap-2">
+           <div className="flex -space-x-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0a0a0a] bg-gray-800" />
+              ))}
+            </div>
+            <span>Join founders waiting for their first scan.</span>
+        </div>
       </div>
               
-              {/* Detailed Comparison Section */}
-              <div className="mt-28 max-w-6xl w-full mx-auto space-y-16">
+      {/* Detailed Comparison Section */}
+      <div className="mt-28 max-w-6xl w-full mx-auto space-y-16">
         <div className="text-center space-y-4">
           <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             Built for Founders, <span className="text-gray-600">not Agencies.</span>
@@ -62,12 +138,8 @@ export default function Home() {
           </p>
         </div>
 
-        {/* The Grid Container - Responsive! Stacks on mobile, 4 cols on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-stretch">
-          
-          {/* --- FIRST-CHECK (Highlighted Card) --- */}
           <div className="md:col-span-1 bg-[#111] border-2 border-blue-600 rounded-3xl p-8 relative shadow-2xl shadow-blue-900/20 group transform transition-all duration-300 hover:-translate-y-2 flex flex-col h-full border-l-4 border-blue-500/40 pl-6">
-            {/* Pulsing Accent Badge */}
             <div className="absolute -top-3 -right-3 bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-lg">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75"></span>
@@ -77,7 +149,6 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/5">
-              {/* Custom Zap Icon */}
               <div className="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20">
                 <Zap className="w-8 h-8 text-blue-400" strokeWidth={1.5} />
               </div>
@@ -100,18 +171,17 @@ export default function Home() {
                 <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> Zero learning curve
               </li>
               <li className="flex items-center gap-3 text-white">
-                <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> You set the price ⚡
+                <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> Ruthless Checklist ⚡
               </li>
             </ul>
           </div>
 
-          {/* --- THE COMPETITORS (Grayed Cards) --- */}
           {[
             { name: "Ahrefs", price: "$129/mo+", icon: DollarSign, features: ["Restrictive 'Credit' system", "Complex backlink data", "No WCAG / Accessibility", "Steep learning curve"] },
             { name: "SEMrush", price: "$117/mo+", icon: BrainCircuit, features: ["Massive feature bloat", "Paid add-ons for AI", "Built for SEO agencies", "Enterprise-only reporting"] },
             { name: "SimilarWeb", price: "$125/mo+", icon: Target, features: ["Market research focus", "Confusing pricing tiers", "Limited technical audit", "Built for Analysts"] },
           ].map((comp, idx) => (
-            <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all duration-300">
+            <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all duration-300 flex flex-col h-full">
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/5 opacity-60">
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
                   <comp.icon className="w-8 h-8 text-gray-400" strokeWidth={1} />
@@ -133,7 +203,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* The Bottom Feature Breakdown */}
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-white/10 text-center opacity-80">
             {[
                 {icon: Zap, title: "Speed to Clarity", desc: "Get a prioritized checklist in 60s, not hours parsing giant spreadsheets."},
@@ -148,80 +217,9 @@ export default function Home() {
             ))}
         </div>
 
-        {!submitted ? (
-          <form action={handleSubmit} className="max-w-md mx-auto space-y-6 text-left">
-            <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-
-            <div className="space-y-6 bg-white/5 p-6 rounded-2xl border border-white/10">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-300">Target Price</label>
-                <div className="flex bg-black rounded-lg p-1 border border-white/10">
-                  <button 
-                    type="button"
-                    onClick={() => setPriceType('one-time')}
-                    className={`px-3 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md transition-all cursor-pointer ${priceType === 'one-time' ? 'bg-white text-black' : 'text-gray-500'}`}
-                  >Once</button>
-                  <button 
-                    type="button"
-                    onClick={() => setPriceType('monthly')}
-                    className={`px-3 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md transition-all cursor-pointer ${priceType === 'monthly' ? 'bg-white text-black' : 'text-gray-500'}`}
-                  >Monthly</button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <input 
-                  type="range" min="5" max="200" step="5"
-                  value={priceValue}
-                  onChange={(e) => setPriceValue(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                />
-                <div className="text-center">
-                  <span className="text-4xl font-bold text-white">${priceValue}</span>
-                  <span className="text-gray-500 ml-1">/{priceType === 'monthly' ? 'mo' : 'per check'}</span>
-                </div>
-              </div>
-
-              <input type="hidden" name="price_amount" value={priceValue} />
-              <input type="hidden" name="price_type" value={priceType} />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <input
-                name="email"
-                type="email"
-                placeholder="Your email"
-                required
-                disabled={isSubmitting}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-white text-black font-bold px-6 py-4 rounded-xl hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-              >
-                {isSubmitting ? "Joining..." : "Get Early Access"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="animate-in zoom-in duration-500 flex flex-col items-center pt-8">
-            <div className="h-20 w-20 bg-blue-500/20 border border-blue-500/50 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
-        )}
-
-        <div className="pt-8 text-xs text-gray-500 flex items-center justify-center gap-2">
-           <div className="flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0a0a0a] bg-gray-800" />
-              ))}
-            </div>
-            <span>Join all the founders like you waiting for their first scan.</span>
-        </div>
+        <p className="text-center text-[10px] text-gray-700 uppercase tracking-widest font-bold pb-12">
+          Data based on 2026 public pricing for entry-level "Lite/Pro" plans.
+        </p>
       </div>
     </main>
   );
