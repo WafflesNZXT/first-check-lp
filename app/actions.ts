@@ -2,24 +2,33 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// The '!' tells TypeScript to trust that these variables exist in your .env.local
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function submitLead(formData: FormData) {
-  // Extract and cast the email to a string
   const email = formData.get('email') as string
+  const price_amount = formData.get('price_amount')
+  const price_type = formData.get('price_type')
+  const honeypot = formData.get('website')
 
-  // Insert into your 'leads' table
+  // Honeypot security
+  if (honeypot) return { success: true }
+
   const { error } = await supabase
     .from('leads')
-    .insert([{ email }])
+    .insert([{ 
+      email, 
+      price_amount: parseInt(price_amount as string), 
+      price_type 
+    }])
 
   if (error) {
     console.error("Supabase Error:", error.message)
-    return { success: false, error: error.message }
+    // If user already exists, we treat it as success to not annoy them
+    if (error.code === '23505') return { success: true }
+    return { success: false, error: "Submission failed." }
   }
 
   return { success: true }
