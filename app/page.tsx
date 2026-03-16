@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { submitLead } from './actions';
+import { Check, X, Zap, DollarSign, Clock3, BrainCircuit, Target } from 'lucide-react';
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -43,9 +44,108 @@ export default function Home() {
           </h1>
           <p className="text-gray-400 text-lg max-w-lg mx-auto">
             {submitted 
-              ? "We'll reach out shortly to run your first manual audit. Keep an eye on your inbox." 
+              ? "We'll reach out shortly. Keep an eye on your inbox." 
               : "Stop guessing your SEO and Accessibility scores. Get a professional roadmap in 60 seconds."}
           </p>
+        </div>
+        {/* Close the small intro container so the comparison grid can be full-width */}
+      </div>
+              
+              {/* Detailed Comparison Section */}
+              <div className="mt-28 max-w-6xl w-full mx-auto space-y-16">
+        <div className="text-center space-y-4">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Built for Founders, <span className="text-gray-600">not Agencies.</span>
+          </h2>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Stop overpaying for 500 features you don't need. Get the 60-second Roadmap that actually makes you investor-ready.
+          </p>
+        </div>
+
+        {/* The Grid Container - Responsive! Stacks on mobile, 4 cols on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-stretch">
+          
+          {/* --- FIRST-CHECK (Highlighted Card) --- */}
+          <div className="md:col-span-1 bg-[#111] border-2 border-blue-600 rounded-3xl p-8 relative shadow-2xl shadow-blue-900/20 group transform transition-all duration-300 hover:-translate-y-2 flex flex-col h-full border-l-4 border-blue-500/40 pl-6">
+            {/* Pulsing Accent Badge */}
+            <div className="absolute -top-3 -right-3 bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-lg">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-100"></span>
+              </span>
+              Optimal Choice
+            </div>
+
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/5">
+              {/* Custom Zap Icon */}
+              <div className="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20">
+                <Zap className="w-8 h-8 text-blue-400" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">First-Check</h3>
+                <p className="text-sm text-gray-500">The Startup Standard</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-400 text-sm mb-6 leading-relaxed">The only tool built to get founders compliant and fundraising-ready in minutes.</p>
+
+            <ul className="space-y-4 text-sm font-medium mt-auto">
+              <li className="flex items-center gap-3 text-white">
+                <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> SEO + WCAG + Security
+              </li>
+              <li className="flex items-center gap-3 text-white">
+                <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> 60s Founder Roadmap
+              </li>
+              <li className="flex items-center gap-3 text-white">
+                <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> Zero learning curve
+              </li>
+              <li className="flex items-center gap-3 text-white">
+                <Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> You set the price ⚡
+              </li>
+            </ul>
+          </div>
+
+          {/* --- THE COMPETITORS (Grayed Cards) --- */}
+          {[
+            { name: "Ahrefs", price: "$129/mo+", icon: DollarSign, features: ["Restrictive 'Credit' system", "Complex backlink data", "No WCAG / Accessibility", "Steep learning curve"] },
+            { name: "SEMrush", price: "$117/mo+", icon: BrainCircuit, features: ["Massive feature bloat", "Paid add-ons for AI", "Built for SEO agencies", "Enterprise-only reporting"] },
+            { name: "SimilarWeb", price: "$125/mo+", icon: Target, features: ["Market research focus", "Confusing pricing tiers", "Limited technical audit", "Built for Analysts"] },
+          ].map((comp, idx) => (
+            <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all duration-300">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/5 opacity-60">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <comp.icon className="w-8 h-8 text-gray-400" strokeWidth={1} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-300">{comp.name}</h3>
+                  <p className="text-lg font-bold text-gray-600">{comp.price}</p>
+                </div>
+              </div>
+
+              <ul className="space-y-4 text-xs font-medium text-gray-600 mt-auto">
+                {comp.features.map((feat, fidx) => (
+                  <li key={fidx} className="flex items-start gap-3">
+                    <X className="w-4 h-4 text-red-900/60 mt-0.5" strokeWidth={3} /> {feat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* The Bottom Feature Breakdown */}
+        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-white/10 text-center opacity-80">
+            {[
+                {icon: Zap, title: "Speed to Clarity", desc: "Get a prioritized checklist in 60s, not hours parsing giant spreadsheets."},
+                {icon: Clock3, title: "Founder's Context", desc: "Audit results explained in simple business logic, not technical jargon."},
+                {icon: Target, title: "Investment-Ready", desc: "The only report built to show investors you've mastered the boring stuff."}
+            ].map((item, i) => (
+                <div key={i} className={`flex flex-col items-center space-y-3 pt-6 md:pt-0 ${i > 0 ? 'md:pl-8' : ''}`}>
+                    <item.icon className="w-8 h-8 text-blue-400 mb-1" />
+                    <h4 className="font-bold text-white text-lg">{item.title}</h4>
+                    <p className="text-sm text-gray-500 max-w-xs">{item.desc}</p>
+                </div>
+            ))}
         </div>
 
         {!submitted ? (
