@@ -1,8 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 
-import React from 'react';
-
 interface LogoProps {
   className?: string;
   size?: number; // pixel size for the SVG (width & height)
