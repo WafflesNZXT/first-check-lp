@@ -69,12 +69,11 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 font-sans">
       {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5 relative z-20">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/20">
-            <Zap className="w-5 h-5 text-white fill-white" />
-          </div>
-          <span className="font-bold text-xl tracking-tight">First Check</span>
+      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5 relative z-20 font-sans">
+        <div className="flex items-center">
+          <Link href="/" aria-label="Home" className="text-2xl md:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
+            First Check
+          </Link>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <Link href="#how-it-works" onClick={(e) => handleNavScroll(e as any, '#how-it-works')} className="hover:text-white transition-colors">How it Works</Link>
@@ -85,7 +84,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-32 px-6 overflow-hidden">
+      <section className="relative pt-24 pb-32 px-6 overflow-hidden font-sans">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-blue-600/15 blur-[120px] -z-10 animate-pulse" />
         
         <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
@@ -284,7 +283,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FINAL CTA (Tutorly Style) */}
+      {/* FINAL CTA*/}
       <section className="max-w-7xl mx-auto px-6 py-32 text-center">
         <div className="relative z-10 space-y-10">
           <h2 className="text-5xl md:text-8xl font-black tracking-tighter">Ready to ship?</h2>
@@ -298,10 +297,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <footer className="py-12 border-t border-white/5 text-center text-gray-600 text-[10px] uppercase tracking-[0.4em] font-black">
-        First Check © 2026 • The Pre-Launch Standard
-      </footer>
     </main>
   );
 }

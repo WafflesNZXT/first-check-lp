@@ -29,12 +29,11 @@ export default function Pricing() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5 relative z-20">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/20">
-            <Zap className="w-5 h-5 text-white fill-white" />
-          </div>
-          <Link href="/" className="font-bold text-xl tracking-tight">First Check</Link>
+      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5 relative z-20 font-sans">
+        <div className="flex items-center">
+          <Link href="/" aria-label="Home" className="text-2xl md:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
+            First Check
+          </Link>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <Link href="/" className="hover:text-white transition-colors">Home</Link>
@@ -139,7 +138,6 @@ export default function Pricing() {
             </div>
           </div>
         </div>
-
       </div>
 
       {modalOpen && (
