@@ -5,7 +5,8 @@ import { submitLead } from './actions';
 import { 
   Check, X, Zap, DollarSign, Clock3, BrainCircuit, 
   Target, ArrowRight, Search, ShieldCheck, 
-  Layout, BarChart3, MessageSquareText, Sparkles, Play 
+  Layout, BarChart3, MessageSquareText, Sparkles, Play,
+  Quote
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -14,7 +15,6 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Smooth scroll helper with easing (decelerating at end)
   function smoothScrollTo(targetY: number, duration = 700) {
     const startY = window.scrollY || window.pageYOffset;
     const distance = targetY - startY;
@@ -40,9 +40,8 @@ export default function Home() {
     const el = document.getElementById(id);
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const targetY = window.scrollY + rect.top - 24; // small offset from top
+    const targetY = window.scrollY + rect.top - 24;
     smoothScrollTo(targetY, 800);
-    // update URL hash without jumping
     history.pushState(null, '', hash);
   }
 
@@ -121,7 +120,7 @@ export default function Home() {
                     type="submit" disabled={isSubmitting}
                     className="w-full bg-white text-black font-black px-6 py-5 rounded-2xl hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 group shadow-xl"
                   >
-                    {isSubmitting ? "Syncing..." : "GET MY RUTHLESS AUDIT — $49"}
+                    {isSubmitting ? "Syncing..." : "GET MY RUTHLESS AUDIT — $29"}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
@@ -138,7 +137,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NEW: THE THREE PILLARS (Tutorly Style) */}
+      {/* THREE PILLARS */}
       <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
@@ -157,7 +156,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NEW: HOW IT WORKS (Tutorly Style) */}
+      {/* TESTIMONIALS */}
+      <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
+        <div className="text-center mb-16 space-y-3">
+          <p className="text-blue-400 text-xs font-black uppercase tracking-widest">What Founders Are Saying</p>
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">Real feedback. Real founders.</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              quote: "The fixes are well articulated and concise. The audit added good notes for improvement I hadn't considered.",
+              author: "WLink Founder",
+              context: "SaaS / Workflow Automation"
+            },
+            {
+              quote: "Very good — found a couple of performance things I can optimize. Helpful in understanding what to prioritize.",
+              author: "RadonFinder Founder",
+              context: "Directory / B2C"
+            },
+            {
+              quote: "The information is genuinely useful. Even as someone who already had an idea of the issues, the audit added valuable notes.",
+              author: "Beta Participant",
+              context: "Pre-launch SaaS"
+            }
+          ].map((t, i) => (
+            <div key={i} className="bg-white/[0.03] border border-white/5 rounded-3xl p-8 flex flex-col justify-between gap-6 hover:bg-white/[0.05] transition-all">
+              <Quote className="w-6 h-6 text-blue-500/40" />
+              <p className="text-gray-300 text-sm leading-relaxed italic">"{t.quote}"</p>
+              <div>
+                <p className="text-white font-bold text-sm">{t.author}</p>
+                <p className="text-gray-600 text-xs">{t.context}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
       <section id="how-it-works" className="max-w-7xl mx-auto px-6 py-24">
         <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-[3rem] p-12 md:p-20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
@@ -168,8 +203,8 @@ export default function Home() {
               <div className="space-y-4 pt-4">
                 {[
                   { step: "01", text: "Submit your URL and pay the one-time fee." },
-                  { step: "02", text: "I perform a manual deep-dive on your platform." },
-                  { step: "03", text: "You receive a custom video + PDF roadmap via email." }
+                  { step: "02", text: "I perform a manual deep-dive on your site." },
+                  { step: "03", text: "You receive a detailed audit report with prioritized fixes via email." }
                 ].map((s, i) => (
                   <div key={i} className="flex items-center gap-4 text-white">
                     <span className="font-black text-2xl opacity-30">{s.step}</span>
@@ -197,7 +232,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* COMPONENT: COMPARISON TABLE */}
+      {/* COMPARISON TABLE */}
       <section id="comparison" className="py-24 px-6 max-w-7xl mx-auto space-y-16">
         <div className="text-center space-y-4">
           <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
@@ -213,7 +248,7 @@ export default function Home() {
               <div><h3 className="text-2xl font-bold">First Check</h3><p className="text-sm text-gray-500">The Human Audit</p></div>
             </div>
             <ul className="space-y-4 text-sm font-medium">
-              <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> SEO + WCAG + Security</li>
+              <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> SEO + WCAG + Performance</li>
               <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> Founder-to-Founder Advice</li>
               <li className="flex items-center gap-3 text-white font-bold"><Check className="w-5 h-5 text-blue-400" strokeWidth={3} /> Ruthless Checklist ⚡</li>
             </ul>
@@ -239,30 +274,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NEW: THE "BENTO" GRID (Tutorly Style) */}
+      {/* BENTO GRID */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-[2.5rem] p-12 flex flex-col justify-between overflow-hidden relative">
               <div className="relative z-10">
-                <h3 className="text-3xl font-bold mb-4">Manual Video Walkthrough.</h3>
-                <p className="text-gray-400 max-w-sm">I don't just send a PDF. I record a 10-minute screencast talking through your site like a user (and an investor) would.</p>
-
-                <div className="mt-8">
-                  <div className="relative bg-gradient-to-b from-blue-600 to-blue-800 h-64 w-full rounded-2xl overflow-hidden shadow-2xl border border-white/5">
-                    <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_#ffffff10,_#0000)]" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-black/25 w-20 h-20 rounded-full flex items-center justify-center hover:scale-100 transition-transform">
-                        <Play className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    <div className="absolute top-4 left-4 text-xs font-bold text-white/95 bg-black/25 px-3 py-1 rounded-full">Manual Walkthrough · 10:32</div>
-                    <div className="absolute bottom-12 left-4 text-sm text-white/90">Key takeaway: Headline clarity + stronger CTA</div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="h-1 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-400" style={{ width: '26%' }} />
-                      </div>
-                    </div>
+                <h3 className="text-3xl font-bold mb-4">Detailed Written Audit.</h3>
+                <p className="text-gray-400 max-w-sm">You get a prioritized, plain-English breakdown of exactly what to fix and why, delivered straight to your inbox within 24 hours. No fluff, no generic advice.</p>
+                <div className="mt-8 bg-[#111] rounded-2xl border border-white/5 p-6 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    <div className="h-3 w-48 bg-white/10 rounded-full" />
                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                    <div className="h-3 w-36 bg-white/10 rounded-full" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    <div className="h-3 w-52 bg-white/10 rounded-full" />
+                  </div>
+                  <div className="pt-2 text-[10px] font-black uppercase tracking-widest text-blue-400">5 Prioritized Fixes Identified</div>
                 </div>
               </div>
           </div>
@@ -273,17 +305,46 @@ export default function Home() {
               <h3 className="text-2xl font-bold">Direct Access.</h3>
               <p className="text-sm text-gray-400">Every audit includes a 48-hour window where you can ask follow-up questions via DM.</p>
               <ul className="mt-2 space-y-2 text-sm text-gray-300">
-                <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> Timestamped chapters and highlights</li>
-                <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> Annotated notes + prioritized PDF roadmap</li>
+                <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> Prioritized fix list with clear reasoning</li>
+                <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> SEO, performance and accessibility scores</li>
+                <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> Honest UI/UX observations</li>
                 <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> 48-hour follow-up for clarifications</li>
-                <li className="flex items-start gap-3"><Check className="w-4 h-4 text-blue-400 mt-1" /> Actionable fixes you can ship in days</li>
               </ul>
               <Link href="/pricing" className="mt-4 inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-500 transition">Get audit</Link>
           </div>
         </div>
       </section>
 
-      {/* FINAL CTA*/}
+      {/* AUDITOR SECTION */}
+      <section className="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
+        <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-blue-500 text-white font-black text-xl flex-shrink-0">
+              WS
+            </div>
+            <div>
+              <p className="text-white font-bold text-lg italic">"I'll personally audit your site within 24 hours."</p>
+              <p className="text-gray-500 text-sm mt-1">Wafi Syed, Founder of First Check</p>
+            </div>
+          </div>
+          <div className="flex gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold">7+</div>
+              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Audits Done</div>
+            </div>
+            <div className="text-center border-l border-white/10 pl-6">
+              <div className="text-2xl font-bold">4/5</div>
+              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Avg Rating</div>
+            </div>
+            <div className="text-center border-l border-white/10 pl-6">
+              <div className="text-2xl font-bold">24hr</div>
+              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Turnaround</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
       <section className="max-w-7xl mx-auto px-6 py-32 text-center">
         <div className="relative z-10 space-y-10">
           <h2 className="text-5xl md:text-8xl font-black tracking-tighter">Ready to ship?</h2>
