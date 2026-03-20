@@ -1,9 +1,208 @@
 "use client";
 
 import { useState } from 'react';
-import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin } from 'lucide-react';
+import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { submitLead } from '../actions';
+
+// Score color helper
+function scoreColor(score: number) {
+  if (score >= 90) return 'text-green-400';
+  if (score >= 50) return 'text-yellow-400';
+  return 'text-red-400';
+}
+
+function scoreBg(score: number) {
+  if (score >= 90) return 'bg-green-400/10 border-green-400/20';
+  if (score >= 50) return 'bg-yellow-400/10 border-yellow-400/20';
+  return 'bg-red-400/10 border-red-400/20';
+}
+
+function scoreLabel(score: number) {
+  if (score >= 90) return 'Good';
+  if (score >= 50) return 'Needs Work';
+  return 'Poor';
+}
+
+interface ScoreResult {
+  performance: number;
+  accessibility: number;
+  seo: number;
+  issues: string[];
+  totalIssues: number;
+}
+
+function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<ScoreResult | null>(null);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setResult(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      setResult(data);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="relative group col-span-1 md:col-span-2">
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-400 rounded-[2rem] opacity-10 group-hover:opacity-20 blur transition duration-500" />
+      <div className="relative bg-[#0f0f0f] border border-white/10 rounded-[1.75rem] p-8 space-y-6">
+
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="bg-white/10 border border-white/10 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400">Free</div>
+              <div className="bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-green-400">No signup needed</div>
+            </div>
+            <h3 className="text-2xl font-extrabold tracking-tight">Quick Score</h3>
+            <p className="text-gray-500 text-sm">Enter your URL and instantly see your Performance, Accessibility, and SEO scores.</p>
+          </div>
+          <div className="flex-shrink-0">
+            <span className="text-4xl font-black tracking-tighter text-gray-500">Free</span>
+          </div>
+        </div>
+
+        {/* Input form */}
+        {!result && (
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://yourstartup.com"
+              required
+              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white placeholder:text-gray-600"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-white text-black font-black px-8 py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  Get Free Score
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-5 py-4 text-red-400 text-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            {error}
+          </div>
+        )}
+
+        {/* Results */}
+        {result && (
+          <div className="space-y-6">
+
+            {/* Score pills */}
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: 'Performance', score: result.performance },
+                { label: 'Accessibility', score: result.accessibility },
+                { label: 'SEO', score: result.seo },
+              ].map((item) => (
+                <div key={item.label} className={`border rounded-2xl p-4 text-center space-y-1 ${scoreBg(item.score)}`}>
+                  <div className={`text-3xl font-black ${scoreColor(item.score)}`}>{item.score}</div>
+                  <div className="text-white text-xs font-bold">{item.label}</div>
+                  <div className={`text-[10px] font-black uppercase tracking-widest ${scoreColor(item.score)}`}>{scoreLabel(item.score)}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Free issues preview */}
+            <div className="space-y-3">
+              <p className="text-white font-bold text-sm">Issues found:</p>
+              {result.issues.map((issue, i) => (
+                <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-300">
+                  <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  {issue}
+                </div>
+              ))}
+
+              {/* Locked issues */}
+              {result.totalIssues > 3 && (
+                <div className="relative">
+                  <div className="space-y-2 blur-sm pointer-events-none select-none">
+                    {Array.from({ length: Math.min(result.totalIssues - 3, 3) }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-300">
+                        <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                        {'█'.repeat(Math.floor(Math.random() * 20) + 20)}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex items-center gap-2 bg-[#0f0f0f] border border-white/10 rounded-xl px-4 py-2 text-sm font-bold text-white">
+                      <Lock className="w-4 h-4 text-blue-400" />
+                      {result.totalIssues - 3} more issues locked
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Upsell */}
+            <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-6 space-y-4">
+              <div className="space-y-1">
+                <p className="text-white font-bold">Want to know exactly how to fix all of this?</p>
+                <p className="text-gray-400 text-sm">The full Deep-Dive Audit gives you a prioritized fix list in plain English, delivered by a real founder in 24 hours.</p>
+              </div>
+              <button
+                onClick={onUpgrade}
+                className="w-full bg-white text-black font-black py-3 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
+              >
+                Unlock Full Audit — $29
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Try another URL */}
+            <button
+              onClick={() => { setResult(null); setUrl(''); }}
+              className="text-gray-600 text-xs hover:text-gray-400 transition-colors underline underline-offset-2 w-full text-center"
+            >
+              Try a different URL
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Pricing() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,7 +242,7 @@ export default function Pricing() {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-24">
+      <div className="max-w-7xl mx-auto px-6 py-24">
 
         {/* Header */}
         <div className="text-center space-y-4 mb-20">
@@ -61,25 +260,24 @@ export default function Pricing() {
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 
+          {/* Free Score Card — full width on top */}
+          <FreeScoreCard onUpgrade={() => setModalOpen(true)} />
+
           {/* Main Tier */}
           <div className="relative group">
-            {/* Glow effect */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-blue-400 rounded-[2rem] opacity-20 group-hover:opacity-40 blur transition duration-500" />
             <div className="relative bg-[#0f0f0f] border border-white/10 rounded-[1.75rem] p-8 space-y-8">
               
-              {/* Badge */}
               <div className="flex items-center justify-between">
                 <div className="bg-blue-600/20 border border-blue-500/20 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-400">Most Popular</div>
                 <div className="bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-green-400">Available Now</div>
               </div>
 
-              {/* Title */}
               <div className="space-y-2">
                 <h3 className="text-3xl font-extrabold tracking-tight">Deep-Dive Audit</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">A ruthless, manual audit of your startup's site. Delivered in 24 hours by a real founder.</p>
               </div>
 
-              {/* Price */}
               <div className="flex items-end gap-2 pb-2 border-b border-white/5">
                 <span className="text-6xl font-black tracking-tighter">$29</span>
                 <div className="pb-2 space-y-0.5">
@@ -88,7 +286,6 @@ export default function Pricing() {
                 </div>
               </div>
 
-              {/* Features */}
               <ul className="space-y-4">
                 {[
                   { icon: Search, text: "Full SEO & Metadata Audit" },
@@ -106,7 +303,6 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {/* CTA */}
               <button
                 onClick={() => setModalOpen(true)}
                 className="w-full bg-white text-black font-black py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
@@ -124,25 +320,21 @@ export default function Pricing() {
             <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-[2rem] opacity-10 blur" />
             <div className="relative bg-[#0f0f0f] border border-white/5 rounded-[1.75rem] p-8 space-y-8 overflow-hidden">
               
-              {/* Coming soon ribbon */}
               <div className="absolute z-20 right-[-28px] top-[28px] rotate-45 bg-yellow-400 text-black text-[9px] font-black uppercase tracking-widest px-10 py-1.5 shadow-lg">
                 Coming Soon
               </div>
 
-              {/* Badge */}
               <div className="flex items-center justify-between">
                 <div className="bg-purple-600/20 border border-purple-500/20 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-purple-400 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" /> Investor Ready
                 </div>
               </div>
 
-              {/* Title */}
               <div className="space-y-2">
                 <h3 className="text-3xl font-extrabold tracking-tight italic">The "Full Send"</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">Everything in Deep-Dive, plus competitor analysis, pitch-deck alignment, and a roadmap to your first $1k MRR.</p>
               </div>
 
-              {/* Price */}
               <div className="flex items-end gap-2 pb-2 border-b border-white/5">
                 <span className="text-6xl font-black tracking-tighter">$99</span>
                 <div className="pb-2 space-y-0.5">
@@ -151,7 +343,6 @@ export default function Pricing() {
                 </div>
               </div>
 
-              {/* Features */}
               <ul className="space-y-4">
                 {[
                   { icon: Check, text: "Everything in Deep-Dive" },
@@ -169,7 +360,6 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {/* Disabled CTA */}
               <div className="pointer-events-none">
                 <button className="w-full bg-white/5 text-gray-600 font-black py-4 rounded-2xl border border-white/5 cursor-not-allowed">
                   Coming Soon
