@@ -37,7 +37,6 @@ export function AnnouncementBar() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Check if dismissed in session
     const wasDismissed = sessionStorage.getItem('announcement-dismissed');
     if (wasDismissed) setDismissed(true);
 
@@ -63,7 +62,7 @@ export function AnnouncementBar() {
             Spring Sale
           </span>
           <span className="text-white text-sm font-bold">
-            Beta pricing ends in
+            Discounted pricing ends in
           </span>
 
           {/* Timer */}
