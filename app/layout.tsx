@@ -66,6 +66,7 @@ export default function RootLayout({
                     { label: "Pricing", href: "/pricing" },
                     { label: "Comparison", href: "/#comparison" },
                     { label: "Get Audit", href: "/pricing#get-audit" },
+                    { label: "Case Studies", href: "/case-studies" },
                   ].map((link) => (
                     <li key={link.label}>
                       <a href={link.href} className="text-gray-500 text-sm hover:text-white transition-colors">
