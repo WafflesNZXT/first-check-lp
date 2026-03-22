@@ -24,12 +24,15 @@ export async function POST(req: NextRequest) {
     const response = await fetch(apiUrl);
     const data = await response.json();
 
+    console.log(`[Score Request] ${new Date().toISOString()} — ${url}`);
+
     if (!response.ok || data.error) {
-      return NextResponse.json(
-        { error: data.error?.message || 'Failed to analyze URL' },
-        { status: 400 }
-      );
-    }
+    console.error(`[Score Error] ${new Date().toISOString()} — ${url} — ${data.error?.message}`);
+    return NextResponse.json(
+      { error: data.error?.message || 'Failed to analyze URL' },
+      { status: 400 }
+    );
+  }
 
     const categories = data.lighthouseResult?.categories;
     const audits = data.lighthouseResult?.audits;
