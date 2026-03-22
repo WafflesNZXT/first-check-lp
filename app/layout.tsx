@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 
 export const metadata: Metadata = {
-  title: "Interest Form",
-  description: "A simple landing page to collect interest for a startup compliance product.",
+  title: "First Check",
+  description: "A manual, ruthless audit of your startup's site. Delivered in 24 hours by a real founder, not a bot.",
 };
 
 
@@ -29,6 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/ai-favicon.svg" />
+        <meta name="theme-color" content="#0a0a0a" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
