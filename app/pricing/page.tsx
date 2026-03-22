@@ -242,6 +242,35 @@ export default function Pricing() {
         </div>
       </nav>
 
+      {/* Spring Sale Banner */}
+      <div className="max-w-5xl mx-auto px-6 pt-8">
+        <div className="relative overflow-hidden bg-gradient-to-r from-blue-600/10 via-blue-500/5 to-blue-600/10 border border-blue-500/20 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          
+          {/* Decorative blur */}
+          <div className="absolute left-0 top-0 w-32 h-full bg-blue-500/10 blur-2xl pointer-events-none" />
+          <div className="absolute right-0 top-0 w-32 h-full bg-blue-500/10 blur-2xl pointer-events-none" />
+      
+          <div className="relative flex items-center gap-3 flex-wrap justify-center sm:justify-start">
+            <span className="bg-blue-500 text-white text-[13px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+              🌸 Spring Sale
+            </span>
+            <p className="text-white font-bold text-sm">
+              Beta pricing is live — save 40% before it ends
+            </p>
+          </div>
+      
+          <div className="relative flex items-center gap-3 flex-shrink-0">
+            <div className="text-right">
+              <div className="flex items-baseline gap-2">
+                <span className="text-gray-500 line-through text-sm font-bold">$49</span>
+                <span className="text-white font-black text-2xl">$29</span>
+              </div>
+              <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">per audit</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 py-24">
 
         {/* Header */}
@@ -279,12 +308,22 @@ export default function Pricing() {
               </div>
 
               <div className="flex items-end gap-2 pb-2 border-b border-white/5">
-                <span className="text-6xl font-black tracking-tighter">$29</span>
-                <div className="pb-2 space-y-0.5">
-                  <span className="text-gray-500 font-medium text-sm block">/audit</span>
-                  <span className="text-gray-700 text-xs block">one-time payment</span>
+              <div className="space-y-1">
+                <span className="text-gray-600 line-through text-lg font-bold">$49</span>
+                <div className="flex items-end gap-2">
+                  <span className="text-6xl font-black tracking-tighter">$29</span>
+                  <div className="pb-2 space-y-0.5">
+                    <span className="text-gray-500 font-medium text-sm block">/audit</span>
+                    <span className="text-gray-700 text-xs block">one-time payment</span>
+                  </div>
                 </div>
               </div>
+              <div className="pb-2 ml-auto">
+                <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+                  40% off
+                </span>
+              </div>
+            </div>
 
               <ul className="space-y-4">
                 {[

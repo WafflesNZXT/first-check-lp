@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { HashScrollHandler } from '@/components/HashScrollHandler';
+import { AnnouncementBar } from './AnnouncementBar';
 
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <AnnouncementBar />
         {children}
         <HashScrollHandler />
         <footer className="w-full border-t border-white/5 bg-[#0a0a0a] mt-12">
