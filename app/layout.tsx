@@ -82,7 +82,7 @@ export default function RootLayout({
                 <p className="text-white font-black text-xs uppercase tracking-widest">Company</p>
                 <ul className="space-y-3">
                   {[
-                    { label: "Contact", href: "mailto:hello@firstcheck.dev" },
+                    { label: "Contact", href: "mailto:wafi.syed5@gmail.com" },
                     { label: "Privacy Policy", href: "/privacy" },
                     { label: "Terms of Service", href: "/terms" },
                   ].map((link) => (
