@@ -33,7 +33,7 @@ function TimeUnit({ value, label }: { value: number; label: string }) {
 }
 
 export function AnnouncementBar() {
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft());
+  const [timeLeft, setTimeLeft] = useState<ReturnType<typeof getTimeLeft>>(null);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
