@@ -219,7 +219,7 @@ export default function Pricing() {
     if (res.success) {
       setSubmitted(true);
       setTimeout(() => {
-        window.location.href = "https://buy.stripe.com/00wfZh0KLccHdso1i30x202";
+        window.location.href = "https://buy.stripe.com/test_14AeV6g2V37hbJoh2basg01";
       }, 1200);
     } else {
       alert('Error: ' + res.error);
