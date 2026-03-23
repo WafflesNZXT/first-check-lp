@@ -226,6 +226,80 @@ const caseStudies = [
     tag: "Beta Audit #6",
     tagColor: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   },
+  {
+    id: 7,
+    site: "srisan.ai",
+    url: "srisan.ai",
+    industry: "AI / SaaS",
+    role: "Founder",
+    focus: ["Performance", "Accessibility", "SEO"],
+    scores: { performance: 76, accessibility: 93, seo: 100 },
+    headline: "Perfect SEO and a fast server — held back by one fixable image problem.",
+    summary: "srisan.ai came in with excellent foundations — a perfect SEO score, solid accessibility, and a server response time that most sites would envy. The entire performance issue traced back to a single cause: unoptimized images adding nearly 2 MB of weight to every page load.",
+    keyFindings: [
+      {
+        category: "Performance",
+        issue: "Images adding nearly 2 MB of unnecessary weight",
+        detail: "The Largest Contentful Paint was 7.9 seconds despite everything else being fast. Compressing images and converting to WebP or AVIF format alone could push the performance score from 76 into the 90s."
+      },
+      {
+        category: "Performance",
+        issue: "Render blocking resources causing small delay",
+        detail: "A small render-blocking resource was slightly delaying page display. Adding defer or async to non-critical script tags removes this from the critical path."
+      },
+      {
+        category: "Accessibility",
+        issue: "Low contrast text on some elements",
+        detail: "Some text did not meet the 4.5:1 minimum contrast ratio. A small colour adjustment using WebAIM's contrast checker resolves this quickly."
+      },
+      {
+        category: "Accessibility",
+        issue: "Missing main landmark and identical links",
+        detail: "The page lacked a main HTML element wrapping primary content, and had links pointing to the same destination with inconsistent labels. Both are quick structural fixes."
+      },
+    ],
+    quote: null,
+    rating: null,
+    tag: "Beta Audit #8",
+    tagColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  },
+  {
+    id: 8,
+    site: "builders.to",
+    url: "builders.to",
+    industry: "Community Platform / Developer Tools",
+    role: "Founder",
+    focus: ["Performance", "Accessibility", "SEO"],
+    scores: { performance: 58, accessibility: 73, seo: 92 },
+    headline: "A promising community platform with foundational issues worth fixing before pushing traffic.",
+    summary: "builders.to is a Reddit-style community platform for developers and builders. The founder came in with exactly the right mindset — wanting to make sure the foundation was solid before driving traffic. The audit found real issues across all three categories, but none requiring a redesign.",
+    keyFindings: [
+      {
+        category: "Performance",
+        issue: "Layout shifting as content loads (CLS: 0.101)",
+        detail: "On a feed-style site, dynamic content loading causes elements to jump around on screen. Google penalizes this heavily. Adding skeleton loading placeholders while content fetches fixes it and improves perceived performance."
+      },
+      {
+        category: "Accessibility",
+        issue: "Zoom disabled on mobile — a hard WCAG failure",
+        detail: "The viewport meta tag had user-scalable=no which prevents users with low vision from zooming in. Removing this one attribute is the fastest single fix on the entire site."
+      },
+      {
+        category: "Accessibility",
+        issue: "Buttons and links missing accessible names",
+        detail: "Several icon-only buttons and links had no aria-label, meaning screen readers announced them as just 'button' or 'link' with no context. Common on feed-style sites with upvote and share buttons."
+      },
+      {
+        category: "SEO",
+        issue: "11 links with no descriptive text",
+        detail: "Links without descriptive text tell Google nothing about their destination. On a community feed this is often post thumbnail links or icon buttons — adding aria-labels fixes both the SEO and accessibility issue simultaneously."
+      },
+    ],
+    quote: null,
+    rating: null,
+    tag: "Beta Audit #9",
+    tagColor: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  },
 ];
 
 function ScorePill({ label, score }: { label: string; score: number | null }) {
@@ -295,7 +369,7 @@ export default function CaseStudies() {
               Beta Results
             </span>
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter bg-gradient-to-b from-white via-white to-gray-500 bg-clip-text text-transparent leading-[0.95] py-2">
-              7 real sites.<br />7 real audits.
+              8 real sites.<br />8 real audits.
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl leading-relaxed">
               These are the actual sites audited during the First Check beta — real founders, real scores, real findings. No cherry-picking, no fake data.
@@ -305,7 +379,7 @@ export default function CaseStudies() {
           {/* Stats strip */}
           <div className="flex flex-wrap gap-8 pt-4 border-t border-white/5">
             {[
-              { value: "7", label: "Sites Audited" },
+              { value: "8", label: "Sites Audited" },
               { value: "4/5", label: "Avg Rating" },
               { value: "100%", label: "Free Beta" },
               { value: "24hr", label: "Turnaround" },
