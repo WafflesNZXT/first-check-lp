@@ -9,18 +9,16 @@ const supabase = createClient(
 
 export async function submitLead(formData: FormData) {
   const email = formData.get('email');
-  const website_url = formData.get('website_url');
 
-  if (!email || !website_url) {
-    return { success: false, error: "Email and Website URL are required." };
+  if (!email) {
+    return { success: false, error: "Email is required." };
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('leads')
     .insert([
       { 
         email, 
-        website_url, 
         status: 'pending',          
         payment_status: 'pending'   
       },

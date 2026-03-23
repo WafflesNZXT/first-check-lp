@@ -236,8 +236,10 @@ export default function Pricing() {
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <Link href="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link>
           <Link href="/#comparison" className="hover:text-white transition-colors">Comparison</Link>
           <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+          <Link href="/case-studies" className="hover:text-white transition-colors">Case Studies</Link>
           <Link href="/pricing" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10">Get Audit</Link>
         </div>
       </nav>

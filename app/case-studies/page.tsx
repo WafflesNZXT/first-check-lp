@@ -260,7 +260,7 @@ const caseStudies = [
     ],
     quote: null,
     rating: null,
-    tag: "Beta Audit #8",
+    tag: "Beta Audit #7",
     tagColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
   {
@@ -297,7 +297,7 @@ const caseStudies = [
     ],
     quote: null,
     rating: null,
-    tag: "Beta Audit #9",
+    tag: "Beta Audit #8",
     tagColor: "bg-orange-500/10 text-orange-400 border-orange-500/20",
   },
 ];
