@@ -480,10 +480,10 @@ export default function Pricing() {
                     <label className="text-sm font-medium text-gray-300">Founder email</label>
                     <input name="email" type="email" required placeholder="you@startup.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-600" />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-300">Website URL</label>
                     <input name="website_url" type="url" required placeholder="https://yourstartup.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-600" />
-                  </div>
+                  </div> */}
                 </div>
                 <button type="submit" disabled={isSubmitting} className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-blue-500 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? 'Processing...' : 'CLAIM THIS AUDIT — $29'}
