@@ -11,28 +11,24 @@ const supabase = createClient(
 
 function SuccessContent() {
   const searchParams = useSearchParams()
-  const customerEmail = searchParams.get('email')
-  
+  // This will be empty because Stripe doesn't send it, which is fine!
+  const [email, setEmail] = useState(searchParams.get('email') || '')
   const [url, setUrl] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!customerEmail) {
-      setStatus('error')
-      return
-    }
-    
     setStatus('loading')
 
+    // We update the row where the email matches AND they have paid
     const { error } = await supabase
       .from('leads')
-      .update({ website_url: url }) // Using your column name: website_url
-      .eq('email', customerEmail)
+      .update({ website_url: url })
+      .eq('email', email.trim().toLowerCase())
       .eq('payment_status', 'paid')
 
     if (error) {
-      console.error(error)
+      console.error('Supabase Error:', error)
       setStatus('error')
     } else {
       setStatus('success')
@@ -40,44 +36,57 @@ function SuccessContent() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-white font-sans">
-      <div className="max-w-md w-full">
-        <h1 className="text-4xl font-black mb-4 text-black tracking-tight">PAYMENT CONFIRMED! ⚡️</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-white font-sans">
+      <div className="max-w-md w-full border border-gray-200 p-10 rounded-[32px] shadow-sm">
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Received!</h1>
+            <p className="text-gray-500">Let's get your audit started.</p>
+        </div>
         
         {status !== 'success' ? (
-          <>
-            <p className="text-gray-600 mb-8 text-lg">
-              Order confirmed for <span className="font-bold text-black">{customerEmail || 'your email'}</span>. 
-              Drop your URL below to start the 24-hour audit clock.
-            </p>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6 text-left">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm your Email</label>
+              <input
+                type="email"
+                required
+                placeholder="The email you used to pay"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Website URL</label>
               <input
                 type="url"
                 required
                 placeholder="https://yourstartup.com"
-                className="w-full p-4 border-4 border-black rounded-2xl focus:ring-4 focus:ring-blue-500 outline-none text-lg font-medium"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="w-full bg-black text-white py-5 rounded-2xl font-black text-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)]"
-              >
-                {status === 'loading' ? 'SYNCING...' : 'START MY AUDIT →'}
-              </button>
-            </form>
+            </div>
+
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all"
+            >
+              {status === 'loading' ? 'Saving...' : 'Submit for Audit'}
+            </button>
             {status === 'error' && (
-              <p className="mt-4 text-red-500 font-bold">Something went wrong. Please reply to the email instead!</p>
+                <p className="text-red-500 text-sm font-medium">Couldn't find an order for that email. Check the spelling or reply to your email!</p>
             )}
-          </>
+          </form>
         ) : (
-          <div className="bg-blue-50 p-10 rounded-[2rem] border-4 border-black shadow-[12px_12px_0px_0px_rgba(37,99,235,0.2)]">
-            <h2 className="text-3xl font-black text-blue-600 mb-4">GOT IT. 🕒</h2>
-            <p className="text-gray-800 text-lg font-medium leading-relaxed">
-              Your audit is officially in the queue. I'll have your deep-dive report ready in less than 24 hours.
-            </p>
+          <div className="py-10">
+            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Audit Queued</h2>
+            <p className="text-gray-500">I've received your site. Expect your report at <strong>{email}</strong> within 24 hours.</p>
           </div>
         )}
       </div>
@@ -85,10 +94,9 @@ function SuccessContent() {
   )
 }
 
-// Wrap in Suspense because useSearchParams() requires it in Next.js App Router
 export default function SuccessPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+    <Suspense fallback={null}>
       <SuccessContent />
     </Suspense>
   )
