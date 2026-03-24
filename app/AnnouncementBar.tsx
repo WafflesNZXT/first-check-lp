@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { X, ArrowRight } from 'lucide-react';
 
@@ -35,6 +35,24 @@ function TimeUnit({ value, label }: { value: number; label: string }) {
 export function AnnouncementBar() {
   const [timeLeft, setTimeLeft] = useState<ReturnType<typeof getTimeLeft>>(null);
   const [dismissed, setDismissed] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  // publish the announcement height so other UI (header/overlays) can offset themselves
+  useEffect(() => {
+    function updateOffset() {
+      if (ref.current) {
+        const h = ref.current.offsetHeight;
+        document.documentElement.style.setProperty('--announcement-offset', `${h}px`);
+      }
+    }
+
+    updateOffset();
+    window.addEventListener('resize', updateOffset);
+    return () => {
+      window.removeEventListener('resize', updateOffset);
+      document.documentElement.style.setProperty('--announcement-offset', `0px`);
+    };
+  }, []);
 
   useEffect(() => {
     const wasDismissed = sessionStorage.getItem('announcement-dismissed');
@@ -50,7 +68,7 @@ export function AnnouncementBar() {
   if (dismissed || !timeLeft) return null;
 
   return (
-    <div className="w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 relative z-50">
+    <div ref={ref} className="w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 relative z-50">
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
 
         {/* Left spacer for centering */}
