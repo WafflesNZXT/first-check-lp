@@ -51,7 +51,7 @@ function SuccessContent() {
                 type="email"
                 required
                 placeholder="The email you used to pay"
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
+                className="w-full p-4 bg-gray-50 text-black border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -63,7 +63,7 @@ function SuccessContent() {
                 type="url"
                 required
                 placeholder="https://yourstartup.com"
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
+                className="w-full p-4 bg-gray-50 text-black border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
