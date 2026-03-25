@@ -19,13 +19,13 @@ export default function AppleIcon() {
           justifyContent: 'center',
           background: '#ffffff',
           color: '#111111',
-          fontSize: 154,
+          fontSize: 144,
           fontWeight: 900,
-          fontFamily: 'Inter, Arial, Helvetica, sans-serif',
+          fontFamily: 'Arial, Helvetica, sans-serif',
           lineHeight: 1,
           letterSpacing: '-0.08em',
           textTransform: 'lowercase',
-          paddingBottom: 8,
+          textAlign: 'center',
         }}
       >
         a

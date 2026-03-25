@@ -19,13 +19,13 @@ export default function Icon() {
           justifyContent: 'center',
           background: '#ffffff',
           color: '#111111',
-          fontSize: 430,
+          fontSize: 410,
           fontWeight: 900,
-          fontFamily: 'Inter, Arial, Helvetica, sans-serif',
+          fontFamily: 'Arial, Helvetica, sans-serif',
           lineHeight: 1,
           letterSpacing: '-0.08em',
           textTransform: 'lowercase',
-          paddingBottom: 18,
+          textAlign: 'center',
         }}
       >
         a
