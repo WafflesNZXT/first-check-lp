@@ -20,6 +20,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "audo",
   description: "A manual, ruthless audit of your startup&apos;s site. Delivered in 24 hours by a real founder, not a bot.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon", type: "image/png", sizes: "512x512" },
+      { url: "/ai-favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/icon"],
+  },
+  themeColor: "#111111",
 };
 
 
@@ -30,10 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/ai-favicon.svg" />
-        <meta name="theme-color" content="#0a0a0a" />
-      </head>
+      <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
