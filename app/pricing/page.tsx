@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout } from 'lucide-react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import { submitLead } from '../actions';
@@ -207,12 +207,33 @@ function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
 
 export default function Pricing() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [fitModalOpen, setFitModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  async function handleModalSubmit(e: any) {
+  useEffect(() => {
+    if (!modalOpen && !fitModalOpen) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setModalOpen(false);
+        setFitModalOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [modalOpen, fitModalOpen]);
+
+  function openPurchaseModal() {
+    setSubmitted(false);
+    setIsSubmitting(false);
+    setModalOpen(true);
+  }
+
+  async function handleModalSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
+    const form = e.currentTarget;
     const formData = new FormData(form);
     setIsSubmitting(true);
     const res = await submitLead(formData);
@@ -273,16 +294,19 @@ export default function Pricing() {
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">One price. No surprises.</h1>
           <p className="text-gray-400 text-lg max-w-xl mx-auto">No subscriptions. No credit systems. Just a human founder auditing your site and telling you exactly what to fix.</p>
+          <p className="text-blue-400 text-lg max-w-xl mx-auto">
+            Every week you wait, you keep paying for the same drop-offs. Fix the bottleneck once, then compound.
+          </p>
         </div>
 
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 
-          {/* Free Score Card — full width on top */}
-          <FreeScoreCard onUpgrade={() => setModalOpen(true)} />
+          {/* Free Score Card — full width on top
+          <FreeScoreCard onUpgrade={() => setModalOpen(true)} /> */}
 
           {/* Main Tier */}
-          <div className="relative group">
+          <div className="relative group md:col-start-1 md:col-end-3 md:w-1/2 md:mx-auto">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-blue-400 rounded-[2rem] opacity-20 group-hover:opacity-40 blur transition duration-500" />
             <div className="relative bg-[#0f0f0f] border border-white/10 rounded-[1.75rem] p-8 space-y-8">
               
@@ -293,7 +317,7 @@ export default function Pricing() {
 
               <div className="space-y-2">
                 <h3 className="text-3xl font-extrabold tracking-tight">Deep-Dive Audit</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">A ruthless, manual audit of your startup's site. Delivered in 24 hours by a real founder.</p>
+                <p className="text-gray-500 text-sm leading-relaxed">A ruthless, manual audit of your startup’s site. Delivered in 24 hours by a real founder.</p>
               </div>
 
               <div className="flex flex-col md:flex-row md:items-end gap-2 pb-2 border-b border-white/5">
@@ -315,24 +339,35 @@ export default function Pricing() {
             </div>
 
               <ul className="space-y-4">
-                {[
-                  { icon: Search, text: "Full SEO & Metadata Audit" },
-                  { icon: BarChart3, text: "Performance & Accessibility Scores" },
-                  { icon: Sparkles, text: "Branding & UX Consistency Check" },
-                  { icon: FileText, text: "Prioritized Fix Report — Plain English" },
-                  { icon: MessageSquareText, text: "48-Hour Follow-Up Window" },
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-4 text-sm text-gray-300">
-                    <div className="w-8 h-8 rounded-xl bg-blue-600/10 border border-blue-500/10 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-4 h-4 text-blue-400" />
-                    </div>
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
+              {[
+                { icon: FileText, text: "The 'Roast' Report — 15+ Point Inspection" },
+                { icon: Sparkles, text: "Conversion Optimization Quick-Wins" },
+                { icon: Zap, text: "SEO & Load Speed Performance Audit" },
+                { icon: Layout, text: "UX/Design Consistency Breakdown" },
+                { icon: CheckCircle, text: "Actionable 'Top 3 Fixes' Priority List" },
+                // { icon: Video, text: "Optional: 3-Min Video Walkthrough" }, // Massive value add
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-4 text-sm text-gray-300">
+                  <div className="w-8 h-8 rounded-xl bg-blue-600/10 border border-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-4 h-4 text-blue-400" />
+                  </div>
+                  {item.text}
+                </li>
+              ))}
+            </ul>
+
+              <div className="-mt-2 flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => setFitModalOpen(true)}
+                  className="text-xs font-bold text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4"
+                >
+                  Is it for me?
+                </button>
+              </div>
 
               <button
-                onClick={() => setModalOpen(true)}
+                onClick={openPurchaseModal}
                 className="w-full bg-white text-black font-black py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
               >
                 Get My Audit
@@ -343,7 +378,7 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* Coming Soon Tier */}
+          {/* Coming Soon Tier
           <div className="relative opacity-70">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-[2rem] opacity-10 blur" />
             <div className="relative bg-[#0f0f0f] border border-white/5 rounded-[1.75rem] p-8 space-y-8 overflow-hidden">
@@ -394,8 +429,8 @@ export default function Pricing() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </div> */}
+        </div> 
 
         {/* Auditor Trust Strip */}
         <div className="mt-16 bg-white/[0.02] border border-white/5 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">
@@ -404,7 +439,7 @@ export default function Pricing() {
               <img src="/1770612376028.jfif" alt="Wafi Syed" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-white font-bold italic text-lg">"I'll personally audit your site within 24 hours."</p>
+              <p className="text-white font-bold italic text-lg">I’ll personally audit your site within 24 hours.</p>
               <p className="text-gray-500 text-sm mt-0.5">Wafi Syed, Founder of First Check</p>
               <div className="mt-2">
                 <a href="https://www.linkedin.com/in/wafisyed/" target="_blank" rel="noopener noreferrer" aria-label="Wafi Syed on LinkedIn" className="inline-flex items-center">
@@ -460,7 +495,7 @@ export default function Pricing() {
                 <input type="text" name="honeypot" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
                 <div className="space-y-1">
                   <h3 className="text-xl font-bold">Claim your audit</h3>
-                  <p className="text-gray-500 text-sm">You'll be redirected to payment. Audit delivered within 24 hours.</p>
+                  <p className="text-gray-500 text-sm">You’ll be redirected to payment. Audit delivered within 24 hours.</p>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -484,9 +519,79 @@ export default function Pricing() {
                   <Check className="w-8 h-8 text-blue-400" />
                 </div>
                 <h3 className="text-lg font-bold">Redirecting to payment...</h3>
-                <p className="text-gray-500 text-sm">Hang tight, you'll be with Stripe in a second.</p>
+                <p className="text-gray-500 text-sm">Hang tight, you’ll be with Stripe in a second.</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Is it for me? Modal */}
+      {fitModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setFitModalOpen(false)} />
+          <div className="relative bg-[#0f0f0f] border border-white/10 rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            <button className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors" onClick={() => setFitModalOpen(false)}>
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold">Is it for you?</h3>
+                <p className="text-gray-500 text-sm">
+                  If your site is “fine” but growth feels stuck, this is usually the missing lever.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-3">
+                  <p className="text-white font-bold text-sm">You’ll get value if you’re:</p>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    {[
+                      "Getting traffic but conversions feel random",
+                      "Not sure what to fix first (SEO, speed, UX, copy)",
+                      "Tired of generic tools that don’t tell you what to do next",
+                      "Shipping fast — and want your site to keep up",
+                    ].map((t) => (
+                      <li key={t} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+                        <span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-5 space-y-2">
+                  <p className="text-white font-bold text-sm">What you lose by waiting</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Every week you don’t fix the bottlenecks, you keep paying for the same outcome: the same bounce, the same drop-off, the same “we’ll improve it later.”
+                    Meanwhile, other founders are tightening their funnels and compounding learnings.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFitModalOpen(false);
+                    openPurchaseModal();
+                  }}
+                  className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                >
+                  Claim this audit — $29
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFitModalOpen(false)}
+                  className="w-full bg-white/5 border border-white/10 text-gray-300 font-bold py-3 rounded-xl hover:bg-white/10 transition-all"
+                >
+                  I want to miss out
+                </button>
+                <p className="text-center text-gray-700 text-xs">One-time payment. Delivered within 24 hours.</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

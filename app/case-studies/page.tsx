@@ -384,7 +384,7 @@ export default function CaseStudies() {
 
         {/* Case Studies */}
         {caseStudies.map((cs, index) => (
-          <article key={cs.id} className="space-y-8">
+          <article id={`case-study-${cs.id}`} key={cs.id} className="space-y-8 scroll-mt-28">
 
             {/* Header */}
             <div className="space-y-4">
