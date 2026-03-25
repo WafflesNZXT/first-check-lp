@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Nav from '@/components/Nav';
 import { submitLead } from '../actions';
 
 // Score color helper
@@ -228,21 +229,7 @@ export default function Pricing() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5 relative z-20 font-sans">
-        <div className="flex items-center">
-          <Link href="/" aria-label="Home" className="text-2xl md:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
-            First Check
-          </Link>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-          <Link href="/" className="hover:text-white transition-colors">Home</Link>
-          <Link href="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link>
-          <Link href="/#comparison" className="hover:text-white transition-colors">Comparison</Link>
-          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link href="/case-studies" className="hover:text-white transition-colors">Case Studies</Link>
-          <Link href="/pricing" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10">Get Audit</Link>
-        </div>
-      </nav>
+      <Nav />
 
       {/* Spring Sale Banner */}
       <div className="max-w-5xl mx-auto px-6 pt-8">
@@ -309,8 +296,8 @@ export default function Pricing() {
                 <p className="text-gray-500 text-sm leading-relaxed">A ruthless, manual audit of your startup's site. Delivered in 24 hours by a real founder.</p>
               </div>
 
-              <div className="flex items-end gap-2 pb-2 border-b border-white/5">
-              <div className="space-y-1">
+              <div className="flex flex-col md:flex-row md:items-end gap-2 pb-2 border-b border-white/5">
+              <div className="space-y-1 min-w-0">
                 <span className="text-gray-600 line-through text-lg font-bold">$49</span>
                 <div className="flex items-end gap-2">
                   <span className="text-6xl font-black tracking-tighter">$29</span>
@@ -320,8 +307,8 @@ export default function Pricing() {
                   </div>
                 </div>
               </div>
-              <div className="pb-2 ml-auto">
-                <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+              <div className="mt-2 md:mt-0 md:ml-auto">
+                <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full whitespace-nowrap">
                   40% off
                 </span>
               </div>

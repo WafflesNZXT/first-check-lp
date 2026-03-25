@@ -11,6 +11,7 @@ import {
 import { AnalysisLoader } from './Analysisloader';
 import { useScrollReveal } from './useScrollReveal';
 import Link from 'next/link';
+import Nav from '@/components/Nav';
 
 // Score helper functions outside component
 function scoreColor(score: number) {
@@ -129,21 +130,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 font-sans">
-      {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5 relative z-20 font-sans">
-        <div className="flex items-center">
-          <Link href="/" aria-label="Home" className="text-2xl md:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
-            First Check
-          </Link>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-          <Link href="#how-it-works" onClick={(e) => handleNavScroll(e as any, '#how-it-works')} className="hover:text-white transition-colors">How it Works</Link>
-          <Link href="#comparison" onClick={(e) => handleNavScroll(e as any, '#comparison')} className="hover:text-white transition-colors">Comparison</Link>
-          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link href="/case-studies" className="hover:text-white transition-colors">Case Studies</Link>
-          <Link href="/pricing" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/10">Get Audit</Link>
-        </div>
-      </nav>
+      <Nav />
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-32 px-6 overflow-hidden font-sans">

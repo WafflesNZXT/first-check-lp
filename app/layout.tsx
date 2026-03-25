@@ -4,7 +4,6 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { HashScrollHandler } from '@/components/HashScrollHandler';
 import { AnnouncementBar } from './AnnouncementBar';
-import Header from '@/components/Header';
 
 
 const geistSans = Geist({
@@ -39,8 +38,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AnnouncementBar />
-        <Header />
-        <main className="min-h-screen">{children}</main>
+        {children}
         <HashScrollHandler />
         <footer className="w-full border-t border-white/5 bg-[#0a0a0a] mt-12">
           <div className="max-w-7xl mx-auto px-6 py-16">

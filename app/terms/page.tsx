@@ -1,14 +1,11 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import Nav from '@/components/Nav';
 
 export default function TermsOfService() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white font-sans">
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b border-white/5">
-        <Link href="/" aria-label="Home" className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-gray-500">
-          First Check
-        </Link>
-      </nav>
+      <Nav />
 
       <div className="max-w-3xl mx-auto px-6 py-24 space-y-12">
         <div className="space-y-4">
