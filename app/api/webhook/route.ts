@@ -53,13 +53,13 @@ export async function POST(req: Request) {
 
       // Email to customer asking for their URL
       await resend.emails.send({
-        from: 'Wafi from First Check <onboarding@resend.dev>',
+        from: 'Wafi from audo <onboarding@resend.dev>',
         to: customerEmail,
-        subject: 'Your First Check audit is confirmed — one quick thing',
+        subject: 'Your audo audit is confirmed — one quick thing',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
             <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Payment confirmed!</h2>
-            <p style="color: #555; font-size: 16px; margin-bottom: 24px;">Hey, Wafi here from First Check. Your $29 Deep-Dive Audit is confirmed and I'll have your report ready within 24 hours.</p>
+            <p style="color: #555; font-size: 16px; margin-bottom: 24px;">Hey, Wafi here from audo. Your $29 Deep-Dive Audit is confirmed and I'll have your report ready within 24 hours.</p>
             
             <p style="font-size: 16px; margin-bottom: 8px;">Just need one thing from you to get started:</p>
             
@@ -74,14 +74,14 @@ export async function POST(req: Request) {
             
             <p style="font-size: 16px; color: #555;">Once you reply I'll get straight to work. You'll also have a 48-hour follow-up window after delivery to ask any questions.</p>
             
-            <p style="font-size: 16px; margin-top: 32px;">Talk soon,<br><strong>Wafi Syed</strong><br>Founder, First Check<br><a href="https://usefirstcheck.vercel.app" style="color: #2563eb;">usefirstcheck.vercel.app</a></p>
+            <p style="font-size: 16px; margin-top: 32px;">Talk soon,<br><strong>Wafi Syed</strong><br>Founder, audo<br><a href="https://usefirstcheck.vercel.app" style="color: #2563eb;">usefirstcheck.vercel.app</a></p>
           </div>
         `,
       });
 
       // Notification email to you
       await resend.emails.send({
-        from: 'First Check Notifications <onboarding@resend.dev>',
+        from: 'audo Notifications <onboarding@resend.dev>',
         to: 'wafi.syed5@gmail.com',
         subject: `New audit order — ${customerEmail}`,
         html: `

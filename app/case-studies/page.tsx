@@ -306,32 +306,32 @@ const caseStudies = [
 function ScorePill({ label, score }: { label: string; score: number | null }) {
   if (score === null) return (
     <div className="flex flex-col items-center gap-1">
-      <div className="text-xl font-black text-gray-600">N/A</div>
-      <div className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">{label}</div>
+      <div className="text-xl font-black text-gray-500">N/A</div>
+      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{label}</div>
     </div>
   );
 
-  const color = score >= 90 ? 'text-green-400' : score >= 50 ? 'text-yellow-400' : 'text-red-400';
-  const bg = score >= 90 ? 'bg-green-400/5' : score >= 50 ? 'bg-yellow-400/5' : 'bg-red-400/5';
+  const color = score >= 90 ? 'text-emerald-700' : score >= 50 ? 'text-amber-700' : 'text-red-700';
+  const bg = score >= 90 ? 'bg-emerald-50 border-emerald-200' : score >= 50 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
 
   return (
-    <div className={`flex flex-col items-center gap-1 px-4 py-3 rounded-2xl ${bg}`}>
+    <div className={`flex flex-col items-center gap-1 px-4 py-3 rounded-2xl border ${bg}`}>
       <div className={`text-2xl font-black ${color}`}>{score}</div>
-      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{label}</div>
+      <div className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">{label}</div>
     </div>
   );
 }
 
 function CategoryBadge({ category }: { category: string }) {
   const styles: Record<string, string> = {
-    Performance: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    Accessibility: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    SEO: 'bg-green-500/10 text-green-400 border-green-500/20',
-    'UI/UX': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    Critical: 'bg-red-500/10 text-red-400 border-red-500/20',
-    Positioning: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-    Conversion: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
-    Credibility: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+    Performance: 'bg-blue-50 text-blue-700 border-blue-200',
+    Accessibility: 'bg-purple-50 text-purple-700 border-purple-200',
+    SEO: 'bg-green-50 text-green-700 border-green-200',
+    'UI/UX': 'bg-orange-50 text-orange-700 border-orange-200',
+    Critical: 'bg-red-50 text-red-700 border-red-200',
+    Positioning: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    Conversion: 'bg-pink-50 text-pink-700 border-pink-200',
+    Credibility: 'bg-gray-100 text-gray-700 border-gray-300',
   };
 
   return (
@@ -343,31 +343,31 @@ function CategoryBadge({ category }: { category: string }) {
 
 export default function CaseStudies() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white font-sans">
+    <main className="min-h-screen bg-white text-black font-sans">
       <Nav />
 
-      <div className="max-w-5xl mx-auto px-6 py-24 space-y-32">
+      <div className="max-w-6xl mx-auto px-6 py-24 space-y-24">
 
         {/* Header */}
         <div className="space-y-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm font-medium">
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
           <div className="space-y-4">
-            <span className="px-4 py-1.5 text-[10px] font-black border border-blue-500/30 bg-blue-500/10 text-blue-400 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
+            <span className="px-4 py-1.5 text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-700 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
               Beta Results
             </span>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter bg-gradient-to-b from-white via-white to-gray-500 bg-clip-text text-transparent leading-[0.95] py-2">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-black leading-[0.95] py-2">
               8 real sites.<br />8 real audits.
             </h1>
-            <p className="text-gray-400 text-lg max-w-2xl leading-relaxed">
-              These are the actual sites audited during the First Check beta — real founders, real scores, real findings. No cherry-picking, no fake data.
+            <p className="text-gray-700 text-lg max-w-2xl leading-relaxed">
+              These are the actual sites audited during the audo beta — real founders, real scores, real findings. No cherry-picking, no fake data.
             </p>
           </div>
 
           {/* Stats strip */}
-          <div className="flex flex-wrap gap-8 pt-4 border-t border-white/5">
+          <div className="flex flex-wrap gap-8 pt-4 border-t border-black/10">
             {[
               { value: "8", label: "Sites Audited" },
               { value: "4/5", label: "Avg Rating" },
@@ -375,8 +375,8 @@ export default function CaseStudies() {
               { value: "24hr", label: "Turnaround" },
             ].map((stat, i) => (
               <div key={i}>
-                <div className="text-2xl font-black text-white">{stat.value}</div>
-                <div className="text-xs text-gray-500 font-bold uppercase tracking-widest">{stat.label}</div>
+                <div className="text-2xl font-black text-black">{stat.value}</div>
+                <div className="text-xs text-gray-600 font-bold uppercase tracking-widest">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -384,7 +384,7 @@ export default function CaseStudies() {
 
         {/* Case Studies */}
         {caseStudies.map((cs, index) => (
-          <article id={`case-study-${cs.id}`} key={cs.id} className="space-y-8 scroll-mt-28">
+          <article id={`case-study-${cs.id}`} key={cs.id} className="space-y-8 scroll-mt-28 relative rounded-[2rem] border border-black/10 bg-white p-7 md:p-9 shadow-[0_18px_50px_rgba(0,0,0,0.05)]">
 
             {/* Header */}
             <div className="space-y-4">
@@ -395,14 +395,14 @@ export default function CaseStudies() {
                 <span className="text-gray-600 text-xs font-medium">{cs.industry}</span>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:pr-[210px]">
                 <div className="space-y-2">
                   <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{cs.site}</h2>
                   <a
                     href={`https://${cs.url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-gray-500 hover:text-blue-400 transition-colors text-sm"
+                    className="inline-flex items-center gap-1.5 text-gray-600 hover:text-blue-700 transition-colors text-sm"
                   >
                     {cs.url}
                     <ExternalLink className="w-3 h-3" />
@@ -410,28 +410,28 @@ export default function CaseStudies() {
                 </div>
 
                 {/* Scores */}
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0 md:absolute md:right-8 md:top-24 bg-white border border-black/10 rounded-2xl p-2 shadow-lg">
                   <ScorePill label="Perf" score={cs.scores.performance} />
                   <ScorePill label="A11y" score={cs.scores.accessibility} />
                   <ScorePill label="SEO" score={cs.scores.seo} />
                 </div>
               </div>
 
-              <p className="text-blue-400 font-bold text-lg leading-snug max-w-3xl">{cs.headline}</p>
-              <p className="text-gray-400 leading-relaxed max-w-3xl">{cs.summary}</p>
+              <p className="text-blue-700 font-bold text-lg leading-snug max-w-3xl">{cs.headline}</p>
+              <p className="text-gray-700 leading-relaxed max-w-3xl">{cs.summary}</p>
             </div>
 
             {/* Findings */}
             <div className="space-y-3">
-              <p className="text-white font-black text-xs uppercase tracking-widest">Key Findings</p>
+              <p className="text-black font-black text-xs uppercase tracking-widest">Key Findings</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cs.keyFindings.map((finding, i) => (
-                  <div key={i} className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 space-y-3 hover:bg-white/[0.04] transition-all">
+                  <div key={i} className={`border border-black/10 rounded-2xl p-6 space-y-3 transition-all ${i % 2 === 0 ? 'bg-white' : 'bg-[#f8f8f8] md:translate-y-4'}`}>
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-white font-bold text-sm leading-snug">{finding.issue}</p>
+                      <p className="text-black font-bold text-sm leading-snug">{finding.issue}</p>
                       <CategoryBadge category={finding.category} />
                     </div>
-                    <p className="text-gray-500 text-xs leading-relaxed">{finding.detail}</p>
+                    <p className="text-gray-600 text-xs leading-relaxed">{finding.detail}</p>
                   </div>
                 ))}
               </div>
@@ -439,36 +439,36 @@ export default function CaseStudies() {
 
             {/* Quote */}
             {cs.quote && (
-              <div className="bg-blue-600/5 border border-blue-500/10 rounded-2xl p-6">
-                <p className="text-gray-300 italic text-sm leading-relaxed">"{cs.quote}"</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                <p className="text-gray-700 italic text-sm leading-relaxed">&ldquo;{cs.quote}&rdquo;</p>
                 <p className="text-gray-600 text-xs mt-2 font-bold">{cs.site} Founder, after receiving audit</p>
               </div>
             )}
 
             {/* Divider */}
             {index < caseStudies.length - 1 && (
-              <div className="border-t border-white/5 pt-8" />
+              <div className="border-t border-black/10 pt-8" />
             )}
           </article>
         ))}
 
         {/* CTA */}
-        <div className="bg-gradient-to-br from-blue-600/10 to-blue-800/5 border border-blue-500/20 rounded-3xl p-12 text-center space-y-6">
+        <div className="bg-black text-white rounded-3xl p-12 text-center space-y-6">
           <div className="space-y-3">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">Want yours next?</h2>
-            <p className="text-gray-400 max-w-lg mx-auto">Every audit above was done manually by a real founder. The $29 Deep-Dive gives you the same treatment — delivered in 24 hours.</p>
+            <p className="text-gray-300 max-w-lg mx-auto">Every audit above was done manually by a real founder. The $29 Deep-Dive gives you the same treatment — delivered in 24 hours.</p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-2 bg-white text-black font-black px-8 py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all shadow-xl"
+              className="inline-flex items-center gap-2 bg-white text-black font-black px-8 py-4 rounded-2xl hover:bg-blue-100 transition-all shadow-xl"
             >
               Get My Audit — $29
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/pricing"
-              className="text-gray-500 text-sm hover:text-white transition-colors underline underline-offset-2"
+              className="text-gray-300 text-sm hover:text-white transition-colors underline underline-offset-2"
             >
               Or try the free score first →
             </Link>

@@ -249,22 +249,22 @@ export default function Pricing() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
+    <main className="min-h-screen bg-white text-black">
       <Nav />
 
       {/* Spring Sale Banner */}
       <div className="max-w-5xl mx-auto px-6 pt-8">
-        <div className="relative overflow-hidden bg-gradient-to-r from-blue-600/10 via-blue-500/5 to-blue-600/10 border border-blue-500/20 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="relative overflow-hidden bg-white border border-black/10 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
           
           {/* Decorative blur */}
-          <div className="absolute left-0 top-0 w-32 h-full bg-blue-500/10 blur-2xl pointer-events-none" />
-          <div className="absolute right-0 top-0 w-32 h-full bg-blue-500/10 blur-2xl pointer-events-none" />
+          <div className="absolute left-0 top-0 w-32 h-full bg-blue-100 blur-2xl pointer-events-none" />
+          <div className="absolute right-0 top-0 w-32 h-full bg-blue-100 blur-2xl pointer-events-none" />
       
           <div className="relative flex items-center gap-3 flex-wrap justify-center sm:justify-start">
             <span className="bg-blue-500 text-white text-[13px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
               🌸 Spring Sale
             </span>
-            <p className="text-white font-bold text-sm">
+            <p className="text-black font-bold text-sm">
               Beta pricing is live — save 40% before it ends
             </p>
           </div>
@@ -273,7 +273,7 @@ export default function Pricing() {
             <div className="text-right">
               <div className="flex items-baseline gap-2">
                 <span className="text-gray-500 line-through text-sm font-bold">$49</span>
-                <span className="text-white font-black text-2xl">$29</span>
+                <span className="text-black font-black text-2xl">$29</span>
               </div>
               <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">per audit</p>
             </div>
@@ -285,7 +285,7 @@ export default function Pricing() {
 
         {/* Header */}
         <div className="text-center space-y-4 mb-20">
-          <span className="px-4 py-1.5 text-[10px] font-black border border-blue-500/30 bg-blue-500/10 text-blue-400 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
+          <span className="px-4 py-1.5 text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-700 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -293,8 +293,8 @@ export default function Pricing() {
             Simple Pricing
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">One price. No surprises.</h1>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">No subscriptions. No credit systems. Just a human founder auditing your site and telling you exactly what to fix.</p>
-          <p className="text-blue-400 text-lg max-w-xl mx-auto">
+          <p className="text-gray-700 text-lg max-w-xl mx-auto">No subscriptions. No credit systems. Just a human founder auditing your site and telling you exactly what to fix.</p>
+          <p className="text-blue-700 text-lg max-w-xl mx-auto">
             Every week you wait, you keep paying for the same drop-offs. Fix the bottleneck once, then compound.
           </p>
         </div>
@@ -306,33 +306,33 @@ export default function Pricing() {
           <FreeScoreCard onUpgrade={() => setModalOpen(true)} /> */}
 
           {/* Main Tier */}
-          <div className="relative group md:col-start-1 md:col-end-3 md:w-1/2 md:mx-auto">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-blue-400 rounded-[2rem] opacity-20 group-hover:opacity-40 blur transition duration-500" />
-            <div className="relative bg-[#0f0f0f] border border-white/10 rounded-[1.75rem] p-8 space-y-8">
+          <div className="relative group md:col-start-1 md:col-end-3 md:w-[56%] md:mx-auto">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-200 to-blue-100 rounded-[2rem] opacity-80 blur transition duration-500" />
+            <div className="relative bg-white border border-black/10 rounded-[1.75rem] p-8 space-y-8 shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
               
               <div className="flex items-center justify-between">
-                <div className="bg-blue-600/20 border border-blue-500/20 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-400">Most Popular</div>
-                <div className="bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-green-400">Available Now</div>
+                {/* <div className="bg-blue-50 border border-blue-200 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-700">Most Popular</div> */}
+                <div className="bg-green-50 border border-green-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-green-700">Available Now</div>
               </div>
 
               <div className="space-y-2">
                 <h3 className="text-3xl font-extrabold tracking-tight">Deep-Dive Audit</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">A ruthless, manual audit of your startup’s site. Delivered in 24 hours by a real founder.</p>
+                <p className="text-gray-600 text-sm leading-relaxed">A ruthless, manual audit of your startup’s site. Delivered in 24 hours by a real founder.</p>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-end gap-2 pb-2 border-b border-white/5">
+              <div className="flex flex-col md:flex-row md:items-end gap-2 pb-2 border-b border-black/10">
               <div className="space-y-1 min-w-0">
                 <span className="text-gray-600 line-through text-lg font-bold">$49</span>
                 <div className="flex items-end gap-2">
                   <span className="text-6xl font-black tracking-tighter">$29</span>
                   <div className="pb-2 space-y-0.5">
-                    <span className="text-gray-500 font-medium text-sm block">/audit</span>
-                    <span className="text-gray-700 text-xs block">one-time payment</span>
+                    <span className="text-gray-700 font-medium text-sm block">/audit</span>
+                    <span className="text-gray-500 text-xs block">one-time payment</span>
                   </div>
                 </div>
               </div>
               <div className="mt-2 md:mt-0 md:ml-auto">
-                <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full whitespace-nowrap">
+                <span className="bg-green-50 border border-green-200 text-green-700 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full whitespace-nowrap">
                   40% off
                 </span>
               </div>
@@ -347,9 +347,9 @@ export default function Pricing() {
                 { icon: CheckCircle, text: "Actionable 'Top 3 Fixes' Priority List" },
                 // { icon: Video, text: "Optional: 3-Min Video Walkthrough" }, // Massive value add
               ].map((item, i) => (
-                <li key={i} className="flex items-center gap-4 text-sm text-gray-300">
-                  <div className="w-8 h-8 rounded-xl bg-blue-600/10 border border-blue-500/10 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-4 h-4 text-blue-400" />
+                <li key={i} className="flex items-center gap-4 text-sm text-gray-700">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
+                    <item.icon className="w-4 h-4 text-blue-700" />
                   </div>
                   {item.text}
                 </li>
@@ -360,7 +360,7 @@ export default function Pricing() {
                 <button
                   type="button"
                   onClick={() => setFitModalOpen(true)}
-                  className="text-xs font-bold text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4"
+                  className="text-xs font-bold text-gray-600 hover:text-black transition-colors underline underline-offset-4"
                 >
                   Is it for me?
                 </button>
@@ -368,13 +368,13 @@ export default function Pricing() {
 
               <button
                 onClick={openPurchaseModal}
-                className="w-full bg-white text-black font-black py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
+                className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
               >
                 Get My Audit
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
               </button>
 
-              <p className="text-center text-gray-700 text-xs">Delivered within 24 hours. No subscription required.</p>
+              <p className="text-center text-gray-500 text-xs">Delivered within 24 hours. No subscription required.</p>
             </div>
           </div>
 
@@ -433,14 +433,14 @@ export default function Pricing() {
         </div> 
 
         {/* Auditor Trust Strip */}
-        <div className="mt-16 bg-white/[0.02] border border-white/5 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="mt-16 bg-[#fafafa] border border-black/10 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-blue-500/50 overflow-hidden flex-shrink-0">
               <img src="/1770612376028.jfif" alt="Wafi Syed" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-white font-bold italic text-lg">I’ll personally audit your site within 24 hours.</p>
-              <p className="text-gray-500 text-sm mt-0.5">Wafi Syed, Founder of First Check</p>
+              <p className="text-black font-bold italic text-lg">I’ll personally audit your site within 24 hours.</p>
+              <p className="text-gray-600 text-sm mt-0.5">Wafi Syed, Founder of audo</p>
               <div className="mt-2">
                 <a href="https://www.linkedin.com/in/wafisyed/" target="_blank" rel="noopener noreferrer" aria-label="Wafi Syed on LinkedIn" className="inline-flex items-center">
                   <span className="inline-flex items-center justify-center rounded-full bg-blue-600 p-2.5 hover:bg-blue-500 transition-colors">
@@ -452,16 +452,16 @@ export default function Pricing() {
           </div>
           <div className="flex gap-6 flex-shrink-0">
             <div className="text-center">
-              <div className="text-2xl font-bold">7+</div>
-              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Audits Done</div>
+              <div className="text-2xl font-bold">8+</div>
+              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Audits Done</div>
             </div>
-            <div className="text-center border-l border-white/10 pl-6">
+            <div className="text-center border-l border-black/10 pl-6">
               <div className="text-2xl font-bold">4/5</div>
-              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Avg Rating</div>
+              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Avg Rating</div>
             </div>
-            <div className="text-center border-l border-white/10 pl-6">
+            <div className="text-center border-l border-black/10 pl-6">
               <div className="text-2xl font-bold">24hr</div>
-              <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Turnaround</div>
+              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Turnaround</div>
             </div>
           </div>
         </div>
@@ -473,9 +473,9 @@ export default function Pricing() {
             { q: "How long does it take?", a: "Your audit is delivered within 24 hours of payment. You also get a 48-hour follow-up window for questions." },
             { q: "Who does the audit?", a: "Wafi Syed personally audits every site. No bots, no outsourcing, no automated reports." },
           ].map((item, i) => (
-            <div key={i} className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 space-y-2">
-              <p className="text-white font-bold text-sm">{item.q}</p>
-              <p className="text-gray-500 text-xs leading-relaxed">{item.a}</p>
+            <div key={i} className="bg-white border border-black/10 rounded-2xl p-6 space-y-2">
+              <p className="text-black font-bold text-sm">{item.q}</p>
+              <p className="text-gray-600 text-xs leading-relaxed">{item.a}</p>
             </div>
           ))}
         </div>
@@ -485,9 +485,9 @@ export default function Pricing() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-[#0f0f0f] border border-white/10 rounded-2xl max-w-md w-full p-8 shadow-2xl">
-            <button className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors" onClick={() => setModalOpen(false)}>
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-white border border-black/10 rounded-2xl max-w-md w-full p-8 shadow-2xl text-black">
+            <button className="absolute top-4 right-4 text-gray-500 hover:text-black transition-colors" onClick={() => setModalOpen(false)}>
               <X className="w-5 h-5" />
             </button>
             {!submitted ? (
@@ -495,31 +495,31 @@ export default function Pricing() {
                 <input type="text" name="honeypot" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
                 <div className="space-y-1">
                   <h3 className="text-xl font-bold">Claim your audit</h3>
-                  <p className="text-gray-500 text-sm">You’ll be redirected to payment. Audit delivered within 24 hours.</p>
+                  <p className="text-gray-600 text-sm">You’ll be redirected to payment. Audit delivered within 24 hours.</p>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Founder email</label>
-                    <input name="email" type="email" required placeholder="you@startup.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-600" />
+                    <label className="text-sm font-medium text-gray-700">Founder email</label>
+                    <input name="email" type="email" required placeholder="you@startup.com" className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-gray-400" />
                   </div>
                   {/* <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-300">Website URL</label>
                     <input name="website_url" type="url" required placeholder="https://yourstartup.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-600" />
                   </div> */}
                 </div>
-                <button type="submit" disabled={isSubmitting} className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-blue-500 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isSubmitting} className="w-full bg-black text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? 'Processing...' : 'CLAIM THIS AUDIT — $29'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <p className="text-center text-gray-700 text-xs">One-time payment. No subscription.</p>
+                <p className="text-center text-gray-500 text-xs">One-time payment. No subscription.</p>
               </form>
             ) : (
               <div className="py-12 text-center space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
-                  <Check className="w-8 h-8 text-blue-400" />
+                <div className="w-16 h-16 mx-auto rounded-full bg-blue-50 flex items-center justify-center border border-blue-200">
+                  <Check className="w-8 h-8 text-blue-700" />
                 </div>
                 <h3 className="text-lg font-bold">Redirecting to payment...</h3>
-                <p className="text-gray-500 text-sm">Hang tight, you’ll be with Stripe in a second.</p>
+                <p className="text-gray-600 text-sm">Hang tight, you’ll be with Stripe in a second.</p>
               </div>
             )}
           </div>
@@ -529,24 +529,24 @@ export default function Pricing() {
       {/* Is it for me? Modal */}
       {fitModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setFitModalOpen(false)} />
-          <div className="relative bg-[#0f0f0f] border border-white/10 rounded-2xl max-w-md w-full p-8 shadow-2xl">
-            <button className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors" onClick={() => setFitModalOpen(false)}>
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setFitModalOpen(false)} />
+          <div className="relative bg-white border border-black/10 rounded-2xl max-w-md w-full p-8 shadow-2xl text-black">
+            <button className="absolute top-4 right-4 text-gray-500 hover:text-black transition-colors" onClick={() => setFitModalOpen(false)}>
               <X className="w-5 h-5" />
             </button>
 
             <div className="space-y-6">
               <div className="space-y-1">
                 <h3 className="text-xl font-bold">Is it for you?</h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-600 text-sm">
                   If your site is “fine” but growth feels stuck, this is usually the missing lever.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-3">
-                  <p className="text-white font-bold text-sm">You’ll get value if you’re:</p>
-                  <ul className="space-y-2 text-sm text-gray-300">
+                <div className="bg-[#fafafa] border border-black/10 rounded-2xl p-5 space-y-3">
+                  <p className="text-black font-bold text-sm">You’ll get value if you’re:</p>
+                  <ul className="space-y-2 text-sm text-gray-700">
                     {[
                       "Getting traffic but conversions feel random",
                       "Not sure what to fix first (SEO, speed, UX, copy)",
@@ -554,16 +554,16 @@ export default function Pricing() {
                       "Shipping fast — and want your site to keep up",
                     ].map((t) => (
                       <li key={t} className="flex items-start gap-3">
-                        <Check className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+                        <Check className="w-4 h-4 mt-0.5 text-blue-700 flex-shrink-0" />
                         <span>{t}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-5 space-y-2">
-                  <p className="text-white font-bold text-sm">What you lose by waiting</p>
-                  <p className="text-gray-300 text-sm leading-relaxed">
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-2">
+                  <p className="text-black font-bold text-sm">What you lose by waiting</p>
+                  <p className="text-gray-700 text-sm leading-relaxed">
                     Every week you don’t fix the bottlenecks, you keep paying for the same outcome: the same bounce, the same drop-off, the same “we’ll improve it later.”
                     Meanwhile, other founders are tightening their funnels and compounding learnings.
                   </p>
@@ -577,7 +577,7 @@ export default function Pricing() {
                     setFitModalOpen(false);
                     openPurchaseModal();
                   }}
-                  className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-black text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
                 >
                   Claim this audit — $29
                   <ArrowRight className="w-4 h-4" />
@@ -585,11 +585,11 @@ export default function Pricing() {
                 <button
                   type="button"
                   onClick={() => setFitModalOpen(false)}
-                  className="w-full bg-white/5 border border-white/10 text-gray-300 font-bold py-3 rounded-xl hover:bg-white/10 transition-all"
+                  className="w-full bg-white border border-black/10 text-gray-700 font-bold py-3 rounded-xl hover:bg-black/5 transition-all"
                 >
                   I want to miss out
                 </button>
-                <p className="text-center text-gray-700 text-xs">One-time payment. Delivered within 24 hours.</p>
+                <p className="text-center text-gray-500 text-xs">One-time payment. Delivered within 24 hours.</p>
               </div>
             </div>
           </div>
