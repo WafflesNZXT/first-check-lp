@@ -107,7 +107,7 @@ export default function Home() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative isolate pt-4 md:pt-6 pb-12 md:pb-12 px-6 overflow-hidden font-sans z-10">
+      <section className="relative isolate pt-5 md:pt-7 pb-20 md:pb-24 px-6 overflow-visible font-sans z-10">
 
         <div className="relative z-20 max-w-6xl mx-auto mt-2 md:mt-3 lg:mt-4 mb-5 md:mb-6 lg:mb-8 flex items-center justify-center">
           <button
@@ -132,8 +132,8 @@ export default function Home() {
         </div>
 
         <div className="max-w-6xl mx-auto relative z-10 flex items-start">
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-stretch">
-            <div className="space-y-4 md:space-y-5 text-left">
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-stretch">
+            <div className="space-y-6 md:space-y-8 text-left">
               <span className="hero-badge px-4 py-1.5 text-[10px] font-black border border-white/20 bg-black/45 backdrop-blur-sm text-white rounded-full hidden md:inline-flex items-center gap-2 uppercase tracking-[0.2em]">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -146,11 +146,11 @@ export default function Home() {
                 Know Exactly <br /> What To Fix.
               </h1>
 
-              <p className="hero-subtitle text-white text-base md:text-lg max-w-2xl leading-relaxed bg-black/45 border border-white/20 rounded-2xl px-6 py-4 shadow-2xl shadow-black/40 backdrop-blur-sm">
+              <p className="hero-subtitle text-white text-base md:text-lg max-w-2xl leading-relaxed bg-black/45 border border-white/20 rounded-2xl px-6 py-5 shadow-2xl shadow-black/40 backdrop-blur-sm">
                 <span className="font-black">Get a founder-reviewed audit in 24 hours</span> with your top conversion leaks, technical blockers, and a prioritized fix plan you can ship immediately.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs text-gray-200">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-gray-200">
                 <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
                   <Clock3 className="w-3.5 h-3.5 text-blue-400" />
                   Delivered in 24hrs
@@ -169,7 +169,7 @@ export default function Home() {
             {/* Free Quick Score Widget */}
             <div className="relative h-full">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/40 via-white/10 to-transparent rounded-3xl blur opacity-80" />
-              <div className="relative bg-black/45 border border-white/20 rounded-3xl px-6 pb-6 pt-8 md:px-8 md:pb-8 md:pt-10 backdrop-blur-sm h-full min-h-[430px] md:min-h-[500px] flex flex-col">
+              <div className="relative bg-black/45 border border-white/20 rounded-3xl px-6 pb-7 pt-9 md:px-8 md:pb-10 md:pt-11 backdrop-blur-sm h-full min-h-[450px] md:min-h-[530px] flex flex-col">
                 <div className="flex items-start justify-between gap-4 mb-6">
                   <div className="space-y-1">
                     <p className="text-white font-black text-xl md:text-2xl leading-none">Free Quick Score</p>
@@ -330,7 +330,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto mt-10 md:mt-12 relative z-10">
+        <div className="max-w-6xl mx-auto mt-24 md:mt-32 relative z-20 translate-y-24 md:translate-y-60">
           <div className="reveal rounded-3xl border border-white/20 bg-black/40 backdrop-blur-sm p-4 md:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
             <div className="space-y-2 mb-5">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-200">Deliverable examples</p>
@@ -369,7 +369,7 @@ export default function Home() {
       <section className="relative bg-white text-black">
 
         {/* AI VS HUMAN */}
-        <section id="ai-vs-human" className="max-w-7xl mx-auto px-6 pt-24 pb-20">
+        <section id="ai-vs-human" className="max-w-7xl mx-auto px-6 pt-40 md:pt-48 pb-20">
           <div className="reveal space-y-4 max-w-3xl">
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700">Why audo wins</p>
             <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">AI gives ideas. audo gives judgment.</h2>
