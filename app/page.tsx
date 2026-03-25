@@ -101,13 +101,14 @@ export default function Home() {
     <main className="relative min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 font-sans">
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[#0a0a0a]" />
-        <div className="absolute inset-0 bg-[linear-gradient(122deg,rgba(8,47,73,0.9)_0%,rgba(37,99,235,0.72)_34%,rgba(191,219,254,0.52)_58%,rgba(226,232,240,0.74)_74%,rgba(245,247,250,0.92)_88%,rgba(255,255,255,1)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_38%_34%,rgba(8,47,73,0.9)_0%,rgba(37,99,235,0.72)_30%,rgba(191,219,254,0.4)_56%,rgba(226,232,240,0.2)_74%,rgba(245,247,250,0.1)_100%),radial-gradient(115%_95%_at_100%_38%,rgba(255,255,255,1)_0%,rgba(252,253,255,0.96)_34%,rgba(248,250,252,0.9)_64%,rgba(241,245,249,0.7)_100%)]" />
       </div>
 
       <Nav />
 
       {/* HERO */}
       <section className="relative isolate pt-5 md:pt-7 pb-20 md:pb-24 px-6 overflow-visible font-sans z-10">
+        <div className="pointer-events-none absolute left-1/2 md:left-[34%] top-28 md:top-24 -translate-x-1/2 h-[300px] md:h-[420px] w-[90vw] md:w-[760px] z-10 bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.5)_0%,rgba(8,47,73,0.38)_36%,rgba(8,47,73,0.16)_58%,rgba(8,47,73,0)_78%)] blur-3xl" />
 
         <div className="relative z-20 max-w-6xl mx-auto mt-2 md:mt-3 lg:mt-4 mb-5 md:mb-6 lg:mb-8 flex items-center justify-center">
           <button
@@ -142,7 +143,7 @@ export default function Home() {
                 24-Hour Human Deep-Dive
               </span>
 
-              <h1 className="hero-title text-5xl md:text-8xl font-extrabold tracking-tighter text-white text-center md:text-left leading-[0.95] py-2 drop-shadow-[0_10px_30px_rgba(0,0,0,0.7)]">
+              <h1 className="hero-title relative z-10 text-5xl md:text-8xl font-extrabold tracking-tighter text-white text-center md:text-left leading-[0.95] py-2 drop-shadow-[0_16px_45px_rgba(0,0,0,0.72)]">
                 Know Exactly <br /> What To Fix.
               </h1>
 
@@ -167,7 +168,7 @@ export default function Home() {
             </div>
 
             {/* Free Quick Score Widget */}
-            <div className="relative h-full">
+            <div className="relative h-full hero-float">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/40 via-white/10 to-transparent rounded-3xl blur opacity-80" />
               <div className="relative bg-black/45 border border-white/20 rounded-3xl px-6 pb-7 pt-9 md:px-8 md:pb-10 md:pt-11 backdrop-blur-sm h-full min-h-[450px] md:min-h-[530px] flex flex-col">
                 <div className="flex items-start justify-between gap-4 mb-6">
@@ -203,7 +204,7 @@ export default function Home() {
                             />
                             <button
                               type="submit"
-                              className="bg-white text-black border border-white font-black px-8 py-4 rounded-2xl hover:bg-blue-500 hover:text-white hover:border-blue-400 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap shadow-xl"
+                              className="hero-cta bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white border border-blue-300/70 font-black px-9 py-4 rounded-2xl hover:from-blue-500 hover:via-blue-400 hover:to-indigo-400 hover:border-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap shadow-[0_14px_34px_rgba(37,99,235,0.55)]"
                             >
                               Get Free Score
                               <ArrowRight className="w-5 h-5" />
@@ -338,14 +339,14 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 items-start">
-              <article className="lg:col-span-7 rounded-2xl border border-white/20 bg-white p-3 md:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+              <article className="lg:col-span-7 rounded-2xl border border-white/20 bg-white p-3 md:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] hero-float-delayed">
                 <div className="rounded-xl overflow-hidden border border-black/10 bg-[#f7f7f7]">
                   <Image src="/audit-report-sample.svg" alt="Sample audit report output" width={1400} height={1040} className="w-full h-auto" />
                 </div>
                 <p className="mt-3 text-sm font-semibold text-black">Manual audit report sample</p>
               </article>
 
-              <div className="lg:col-span-5 space-y-4">
+              <div className="lg:col-span-5 space-y-4 hero-float-soft">
                 <article className="rounded-2xl border border-white/20 bg-white p-3 shadow-[0_16px_40px_rgba(0,0,0,0.15)]">
                   <div className="rounded-xl overflow-hidden border border-black/10 bg-[#0b1220]">
                     <Image src="/scores-overview-sample.svg" alt="Sample score summary view" width={1200} height={540} className="w-full h-auto" />

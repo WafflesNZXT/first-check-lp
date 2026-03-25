@@ -94,6 +94,26 @@ a[href],
   }
 }
 
+@keyframes heroFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes heroFloatSoft {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
 /* ============================================
    UTILITY CLASSES
    ============================================ */
@@ -121,6 +141,18 @@ a[href],
 .animate-slide-right {
   opacity: 0;
   animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-float {
+  animation: heroFloat 6.4s ease-in-out 1.2s infinite;
+}
+
+.hero-float-delayed {
+  animation: heroFloat 7s ease-in-out 1.8s infinite;
+}
+
+.hero-float-soft {
+  animation: heroFloatSoft 6.8s ease-in-out 1.4s infinite;
 }
 
 /* ============================================
@@ -195,9 +227,13 @@ a[href],
   .reveal,
   .reveal-scale,
   .reveal-stagger,
-  .reveal-stagger > * {
+  .reveal-stagger > *,
+  .hero-float,
+  .hero-float-delayed,
+  .hero-float-soft {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
+    animation: none !important;
   }
 }

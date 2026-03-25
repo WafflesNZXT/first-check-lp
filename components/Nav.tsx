@@ -18,7 +18,7 @@ export default function Nav() {
   return (
     <>
       <nav className="max-w-7xl mx-auto px-6 pt-2 md:pt-4 sticky top-0 md:top-[var(--announcement-offset,0px)] z-40 font-sans">
-        <div className="rounded-[2rem] border border-white/45 bg-white/45 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-5 md:px-8 py-3.5">
+        <div className="rounded-[2rem] border border-white/45 bg-white/80 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-5 md:px-8 py-3.5">
           <div className="flex justify-between items-center gap-4">
             <div className="flex items-center min-w-0">
               <Link href="/" aria-label="Home" className="text-3xl md:text-4xl font-black tracking-[-0.07em] lowercase text-black leading-none">
