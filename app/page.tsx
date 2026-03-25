@@ -99,7 +99,7 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 font-sans">
-      <div className="absolute inset-x-0 top-0 h-[112svh] pointer-events-none z-0">
+      <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[#0a0a0a]" />
         <div className="absolute inset-0 bg-[linear-gradient(122deg,rgba(8,47,73,0.9)_0%,rgba(37,99,235,0.72)_34%,rgba(191,219,254,0.52)_58%,rgba(226,232,240,0.74)_74%,rgba(245,247,250,0.92)_88%,rgba(255,255,255,1)_100%)]" />
       </div>
@@ -107,9 +107,9 @@ export default function Home() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative isolate pt-16 pb-12 md:pb-12 px-6 overflow-hidden font-sans min-h-screen min-h-[100svh] z-10">
+      <section className="relative isolate pt-4 md:pt-6 pb-12 md:pb-12 px-6 overflow-hidden font-sans z-10">
 
-        <div className="relative z-20 max-w-6xl mx-auto mt-8 md:mt-10 lg:mt-16 mb-5 md:-mb-8 lg:-mb-14 flex items-center justify-center">
+        <div className="relative z-20 max-w-6xl mx-auto mt-2 md:mt-3 lg:mt-4 mb-5 md:mb-6 lg:mb-8 flex items-center justify-center">
           <button
             type="button"
             onClick={() => smoothScrollTo('#ai-vs-human')}
@@ -131,7 +131,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="max-w-6xl mx-auto relative z-10 min-h-[calc(100svh-8rem)] flex items-center md:-translate-y-4 lg:-translate-y-30">
+        <div className="max-w-6xl mx-auto relative z-10 flex items-start">
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-stretch">
             <div className="space-y-4 md:space-y-5 text-left">
               <span className="hero-badge px-4 py-1.5 text-[10px] font-black border border-white/20 bg-black/45 backdrop-blur-sm text-white rounded-full hidden md:inline-flex items-center gap-2 uppercase tracking-[0.2em]">
@@ -330,15 +330,42 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="max-w-6xl mx-auto mt-10 md:mt-12 relative z-10">
+          <div className="reveal rounded-3xl border border-white/20 bg-black/40 backdrop-blur-sm p-4 md:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+            <div className="space-y-2 mb-5">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-200">Deliverable examples</p>
+              <p className="text-white text-sm md:text-base">Preview the exact report views you receive after purchase.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 items-start">
+              <article className="lg:col-span-7 rounded-2xl border border-white/20 bg-white p-3 md:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+                <div className="rounded-xl overflow-hidden border border-black/10 bg-[#f7f7f7]">
+                  <Image src="/audit-report-sample.svg" alt="Sample audit report output" width={1400} height={1040} className="w-full h-auto" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-black">Manual audit report sample</p>
+              </article>
+
+              <div className="lg:col-span-5 space-y-4">
+                <article className="rounded-2xl border border-white/20 bg-white p-3 shadow-[0_16px_40px_rgba(0,0,0,0.15)]">
+                  <div className="rounded-xl overflow-hidden border border-black/10 bg-[#0b1220]">
+                    <Image src="/scores-overview-sample.svg" alt="Sample score summary view" width={1200} height={540} className="w-full h-auto" />
+                  </div>
+                  <p className="mt-2.5 text-sm font-semibold text-black">Score summary view</p>
+                </article>
+
+                <article className="rounded-2xl border border-white/20 bg-white p-3 shadow-[0_16px_40px_rgba(0,0,0,0.15)]">
+                  <div className="rounded-xl overflow-hidden border border-black/10 bg-[#0b1220]">
+                    <Image src="/performance-detail-sample.svg" alt="Sample performance detail with site preview" width={1400} height={780} className="w-full h-auto" />
+                  </div>
+                  <p className="mt-2.5 text-sm font-semibold text-black">Detailed metric + live page preview</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </section>
 
-      <div
-        // className="h-40 md:h-56"
-        // style={{
-        //   background: 'linear-gradient(to bottom, #0a0a0a 0%, #111111 18%, #1a1a1a 34%, #2a2a2a 48%, #3c3c3c 60%, #5a5a5a 72%, #888888 84%, #c8c8c8 93%, #ffffff 100%)',
-        // }}
-        aria-hidden="true"
-      />
       <section className="relative bg-white text-black">
 
         {/* AI VS HUMAN */}
@@ -414,41 +441,6 @@ export default function Home() {
                 <p className="text-xs uppercase tracking-widest text-gray-500 font-bold">delivery</p>
                 <p className="text-lg font-black text-black inline-flex items-center gap-2">24 hours <Clock3 className="w-4 h-4" /></p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* REAL OUTPUT PREVIEW */}
-        <section className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
-          <div className="reveal space-y-3 max-w-3xl">
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700">Trust through transparency</p>
-            <h3 className="text-3xl md:text-5xl font-black tracking-tight">See what your actual deliverables look like.</h3>
-            <p className="text-gray-600">No vague promises — these are sample views of the report and score breakdown you receive.</p>
-          </div>
-
-          <div className="reveal mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <article className="lg:col-span-7 rounded-3xl border border-black/10 bg-white p-4 md:p-6 shadow-[0_18px_50px_rgba(0,0,0,0.06)]">
-              <div className="rounded-2xl overflow-hidden border border-black/10 bg-[#f7f7f7]">
-                <Image src="/audit-report-sample.svg" alt="Sample audit report output" width={1400} height={1040} className="w-full h-auto" />
-              </div>
-              <p className="mt-4 text-sm font-semibold text-black">Manual audit report sample</p>
-              <p className="text-xs text-gray-600">Structured findings with top fixes ranked by impact and implementation speed.</p>
-            </article>
-
-            <div className="lg:col-span-5 space-y-6">
-              <article className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.05)]">
-                <div className="rounded-2xl overflow-hidden border border-black/10 bg-[#0b1220]">
-                  <Image src="/scores-overview-sample.svg" alt="Sample score summary view" width={1200} height={540} className="w-full h-auto" />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-black">Score summary view</p>
-              </article>
-
-              <article className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.05)]">
-                <div className="rounded-2xl overflow-hidden border border-black/10 bg-[#0b1220]">
-                  <Image src="/performance-detail-sample.svg" alt="Sample performance detail with site preview" width={1400} height={780} className="w-full h-auto" />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-black">Detailed metric + live page preview</p>
-              </article>
             </div>
           </div>
         </section>
