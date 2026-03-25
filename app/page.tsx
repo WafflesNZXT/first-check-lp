@@ -109,7 +109,7 @@ export default function Home() {
       {/* HERO */}
       <section className="relative isolate pt-16 pb-12 md:pb-12 px-6 overflow-hidden font-sans min-h-screen min-h-[100svh] z-10">
 
-        <div className="relative z-20 max-w-6xl mx-auto mt-8 md:mt-16 mb-5 md:-mb-14 flex items-center justify-center">
+        <div className="relative z-20 max-w-6xl mx-auto mt-8 md:mt-10 lg:mt-16 mb-5 md:-mb-8 lg:-mb-14 flex items-center justify-center">
           <button
             type="button"
             onClick={() => smoothScrollTo('#ai-vs-human')}
@@ -131,7 +131,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="max-w-6xl mx-auto relative z-10 min-h-[calc(100svh-8rem)] flex items-center md:-translate-y-4">
+        <div className="max-w-6xl mx-auto relative z-10 min-h-[calc(100svh-8rem)] flex items-center md:-translate-y-4 lg:-translate-y-30">
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-stretch">
             <div className="space-y-4 md:space-y-5 text-left">
               <span className="hero-badge px-4 py-1.5 text-[10px] font-black border border-white/20 bg-black/45 backdrop-blur-sm text-white rounded-full hidden md:inline-flex items-center gap-2 uppercase tracking-[0.2em]">
