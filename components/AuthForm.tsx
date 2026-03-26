@@ -39,6 +39,23 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
           })
           if (error) throw error
 
+          // Exchange session with server so SSR can read cookies (required on deployed domains)
+          try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) {
+              await fetch('/api/auth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  access_token: session.access_token,
+                  refresh_token: session.refresh_token,
+                }),
+              })
+            }
+          } catch (e) {
+            // non-fatal; continue to redirect client
+          }
+
           // Success: Refresh and redirect
           router.refresh()
           setTimeout(() => {
