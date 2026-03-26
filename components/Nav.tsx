@@ -2,9 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isHome = pathname === '/';
 
   function smoothScrollTo(elId: string) {
     const el = document.getElementById(elId.replace('#', ''));
@@ -13,6 +16,17 @@ export default function Nav() {
     const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--announcement-offset') || '0', 10) || 0;
     const targetY = window.scrollY + rect.top - 24 - offset;
     window.scrollTo({ top: targetY, behavior: 'smooth' });
+  }
+
+  function handleSectionClick(
+    e: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: '#how-it-works' | '#comparison',
+    closeMenu = false
+  ) {
+    if (closeMenu) setOpen(false);
+    if (!isHome) return;
+    e.preventDefault();
+    smoothScrollTo(sectionId);
   }
 
   return (
@@ -28,8 +42,8 @@ export default function Nav() {
 
             <div className="hidden lg:flex items-center justify-center gap-10 text-lg font-semibold text-black/55">
               <Link href="/pricing" className="hover:text-black transition-colors">Pricing</Link>
-              <a href="#how-it-works" onClick={(e) => { e.preventDefault(); smoothScrollTo('#how-it-works'); }} className="hover:text-black transition-colors">How it Works</a>
-              <a href="#comparison" onClick={(e) => { e.preventDefault(); smoothScrollTo('#comparison'); }} className="hover:text-black transition-colors">Comparison</a>
+              <a href="/#how-it-works" onClick={(e) => handleSectionClick(e, '#how-it-works')} className="hover:text-black transition-colors">How it Works</a>
+              <a href="/#comparison" onClick={(e) => handleSectionClick(e, '#comparison')} className="hover:text-black transition-colors">Comparison</a>
               <Link href="/case-studies" className="hover:text-black transition-colors">Case Studies</Link>
             </div>
 
@@ -69,8 +83,8 @@ export default function Nav() {
 
             <nav className="mt-6 flex flex-col gap-4 px-1">
               <Link href="/" onClick={() => setOpen(false)} className="text-black text-lg">Home</Link>
-              <a href="#how-it-works" onClick={(e) => { e.preventDefault(); setOpen(false); smoothScrollTo('#how-it-works'); }} className="text-black text-lg">How it Works</a>
-              <a href="#comparison" onClick={(e) => { e.preventDefault(); setOpen(false); smoothScrollTo('#comparison'); }} className="text-black text-lg">Comparison</a>
+              <a href="/#how-it-works" onClick={(e) => handleSectionClick(e, '#how-it-works', true)} className="text-black text-lg">How it Works</a>
+              <a href="/#comparison" onClick={(e) => handleSectionClick(e, '#comparison', true)} className="text-black text-lg">Comparison</a>
               <Link href="/pricing" onClick={() => setOpen(false)} className="text-black text-lg">Pricing</Link>
               <Link href="/case-studies" onClick={() => setOpen(false)} className="text-black text-lg">Case Studies</Link>
               <Link href="/signin" onClick={() => setOpen(false)} className="mt-4 inline-block px-4 py-2 border border-black/15 text-black rounded-md font-semibold transition-colors">Log in</Link>

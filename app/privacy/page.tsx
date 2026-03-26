@@ -26,14 +26,14 @@ export default function PrivacyPolicy() {
 
           <section className="space-y-3 pb-6 border-b border-black/10">
             <h2 className="text-black font-bold text-lg">Information We Collect</h2>
-            <p>When you request an audit, we collect your email address and the URL of your website. This is the only personal information we collect directly.</p>
-            <p>When you use the free score tool, we receive the URL you submit. We do not store this URL beyond the immediate request and do not link it to any personal identity.</p>
+            <p>When you create an account, we collect your email address and authentication details managed through our auth provider. When you run audits, we collect the URLs you submit and related audit metadata required to provide dashboard features.</p>
+            <p>When you use the free score tool, we receive the URL you submit for processing. Free score submissions may be processed without account-level history.</p>
             <p>We use Vercel Analytics to understand general traffic patterns on our site. This collects anonymized data such as page views and referral sources. No personally identifiable information is collected through analytics.</p>
           </section>
 
           <section className="space-y-3 pb-6 border-b border-black/10">
             <h2 className="text-black font-bold text-lg">How We Use Your Information</h2>
-            <p>Your email address is used solely to deliver your audit report and follow up on your order. We do not add you to marketing lists without your explicit consent. We do not sell, rent, or share your personal information with third parties.</p>
+            <p>We use your information to authenticate your account, provide dashboard access, run audits, and support your use of the service. We do not add you to marketing lists without your explicit consent. We do not sell or rent your personal information.</p>
           </section>
 
           <section className="space-y-3 pb-6 border-b border-black/10">

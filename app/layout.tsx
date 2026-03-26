@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "audo",
-  description: "A manual, ruthless audit of your startup&apos;s site. Delivered in 24 hours by a real founder, not a bot.",
+  description: "Dashboard-first website auditing for startup teams. Run audits, prioritize fixes, and track progress in one place.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

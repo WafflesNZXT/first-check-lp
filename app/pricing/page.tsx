@@ -180,13 +180,13 @@ function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
             <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-6 space-y-4">
               <div className="space-y-1">
                 <p className="text-white font-bold">Want to know exactly how to fix all of this?</p>
-                <p className="text-gray-400 text-sm">The full Deep-Dive Audit gives you a prioritized fix list in plain English, delivered by a real founder in 24 hours.</p>
+                <p className="text-gray-400 text-sm">Unlock dashboard access for full prioritized audits, issue history, and a workflow your team can re-run as you ship.</p>
               </div>
               <button
                 onClick={onUpgrade}
                 className="w-full bg-white text-black font-black py-3 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
               >
-                Unlock Full Audit — $29
+                Unlock Dashboard Access — $29
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -275,7 +275,7 @@ export default function Pricing() {
                 <span className="text-gray-500 line-through text-sm font-bold">$49</span>
                 <span className="text-black font-black text-2xl">$29</span>
               </div>
-              <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">per audit</p>
+              <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">beta access</p>
             </div>
           </div>
         </div>
@@ -292,8 +292,8 @@ export default function Pricing() {
             </span>
             Simple Pricing
           </span>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">One price. No surprises.</h1>
-          <p className="text-gray-700 text-lg max-w-xl mx-auto">No subscriptions. No credit systems. Just a human founder auditing your site and telling you exactly what to fix.</p>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">Simple beta access. No surprises.</h1>
+          <p className="text-gray-700 text-lg max-w-xl mx-auto">Get access to the audo dashboard to run audits, prioritize fixes, and track progress in one place.</p>
           <p className="text-blue-700 text-lg max-w-xl mx-auto">
             Every week you wait, you keep paying for the same drop-offs. Fix the bottleneck once, then compound.
           </p>
@@ -316,8 +316,8 @@ export default function Pricing() {
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-3xl font-extrabold tracking-tight">Deep-Dive Audit</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">A ruthless, manual audit of your startup’s site. Delivered in 24 hours by a real founder.</p>
+                <h3 className="text-3xl font-extrabold tracking-tight">Dashboard Access</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">Run structured audits inside your dashboard and keep a prioritized action feed for your team.</p>
               </div>
 
               <div className="flex flex-col md:flex-row md:items-end gap-2 pb-2 border-b border-black/10">
@@ -326,8 +326,8 @@ export default function Pricing() {
                 <div className="flex items-end gap-2">
                   <span className="text-6xl font-black tracking-tighter">$29</span>
                   <div className="pb-2 space-y-0.5">
-                    <span className="text-gray-700 font-medium text-sm block">/audit</span>
-                    <span className="text-gray-500 text-xs block">one-time payment</span>
+                    <span className="text-gray-700 font-medium text-sm block">/beta access</span>
+                    <span className="text-gray-500 text-xs block">early access pricing</span>
                   </div>
                 </div>
               </div>
@@ -340,11 +340,11 @@ export default function Pricing() {
 
               <ul className="space-y-4">
               {[
-                { icon: FileText, text: "The 'Roast' Report — 15+ Point Inspection" },
-                { icon: Sparkles, text: "Conversion Optimization Quick-Wins" },
-                { icon: Zap, text: "SEO & Load Speed Performance Audit" },
-                { icon: Layout, text: "UX/Design Consistency Breakdown" },
-                { icon: CheckCircle, text: "Actionable 'Top 3 Fixes' Priority List" },
+                { icon: FileText, text: "Full audit detail pages with issue breakdowns" },
+                { icon: Sparkles, text: "Prioritized quick wins for conversion and UX" },
+                { icon: Zap, text: "Performance, SEO, and accessibility insights" },
+                { icon: Layout, text: "Dashboard workflow to manage what to fix next" },
+                { icon: CheckCircle, text: "Clear 'Top 3 fixes' priority list per run" },
                 // { icon: Video, text: "Optional: 3-Min Video Walkthrough" }, // Massive value add
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-4 text-sm text-gray-700">
@@ -370,11 +370,11 @@ export default function Pricing() {
                 onClick={openPurchaseModal}
                 className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
               >
-                Get My Audit
+                Improve my site
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
               </button>
 
-              <p className="text-center text-gray-500 text-xs">Delivered within 24 hours. No subscription required.</p>
+              <p className="text-center text-gray-500 text-xs">Includes dashboard access and full audit workflow.</p>
             </div>
           </div>
 
@@ -402,7 +402,7 @@ export default function Pricing() {
                 <span className="text-6xl font-black tracking-tighter">$99</span>
                 <div className="pb-2 space-y-0.5">
                   <span className="text-gray-500 font-medium text-sm block">/audit</span>
-                  <span className="text-gray-700 text-xs block">one-time payment</span>
+                  <span className="text-gray-700 text-xs block">beta access pricing</span>
                 </div>
               </div>
 
@@ -439,7 +439,7 @@ export default function Pricing() {
               <img src="/1770612376028.jfif" alt="Wafi Syed" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-black font-bold italic text-lg">I’ll personally audit your site within 24 hours.</p>
+              <p className="text-black font-bold italic text-lg">I built audo so founders can run clear, repeatable audits in one tool.</p>
               <p className="text-gray-600 text-sm mt-0.5">Wafi Syed, Founder of audo</p>
               <div className="mt-2">
                 <a href="https://www.linkedin.com/in/wafisyed/" target="_blank" rel="noopener noreferrer" aria-label="Wafi Syed on LinkedIn" className="inline-flex items-center">
@@ -461,7 +461,7 @@ export default function Pricing() {
             </div>
             <div className="text-center border-l border-black/10 pl-6">
               <div className="text-2xl font-bold">24hr</div>
-              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Turnaround</div>
+              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Dashboard-First</div>
             </div>
           </div>
         </div>
@@ -469,9 +469,9 @@ export default function Pricing() {
         {/* FAQ Strip */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { q: "What do I actually get?", a: "A detailed written audit with prioritized fixes covering SEO, performance, accessibility, and UX observations." },
-            { q: "How long does it take?", a: "Your audit is delivered within 24 hours of payment. You also get a 48-hour follow-up window for questions." },
-            { q: "Who does the audit?", a: "Wafi Syed personally audits every site. No bots, no outsourcing, no automated reports." },
+            { q: "What do I actually get?", a: "Dashboard access plus full audit detail views with prioritized fixes for SEO, performance, accessibility, and UX." },
+            { q: "How does it work?", a: "Add your URL in the dashboard, run an audit, then track and re-run as you ship improvements." },
+            { q: "Is this built for teams?", a: "Yes. The dashboard keeps audit history and priorities in one place so everyone can align on what to fix next." },
           ].map((item, i) => (
             <div key={i} className="bg-white border border-black/10 rounded-2xl p-6 space-y-2">
               <p className="text-black font-bold text-sm">{item.q}</p>
@@ -494,8 +494,8 @@ export default function Pricing() {
               <form onSubmit={handleModalSubmit} className="space-y-6">
                 <input type="text" name="honeypot" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
                 <div className="space-y-1">
-                  <h3 className="text-xl font-bold">Claim your audit</h3>
-                  <p className="text-gray-600 text-sm">You’ll be redirected to payment. Audit delivered within 24 hours.</p>
+                  <h3 className="text-xl font-bold">Start dashboard access</h3>
+                  <p className="text-gray-600 text-sm">You’ll be redirected to payment, then continue inside your dashboard.</p>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -508,10 +508,10 @@ export default function Pricing() {
                   </div> */}
                 </div>
                 <button type="submit" disabled={isSubmitting} className="w-full bg-black text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isSubmitting ? 'Processing...' : 'CLAIM THIS AUDIT — $29'}
+                  {isSubmitting ? 'Processing...' : 'START DASHBOARD ACCESS — $29'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <p className="text-center text-gray-500 text-xs">One-time payment. No subscription.</p>
+                <p className="text-center text-gray-500 text-xs">Beta access pricing.</p>
               </form>
             ) : (
               <div className="py-12 text-center space-y-4">
@@ -539,7 +539,7 @@ export default function Pricing() {
               <div className="space-y-1">
                 <h3 className="text-xl font-bold">Is it for you?</h3>
                 <p className="text-gray-600 text-sm">
-                  If your site is “fine” but growth feels stuck, this is usually the missing lever.
+                  If your site is “fine” but growth feels stuck, a clear dashboard workflow is usually the missing lever.
                 </p>
               </div>
 
@@ -549,9 +549,9 @@ export default function Pricing() {
                   <ul className="space-y-2 text-sm text-gray-700">
                     {[
                       "Getting traffic but conversions feel random",
-                      "Not sure what to fix first (SEO, speed, UX, copy)",
-                      "Tired of generic tools that don’t tell you what to do next",
-                      "Shipping fast — and want your site to keep up",
+                      "Not sure what to fix first across SEO, speed, UX, and copy",
+                      "Tired of generic tools that don’t turn into a workflow",
+                      "Shipping fast and need a repeatable audit loop",
                     ].map((t) => (
                       <li key={t} className="flex items-start gap-3">
                         <Check className="w-4 h-4 mt-0.5 text-blue-700 flex-shrink-0" />
@@ -564,7 +564,7 @@ export default function Pricing() {
                 <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-2">
                   <p className="text-black font-bold text-sm">What you lose by waiting</p>
                   <p className="text-gray-700 text-sm leading-relaxed">
-                    Every week you don’t fix the bottlenecks, you keep paying for the same outcome: the same bounce, the same drop-off, the same “we’ll improve it later.”
+                    Every week you don’t fix bottlenecks, you keep paying for the same outcome: the same bounce, the same drop-off, the same “we’ll improve it later.”
                     Meanwhile, other founders are tightening their funnels and compounding learnings.
                   </p>
                 </div>
@@ -579,7 +579,7 @@ export default function Pricing() {
                   }}
                   className="w-full bg-black text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
                 >
-                  Claim this audit — $29
+                  Start dashboard access — $29
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
@@ -589,7 +589,7 @@ export default function Pricing() {
                 >
                   I want to miss out
                 </button>
-                <p className="text-center text-gray-500 text-xs">One-time payment. Delivered within 24 hours.</p>
+                <p className="text-center text-gray-500 text-xs">Beta access pricing.</p>
               </div>
             </div>
           </div>

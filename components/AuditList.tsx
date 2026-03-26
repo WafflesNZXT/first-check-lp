@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import ProgressBar from '@/components/ProgressBar'
 import { supabase } from '@/lib/supabase'
 
 export default function AuditList({ initialAudits }: { initialAudits: any[] }) {
@@ -11,19 +10,42 @@ export default function AuditList({ initialAudits }: { initialAudits: any[] }) {
   useEffect(() => {
     const channel = supabase
       .channel('audit-status')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audits' }, (payload) => {
+        const inserted = (payload as any)?.new
+        if (!inserted || inserted.status !== 'completed') return
+        setAudits((prev: any[]) => {
+          const exists = prev.some((a) => a.id === inserted.id)
+          if (exists) return prev
+          return [inserted, ...prev]
+        })
+      })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'audits' }, (payload) => {
         const updated = (payload as any)?.new
         if (!updated) return
-        setAudits((prev: any[]) => prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)))
+        setAudits((prev: any[]) => {
+          const exists = prev.some((a) => a.id === updated.id)
+          if (!exists) {
+            if (updated.status !== 'completed') return prev
+            return [updated, ...prev]
+          }
+
+          const next = prev
+            .map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
+            .filter((a) => a.status === 'completed')
+
+          return next
+        })
       })
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [])
 
+  const completedAudits = audits.filter((audit) => audit.status === 'completed')
+
   return (
     <div className="grid gap-4">
-      {audits.map((audit) => (
+      {completedAudits.map((audit) => (
         <Link 
           href={`/dashboard/audit/${audit.id}`} 
           key={audit.id} 
@@ -47,12 +69,6 @@ export default function AuditList({ initialAudits }: { initialAudits: any[] }) {
               </span>
             )}
           </div>
-
-          {audit.status === 'processing' && (
-            <div className="w-full border-t border-gray-50 pt-4">
-              <ProgressBar status={audit.status} />
-            </div>
-          )}
         </Link>
       ))}
     </div>

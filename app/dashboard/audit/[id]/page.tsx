@@ -70,6 +70,12 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
   const userId = currentUser?.id
   if (!userId) redirect('/signin')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_status, audit_count')
+    .eq('id', userId)
+    .maybeSingle()
+
   return (
     <div className="min-h-screen bg-[#fcfcfc] p-8 md:p-24 relative">
       <div className="max-w-5xl mx-auto space-y-16">
@@ -98,12 +104,6 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
             <p className="text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto">
               {audit.report_content?.summary || "no summary available."}
             </p>
-
-            <div className="flex gap-4 pt-4 justify-center">
-              <ScoreCircle label="perf" score={audit.performance_score} />
-              <ScoreCircle label="ux" score={audit.ux_score} />
-              <ScoreCircle label="seo" score={audit.seo_score} />
-            </div>
           </div>
         </section>
 
@@ -130,11 +130,70 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Audit status / progress (client) --- */}
         <AuditStatus audit={audit} />
 
-        {/* --- ✅ Improvement Roadmap (client) --- */}
-        <AuditChecklist audit={audit} />
+        <AuditDetail audit={audit} profile={profile} />
         
       </div>
     </div>
+  )
+}
+
+function AuditDetail({ audit, profile }: { audit: any, profile: any }) {
+  const isPro = profile?.subscription_status === 'active'
+  const isFreeAudit = (profile?.audit_count ?? 0) <= 2
+  const isLocked = !isPro && !isFreeAudit
+
+  return (
+    <div className="space-y-12">
+      <section className="flex flex-col items-center gap-8">
+        <div className="space-y-6 text-center">
+          <div className="flex gap-4 pt-4 justify-center">
+            <ScoreCircle label="perf" score={audit.performance_score} />
+            <ScoreCircle label="ux" score={audit.ux_score} />
+            <ScoreCircle label="seo" score={audit.seo_score} />
+          </div>
+        </div>
+      </section>
+
+      <div className="relative">
+        {isLocked && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-[2.5rem] border-2 border-dashed border-gray-200 p-12 text-center">
+            <LockIcon className="w-12 h-12 mb-4 text-black" />
+            <h3 className="text-2xl text-black font-black tracking-tighter mb-2">Upgrade to Pro</h3>
+            <p className="text-gray-500 mb-8 max-w-xs">
+              You've used your 2 free audits. Subscribe to unlock the full checklist and fix your site.
+            </p>
+            <Link
+              href="/pricing"
+              className="bg-black text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
+            >
+              Unlock All Fixes — $12/mo
+            </Link>
+          </div>
+        )}
+
+        <div className={isLocked ? 'filter blur-xl pointer-events-none select-none' : ''}>
+          <AuditChecklist audit={audit} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LockIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="3" y="11" width="18" height="10" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
   )
 }
 
@@ -145,7 +204,7 @@ function ScoreCircle({ label, score }: { label: string, score: number }) {
   const bgColor = score > 80 ? 'bg-green-50' : score > 50 ? 'bg-yellow-50' : 'bg-red-50'
 
   return (
-    <div className={`bg-white p-5 rounded-[1.5rem] border border-gray-100 shadow-sm text-center min-w-[100px] transition-transform hover:scale-105`}>
+    <div className={`${bgColor} p-5 rounded-[1.5rem] border border-gray-100 shadow-sm text-center min-w-[100px] transition-transform hover:scale-105`}>
       <div className={`text-3xl font-black ${color}`}>{score || 0}</div>
       <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 mt-1">{label}</div>
     </div>

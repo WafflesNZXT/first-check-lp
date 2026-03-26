@@ -55,24 +55,24 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: 'Wafi from audo <onboarding@resend.dev>',
         to: customerEmail,
-        subject: 'Your audo audit is confirmed — one quick thing',
+        subject: 'Your audo access is confirmed — one quick step',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
             <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Payment confirmed!</h2>
-            <p style="color: #555; font-size: 16px; margin-bottom: 24px;">Hey, Wafi here from audo. Your $29 Deep-Dive Audit is confirmed and I'll have your report ready within 24 hours.</p>
+            <p style="color: #555; font-size: 16px; margin-bottom: 24px;">Hey, Wafi here from audo. Your $29 dashboard access is confirmed.</p>
             
-            <p style="font-size: 16px; margin-bottom: 8px;">Just need one thing from you to get started:</p>
+            <p style="font-size: 16px; margin-bottom: 8px;">One quick step to finish setup:</p>
             
             <div style="background: #f5f5f5; border-left: 4px solid #2563eb; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-              <p style="margin: 0; font-size: 16px; font-weight: 700;">Reply to this email with:</p>
+              <p style="margin: 0; font-size: 16px; font-weight: 700;">Add your website URL in the setup flow:</p>
               <ul style="margin: 12px 0 0 0; padding-left: 20px; color: #333;">
-                <li style="margin-bottom: 8px;">Your website URL</li>
-                <li style="margin-bottom: 8px;">Anything specific you want me to focus on (SEO, performance, accessibility, UX)</li>
-                <li>Any context about your product that would help (industry, stage, target audience)</li>
+                <li style="margin-bottom: 8px;">Open your success page after checkout</li>
+                <li style="margin-bottom: 8px;">Submit your website URL</li>
+                <li>Then continue in your dashboard to run your first audit</li>
               </ul>
             </div>
             
-            <p style="font-size: 16px; color: #555;">Once you reply I'll get straight to work. You'll also have a 48-hour follow-up window after delivery to ask any questions.</p>
+            <p style="font-size: 16px; color: #555;">Once your URL is saved, you&apos;re ready to start using the dashboard workflow.</p>
             
             <p style="font-size: 16px; margin-top: 32px;">Talk soon,<br><strong>Wafi Syed</strong><br>Founder, audo<br><a href="https://usefirstcheck.vercel.app" style="color: #2563eb;">usefirstcheck.vercel.app</a></p>
           </div>
@@ -83,16 +83,16 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: 'audo Notifications <onboarding@resend.dev>',
         to: 'wafi.syed5@gmail.com',
-        subject: `New audit order — ${customerEmail}`,
+        subject: `New dashboard access order — ${customerEmail}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
             <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">New order received!</h2>
-            <p style="font-size: 16px; color: #555;">Someone just paid for a Deep-Dive Audit.</p>
+            <p style="font-size: 16px; color: #555;">Someone just paid for dashboard access.</p>
             
             <div style="background: #f5f5f5; padding: 16px 20px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0 0 8px 0;"><strong>Customer email:</strong> ${customerEmail}</p>
               <p style="margin: 0 0 8px 0;"><strong>Amount:</strong> $29</p>
-              <p style="margin: 0;"><strong>Status:</strong> Waiting for their URL — they've been emailed.</p>
+              <p style="margin: 0;"><strong>Status:</strong> Waiting for URL setup completion.</p>
             </div>
             
             <p style="font-size: 14px; color: #888;">Check your Supabase leads table for the full record.</p>

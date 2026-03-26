@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'audo',
     short_name: 'audo',
-    description: 'Manual startup audits delivered in 24 hours.',
+    description: 'Dashboard-first website auditing for startup teams.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

@@ -37,7 +37,7 @@ export default function SiteFooter() {
                 audo
               </div>
               <p className="text-gray-600 text-sm leading-relaxed max-w-xs">
-                A manual, ruthless audit of your startup&apos;s site. Delivered in 24 hours by a real founder, not a bot.
+                Dashboard-first website auditing for startup teams. Run audits, prioritize fixes, and keep progress visible in one place.
               </p>
               <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
                 By Wafi Syed
@@ -51,7 +51,7 @@ export default function SiteFooter() {
                   { label: 'How it Works', href: '/#how-it-works' },
                   { label: 'Pricing', href: '/pricing' },
                   { label: 'Comparison', href: '/#comparison' },
-                  { label: 'Get Audit', href: '/pricing#get-audit' },
+                  { label: 'Get Access', href: '/pricing#get-audit' },
                   { label: 'Case Studies', href: '/case-studies' },
                 ].map((link) => (
                   <li key={link.label}>

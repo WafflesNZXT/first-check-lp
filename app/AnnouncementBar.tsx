@@ -95,7 +95,7 @@ export function AnnouncementBar() {
             href="/pricing"
             className="inline-flex items-center gap-1 bg-white text-blue-700 font-black text-xs px-3 py-1.5 rounded-full hover:bg-blue-50 transition-all whitespace-nowrap"
           >
-            Get 40% off
+            Unlock beta access
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>

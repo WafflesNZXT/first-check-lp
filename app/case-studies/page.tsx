@@ -362,7 +362,7 @@ export default function CaseStudies() {
               8 real sites.<br />8 real audits.
             </h1>
             <p className="text-gray-700 text-lg max-w-2xl leading-relaxed">
-              These are the actual sites audited during the audo beta — real founders, real scores, real findings. No cherry-picking, no fake data.
+              These are real sites from the audo beta — real founders, real scores, real findings. No cherry-picking, no fake data.
             </p>
           </div>
 
@@ -456,14 +456,14 @@ export default function CaseStudies() {
         <div className="bg-black text-white rounded-3xl p-12 text-center space-y-6">
           <div className="space-y-3">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">Want yours next?</h2>
-            <p className="text-gray-300 max-w-lg mx-auto">Every audit above was done manually by a real founder. The $29 Deep-Dive gives you the same treatment — delivered in 24 hours.</p>
+            <p className="text-gray-300 max-w-lg mx-auto">Run the same style of analysis in your dashboard with prioritized issues your team can act on right away.</p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/pricing"
               className="inline-flex items-center gap-2 bg-white text-black font-black px-8 py-4 rounded-2xl hover:bg-blue-100 transition-all shadow-xl"
             >
-              Get My Audit — $29
+              Start Dashboard Access — $29
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link

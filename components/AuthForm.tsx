@@ -86,7 +86,7 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
         <p className="text-gray-500 text-base md:text-lg">
           {mode === 'signin' 
             ? 'Enter your details to access your dashboard' 
-            : 'Start getting ruthless feedback on your site'}
+            : 'Start running audits and tracking fixes in your dashboard'}
         </p>
       </div>
       

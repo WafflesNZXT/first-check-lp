@@ -48,7 +48,7 @@ export default async function DashboardPage() {
         <section className="mb-20 text-center">
             <h2 className="text-4xl font-bold tracking-tight mb-4 text-black">New Audit</h2>
             <p className="text-gray-500 mb-10">Enter your URL to get ruthless feedback.</p>
-          <AuditInput userId={userId} />
+          <AuditInput />
         </section>
 
         <section>
