@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { HashScrollHandler } from '@/components/HashScrollHandler';
 import { AnnouncementBar } from './AnnouncementBar';
+import SiteFooter from '@/components/SiteFooter';
 
 
 const geistSans = Geist({
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
     shortcut: ["/icon"],
   },
-  themeColor: "#111111",
+  // `themeColor` is handled manually in the head to avoid Next.js metadata warnings
 };
 
 
@@ -40,81 +41,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head />
+      <head>
+        <meta name="theme-color" content="#111111" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AnnouncementBar />
         {children}
         <HashScrollHandler />
-        <footer className="w-full border-t border-black/10 bg-white">
-          <div className="max-w-7xl mx-auto px-6 py-16">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-
-              {/* Brand column */}
-              <div className="md:col-span-2 space-y-4">
-                <div className="text-2xl font-black tracking-[-0.06em] lowercase text-black">
-                  audo
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed max-w-xs">
-                  A manual, ruthless audit of your startup&apos;s site. Delivered in 24 hours by a real founder, not a bot.
-                </p>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
-                  By Wafi Syed
-                </p>
-              </div>
-
-              {/* Quick Links */}
-              <div className="space-y-4">
-                <p className="text-black font-black text-xs uppercase tracking-widest">Product</p>
-                <ul className="space-y-3">
-                  {[
-                    { label: "How it Works", href: "/#how-it-works" },
-                    { label: "Pricing", href: "/pricing" },
-                    { label: "Comparison", href: "/#comparison" },
-                    { label: "Get Audit", href: "/pricing#get-audit" },
-                    { label: "Case Studies", href: "/case-studies" },
-                  ].map((link) => (
-                    <li key={link.label}>
-                      <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Legal / Contact */}
-              <div className="space-y-4">
-                <p className="text-black font-black text-xs uppercase tracking-widest">Company</p>
-                <ul className="space-y-3">
-                  {[
-                    { label: "Contact", href: "mailto:wafi.syed5@gmail.com" },
-                    { label: "Privacy Policy", href: "/privacy" },
-                    { label: "Terms of Service", href: "/terms" },
-                  ].map((link) => (
-                    <li key={link.label}>
-                      <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-            </div>
-
-            {/* Bottom bar */}
-            <div className="mt-16 pt-8 border-t border-black/10 flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-gray-500 text-xs uppercase tracking-widest font-black">
-                © 2026 audo · The Pre-Launch Standard
-              </p>
-              <p className="text-gray-500 text-xs">
-                Built by a founder, for founders.
-              </p>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
 
         <Analytics />
       </body>

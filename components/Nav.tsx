@@ -34,7 +34,10 @@ export default function Nav() {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <Link href="/pricing" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-full text-sm font-bold transition-colors shadow-[0_8px_24px_rgba(37,99,235,0.35)]">
+              <Link href="/signin" className="border border-black/15 hover:border-black/30 text-black px-6 py-3 rounded-full text-sm font-semibold transition-colors">
+                Log in
+              </Link>
+              <Link href="/signup" className="bg-blue-600 hover:bg-blue-500 text-white px-7 py-3 rounded-full text-sm font-bold transition-colors shadow-[0_8px_24px_rgba(37,99,235,0.35)]">
                 Get Started ↗
               </Link>
             </div>
@@ -70,7 +73,8 @@ export default function Nav() {
               <a href="#comparison" onClick={(e) => { e.preventDefault(); setOpen(false); smoothScrollTo('#comparison'); }} className="text-black text-lg">Comparison</a>
               <Link href="/pricing" onClick={() => setOpen(false)} className="text-black text-lg">Pricing</Link>
               <Link href="/case-studies" onClick={() => setOpen(false)} className="text-black text-lg">Case Studies</Link>
-              <Link href="/pricing" onClick={() => setOpen(false)} className="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-bold transition-colors">Get Started Free</Link>
+              <Link href="/signin" onClick={() => setOpen(false)} className="mt-4 inline-block px-4 py-2 border border-black/15 text-black rounded-md font-semibold transition-colors">Log in</Link>
+              <Link href="/signup" onClick={() => setOpen(false)} className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-bold transition-colors">Get Started</Link>
             </nav>
           </div>
         </div>
