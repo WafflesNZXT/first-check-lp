@@ -1,8 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import AuditChecklist from '../../../../components/AuditChecklist'
 import AuditStatus from '../../../../components/AuditStatus'
+import EmailAuditButton from '../../../../components/EmailAuditButton'
+import { getUserFromCookie } from '@/lib/auth'
 
 export default async function AuditPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies()
@@ -42,6 +45,8 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
     )
   }
 
+  if (!audit) return <div>Audit not found — no row for id {id}</div>
+
   let hostname = "unknown site";
     try {
     // Add https prefix if the user forgot it, so URL() doesn't get confused
@@ -53,11 +58,26 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
     hostname = audit.website_url; // Fallback to raw input
     }
 
-  if (!audit) return <div>Audit not found — no row for id {id}</div>
+  // Try to get user from access token cookie to avoid an extra network call
+  const tokenUser = getUserFromCookie(cookieStore)
+  let currentUser = tokenUser
+  if (!currentUser) {
+    const { data } = await supabase.auth.getUser()
+    currentUser = data.user
+  }
+  if (!currentUser) redirect('/signin')
+
+  const userId = currentUser?.id
+  if (!userId) redirect('/signin')
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] p-8 md:p-24">
+    <div className="min-h-screen bg-[#fcfcfc] p-8 md:p-24 relative">
       <div className="max-w-5xl mx-auto space-y-16">
+        <EmailAuditButton
+          email={currentUser?.email || ''}
+          auditData={audit.report_content}
+          hostname={hostname}
+        />
         
         {/* --- Header & Breadcrumbs --- */}
         <header className="space-y-4">

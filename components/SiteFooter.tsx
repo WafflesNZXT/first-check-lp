@@ -1,77 +1,103 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import FeedbackModal from './FeedbackModal'
+import { supabase } from '@/lib/supabase'
 
 export default function SiteFooter() {
   const pathname = usePathname()
   const hideFooter = pathname === '/signin' || pathname === '/signup'
+  const [isOpen, setIsOpen] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await supabase.auth.getUser()
+        if (mounted && data?.user?.email) setUserEmail(data.user.email)
+      } catch (e) {
+        // ignore
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
 
   if (hideFooter) return null
 
   return (
-    <footer className="w-full border-t border-black/10 bg-white">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+    <>
+      <footer className="w-full border-t border-black/10 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
 
-          <div className="md:col-span-2 space-y-4">
-            <div className="text-2xl font-black tracking-[-0.06em] lowercase text-black">
-              audo
+            <div className="md:col-span-2 space-y-4">
+              <div className="text-2xl font-black tracking-[-0.06em] lowercase text-black">
+                audo
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed max-w-xs">
+                A manual, ruthless audit of your startup&apos;s site. Delivered in 24 hours by a real founder, not a bot.
+              </p>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
+                By Wafi Syed
+              </p>
             </div>
-            <p className="text-gray-600 text-sm leading-relaxed max-w-xs">
-              A manual, ruthless audit of your startup&apos;s site. Delivered in 24 hours by a real founder, not a bot.
+
+            <div className="space-y-4">
+              <p className="text-black font-black text-xs uppercase tracking-widest">Product</p>
+              <ul className="space-y-3">
+                {[
+                  { label: 'How it Works', href: '/#how-it-works' },
+                  { label: 'Pricing', href: '/pricing' },
+                  { label: 'Comparison', href: '/#comparison' },
+                  { label: 'Get Audit', href: '/pricing#get-audit' },
+                  { label: 'Case Studies', href: '/case-studies' },
+                ].map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-black font-black text-xs uppercase tracking-widest">Company</p>
+              <ul className="space-y-3">
+                {[
+                  { label: 'Contact', href: 'mailto:wafi.syed5@gmail.com' },
+                  { label: 'Privacy Policy', href: '/privacy' },
+                  { label: 'Terms of Service', href: '/terms' },
+                ].map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+          </div>
+
+          <button onClick={() => setIsOpen(true)} className="text-xs font-bold uppercase tracking-widest text-gray-700 hover:text-black">
+            Give Feedback
+          </button>
+          
+          <div className="mt-16 pt-8 border-t border-black/10 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-500 text-xs uppercase tracking-widest font-black">
+              © 2026 audo · The Pre-Launch Standard
             </p>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
-              By Wafi Syed
+            <p className="text-gray-500 text-xs">
+              Built by a founder, for founders.
             </p>
           </div>
-
-          <div className="space-y-4">
-            <p className="text-black font-black text-xs uppercase tracking-widest">Product</p>
-            <ul className="space-y-3">
-              {[
-                { label: 'How it Works', href: '/#how-it-works' },
-                { label: 'Pricing', href: '/pricing' },
-                { label: 'Comparison', href: '/#comparison' },
-                { label: 'Get Audit', href: '/pricing#get-audit' },
-                { label: 'Case Studies', href: '/case-studies' },
-              ].map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-black font-black text-xs uppercase tracking-widest">Company</p>
-            <ul className="space-y-3">
-              {[
-                { label: 'Contact', href: 'mailto:wafi.syed5@gmail.com' },
-                { label: 'Privacy Policy', href: '/privacy' },
-                { label: 'Terms of Service', href: '/terms' },
-              ].map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
         </div>
+      </footer>
 
-        <div className="mt-16 pt-8 border-t border-black/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-xs uppercase tracking-widest font-black">
-            © 2026 audo · The Pre-Launch Standard
-          </p>
-          <p className="text-gray-500 text-xs">
-            Built by a founder, for founders.
-          </p>
-        </div>
-      </div>
-    </footer>
+      <FeedbackModal userEmail={userEmail} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </>
   )
 }
