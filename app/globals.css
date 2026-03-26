@@ -114,6 +114,20 @@ a[href],
   }
 }
 
+@keyframes checklistConfetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--x-start), var(--y-start), 0) rotate(0deg) scale(0.85);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--x-start) + var(--x-drift)), calc(var(--y-start) + var(--y-drop)), 0) rotate(var(--rotate)) scale(1);
+  }
+}
+
 /* ============================================
    UTILITY CLASSES
    ============================================ */
@@ -153,6 +167,11 @@ a[href],
 
 .hero-float-soft {
   animation: heroFloatSoft 6.8s ease-in-out 1.4s infinite;
+}
+
+.animate-checklist-confetti {
+  opacity: 0;
+  animation: checklistConfetti 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ============================================
@@ -230,7 +249,8 @@ a[href],
   .reveal-stagger > *,
   .hero-float,
   .hero-float-delayed,
-  .hero-float-soft {
+  .hero-float-soft,
+  .animate-checklist-confetti {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;

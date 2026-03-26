@@ -1,9 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies, headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserFromCookie } from '@/lib/auth'
 import AuditInput from '@/components/AuditInput'
 import AuditList from '@/components/AuditList' // The new client component
+import DashboardBoot from '../../components/DashboardBoot'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -25,34 +26,6 @@ export default async function DashboardPage() {
   const userId = currentUser?.id
   if (!userId) redirect('/signin')
 
-  const headerStore = await headers()
-  const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
-  const proto = headerStore.get('x-forwarded-proto') || 'https'
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : '')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('welcome_sent')
-    .eq('id', userId)
-    .single()
-
-  if (profile && !profile.welcome_sent) {
-    // Trigger the welcome email
-    if (!siteUrl) throw new Error('Missing site URL for welcome email API call')
-    await fetch(`${siteUrl}/api/send-welcome`, {
-      method: 'POST',
-      body: JSON.stringify({ email: currentUser?.email }),
-    })
-
-    // Update DB so we don't spam them every time they visit the dashboard
-    await supabase
-      .from('profiles')
-      .update({ welcome_sent: true })
-      .eq('id', userId)
-  }
-
-  
-
   const { data: audits } = await supabase
     .from('audits')
     .select('id, website_url, created_at, status')
@@ -61,6 +34,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] p-8">
+      <DashboardBoot />
       <div className="max-w-5xl mx-auto">
         <header className="flex justify-between items-center mb-16">
           <h1 className="text-2xl font-bold text-black tracking-tighter"><strong>audo</strong> Dashboard</h1>

@@ -1,21 +1,95 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Check } from 'lucide-react'
 
-export default function AuditChecklist({ audit }: { audit: any }) {
+type ChecklistItem = {
+  issue: string
+  fix: string
+  category: string
+  priority?: string
+}
+
+type Audit = {
+  id: string
+  report_content?: {
+    completed_tasks?: string[]
+    checklist?: ChecklistItem[]
+  }
+}
+
+type ConfettiPiece = {
+  id: string
+  color: string
+  xStart: string
+  yStart: string
+  xDrift: string
+  yDrop: string
+  rotate: string
+  delay: string
+  duration: string
+}
+
+const CONFETTI_COLORS = ['bg-black', 'bg-gray-500', 'bg-gray-400', 'bg-gray-300', 'bg-yellow-400', 'bg-yellow-300']
+
+export default function AuditChecklist({ audit }: { audit: Audit }) {
   const initialCompleted: string[] = audit?.report_content?.completed_tasks || []
   const [completedTasks, setCompletedTasks] = useState<string[]>(initialCompleted)
+  const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
+  const confettiBurstIdRef = useRef(0)
   const checklist = audit?.report_content?.checklist || []
-  const summary = audit?.report_content?.summary || ''
+  const allTasksCompleted = checklist.length > 0 && checklist.every((item) => completedTasks.includes(item.issue))
+
+  const triggerConfetti = () => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
+
+    confettiBurstIdRef.current += 1
+    const burstId = confettiBurstIdRef.current
+
+    const generatedPieces: ConfettiPiece[] = Array.from({ length: 96 }, (_, index) => {
+      const xStart = `${Math.round(4 + Math.random() * 92)}vw`
+      const yStart = `${Math.round(4 + Math.random() * 52)}vh`
+      const xDrift = `${Math.round(-120 + Math.random() * 240)}px`
+      const yDrop = `${Math.round(120 + Math.random() * 340)}px`
+      const rotate = `${Math.round(-420 + Math.random() * 840)}deg`
+      const delay = `${Math.round(Math.random() * 240)}ms`
+      const duration = `${Math.round(900 + Math.random() * 700)}ms`
+      const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]
+
+      return {
+        id: `${burstId}-${index}`,
+        color,
+        xStart,
+        yStart,
+        xDrift,
+        yDrop,
+        rotate,
+        delay,
+        duration,
+      }
+    })
+
+    setConfettiPieces(generatedPieces)
+    window.setTimeout(() => {
+      setConfettiPieces([])
+    }, 1700)
+  }
 
   const toggleTask = async (taskIssue: string) => {
     const newCompleted = completedTasks.includes(taskIssue)
       ? completedTasks.filter((t) => t !== taskIssue)
       : [...completedTasks, taskIssue]
 
+    const willBeFullyCompleted = checklist.length > 0 && checklist.every((item) => newCompleted.includes(item.issue))
+
     setCompletedTasks(newCompleted)
+
+    if (!allTasksCompleted && willBeFullyCompleted) {
+      triggerConfetti()
+    }
 
     const newReportContent = {
       ...(audit?.report_content || {}),
@@ -29,14 +103,33 @@ export default function AuditChecklist({ audit }: { audit: any }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-12">
+    <div className="max-w-3xl mx-auto space-y-12 relative">
+      {confettiPieces.length > 0 && (
+        <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden="true">
+          {confettiPieces.map((piece) => (
+            <span
+              key={piece.id}
+              className={`absolute h-2 w-1.5 rounded-sm animate-checklist-confetti ${piece.color}`}
+              style={{
+                ['--x-start' as string]: piece.xStart,
+                ['--y-start' as string]: piece.yStart,
+                ['--x-drift' as string]: piece.xDrift,
+                ['--y-drop' as string]: piece.yDrop,
+                ['--rotate' as string]: piece.rotate,
+                animationDelay: piece.delay,
+                animationDuration: piece.duration,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="space-y-6">
         <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">
           Improvement Roadmap
         </h3>
 
-        {checklist.map((item: any, index: number) => (
+        {checklist.map((item, index) => (
           <div
             key={index}
             onClick={() => toggleTask(item.issue)}

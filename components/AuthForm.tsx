@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -10,6 +11,12 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    if (mode === 'signin') {
+      router.prefetch('/dashboard')
+    }
+  }, [mode, router])
 
 
   // Use shared client from `lib/supabase` to avoid recreating client each render
@@ -52,15 +59,12 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
                 }),
               })
             }
-          } catch (e) {
+          } catch {
             // non-fatal; continue to redirect client
           }
 
-          // Success: Refresh and redirect
-          router.refresh()
-          setTimeout(() => {
-            router.push('/dashboard')
-          }, 100)
+          // Success: navigate immediately after session exchange attempt
+          router.replace('/dashboard')
         }
       })()
 
@@ -121,12 +125,12 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
       )}
       
       <div className="text-center">
-        <button 
-          onClick={() => router.push(mode === 'signin' ? '/signup' : '/signin')}
+        <Link
+          href={mode === 'signin' ? '/signup' : '/signin'}
           className="text-sm text-gray-400 hover:text-black transition-colors"
         >
           {mode === 'signin' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-        </button>
+        </Link>
       </div>
     </div>
   )
