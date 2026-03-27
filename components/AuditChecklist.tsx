@@ -7,6 +7,8 @@ import { Check } from 'lucide-react'
 type ChecklistItem = {
   issue: string
   fix: string
+  selector?: string
+  code_example?: string
   category: string
   priority?: string
   completed?: boolean
@@ -48,6 +50,13 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
   const completionPercent = checklistItems.length > 0
     ? Math.round((completedCount / checklistItems.length) * 100)
     : 0
+
+  const copySnippet = async (snippet: string) => {
+    try {
+      await navigator.clipboard.writeText(snippet)
+    } catch {
+    }
+  }
 
   const triggerConfetti = () => {
     if (readOnly) return
@@ -146,18 +155,18 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
 
       <div className="space-y-6">
         <div className="sticky top-2 sm:top-4 z-30">
-          <div className="print-card rounded-[1.5rem] sm:rounded-[2rem] border border-white/45 bg-white/80 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-4 sm:px-6 py-3 sm:py-4">
+          <div className="print-card rounded-[1.5rem] sm:rounded-[2rem] border border-white/45 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-4 sm:px-6 py-3 sm:py-4 transition-colors">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
                 Checklist Progress
               </p>
-              <p className="text-lg sm:text-xl font-black text-black tabular-nums">
+              <p className="text-lg sm:text-xl font-black text-black dark:text-white tabular-nums">
                 {completionPercent}%
               </p>
             </div>
-            <div className="print-progress-track mt-2.5 h-2.5 w-full rounded-full bg-black/10 overflow-hidden">
+            <div className="print-progress-track mt-2.5 h-2.5 w-full rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
               <div
-                className="print-progress-fill h-full rounded-full bg-black transition-[width] duration-500 ease-out"
+                className="print-progress-fill h-full rounded-full bg-black dark:bg-white transition-[width] duration-500 ease-out"
                 style={{ width: `${completionPercent}%` }}
                 role="progressbar"
                 aria-valuemin={0}
@@ -166,13 +175,13 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
                 aria-label="Checklist completion"
               />
             </div>
-            <p className="mt-2 text-[11px] text-gray-500">
+            <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
               {completedCount} of {checklistItems.length} completed
             </p>
           </div>
         </div>
 
-        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">
+        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
           Improvement Roadmap
         </h3>
 
@@ -182,31 +191,58 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
             onClick={() => handleToggleTask(item.issue)}
             className={`group p-6 rounded-3xl border-2 transition-all duration-300 ${
               completedTasks.includes(item.issue)
-                ? 'bg-gray-50 border-gray-100 opacity-60'
-                : 'bg-white border-white shadow-sm'
-            } ${readOnly ? '' : 'cursor-pointer hover:border-black'}`}
+                ? 'bg-gray-50 dark:bg-slate-900 border-gray-100 dark:border-slate-800 opacity-60'
+                : 'bg-white dark:bg-slate-900 border-white dark:border-slate-800 shadow-sm'
+            } ${readOnly ? '' : 'cursor-pointer hover:border-black dark:hover:border-slate-500'}`}
           >
             <div className="flex gap-4 items-start">
               <div
                 className={`flex-none mt-1 w-6 h-6 min-w-[24px] min-h-[24px] rounded-full border-2 flex items-center justify-center transition-colors ${
-                  completedTasks.includes(item.issue) ? 'bg-black border-black' : 'border-gray-200'
+                  completedTasks.includes(item.issue) ? 'bg-black dark:bg-white border-black dark:border-white' : 'border-gray-200 dark:border-slate-600'
                 }`}
               >
-                {completedTasks.includes(item.issue) && <Check className="w-4 h-4 text-white" />}
+                {completedTasks.includes(item.issue) && <Check className="w-4 h-4 text-white dark:text-slate-900" />}
               </div>
 
               <div className="space-y-1">
-                <h4 className={`font-bold text-lg ${completedTasks.includes(item.issue) ? 'line-through text-gray-400' : 'text-black'}`}>
+                <h4 className={`font-bold text-lg ${completedTasks.includes(item.issue) ? 'line-through text-gray-400 dark:text-gray-500' : 'text-black dark:text-white'}`}>
                   {item.issue}
                 </h4>
-                <p className="text-gray-500 text-sm">{item.fix}</p>
+                <p className="text-gray-500 dark:text-gray-300 text-sm">{item.fix}</p>
+
+                {item.selector && (
+                  <code className="inline-block mt-1 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-2 py-1 text-[11px] text-gray-700 dark:text-gray-200 break-all">
+                    {item.selector}
+                  </code>
+                )}
+
+                {item.code_example && (
+                  <div className="mt-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">Quick Fix</p>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          copySnippet(item.code_example as string)
+                        }}
+                        className="rounded-full border border-gray-200 dark:border-slate-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <pre className="p-3 text-xs leading-5 text-gray-700 dark:text-gray-200 whitespace-pre-wrap break-words overflow-x-auto">
+                      {item.code_example}
+                    </pre>
+                  </div>
+                )}
 
                 <div className="flex gap-2 mt-3">
-                  <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-gray-100 text-gray-400">
+                  <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-300">
                     {item.category}
                   </span>
                   {item.priority === 'high' && (
-                    <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-red-50 text-red-500">
+                    <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-red-50 dark:bg-red-900/35 text-red-500 dark:text-red-300">
                       High Priority
                     </span>
                   )}

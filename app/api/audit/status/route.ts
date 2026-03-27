@@ -41,12 +41,27 @@ export async function GET(req: Request) {
       return new Response(JSON.stringify({ error: 'not_authenticated' }), { status: 401 })
     }
 
-    const { data, error } = await supabase
+    const withErrorMessage = await supabase
       .from('audits')
-      .select('status')
+      .select('status, error_message')
       .eq('id', auditId)
       .eq('user_id', user.id)
       .maybeSingle()
+
+    let data = withErrorMessage.data as { status: string; error_message?: string | null } | null
+    let error = withErrorMessage.error
+
+    if (error && String(error.message || '').toLowerCase().includes("could not find the 'error_message' column")) {
+      const statusOnly = await supabase
+        .from('audits')
+        .select('status')
+        .eq('id', auditId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      data = statusOnly.data as { status: string } | null
+      error = statusOnly.error
+    }
 
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 400 })
@@ -56,7 +71,7 @@ export async function GET(req: Request) {
       return new Response(JSON.stringify({ error: 'not_found' }), { status: 404 })
     }
 
-    return new Response(JSON.stringify({ status: data.status }), { status: 200 })
+    return new Response(JSON.stringify({ status: data.status, error: data.error_message ?? null }), { status: 200 })
   } catch (err: any) {
     return new Response(JSON.stringify({ error: String(err?.message || err) }), { status: 500 })
   }

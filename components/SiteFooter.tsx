@@ -28,24 +28,24 @@ export default function SiteFooter() {
 
   return (
     <>
-      <footer className="w-full border-t border-black/10 bg-white">
+      <footer className="w-full border-t border-black/10 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
 
             <div className="md:col-span-2 space-y-4">
-              <div className="text-2xl font-black tracking-[-0.06em] lowercase text-black">
+              <div className="text-2xl font-black tracking-[-0.06em] lowercase text-black dark:text-white">
                 audo
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed max-w-xs">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
                 Dashboard-first website auditing for startup teams. Run audits, prioritize fixes, and keep progress visible in one place.
               </p>
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
+              <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
                 By Wafi Syed
               </p>
             </div>
 
             <div className="space-y-4">
-              <p className="text-black font-black text-xs uppercase tracking-widest">Product</p>
+              <p className="text-black dark:text-white font-black text-xs uppercase tracking-widest">Product</p>
               <ul className="space-y-3">
                 {[
                   { label: 'How it Works', href: '/#how-it-works' },
@@ -55,7 +55,7 @@ export default function SiteFooter() {
                   { label: 'Case Studies', href: '/case-studies' },
                 ].map((link) => (
                   <li key={link.label}>
-                    <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
+                    <a href={link.href} className="text-gray-600 dark:text-gray-300 text-sm hover:text-black dark:hover:text-white transition-colors">
                       {link.label}
                     </a>
                   </li>
@@ -64,7 +64,7 @@ export default function SiteFooter() {
             </div>
 
             <div className="space-y-4">
-              <p className="text-black font-black text-xs uppercase tracking-widest">Company</p>
+              <p className="text-black dark:text-white font-black text-xs uppercase tracking-widest">Company</p>
               <ul className="space-y-3">
                 {[
                   { label: 'Contact', href: 'mailto:wafi.syed5@gmail.com' },
@@ -72,7 +72,7 @@ export default function SiteFooter() {
                   { label: 'Terms of Service', href: '/terms' },
                 ].map((link) => (
                   <li key={link.label}>
-                    <a href={link.href} className="text-gray-600 text-sm hover:text-black transition-colors">
+                    <a href={link.href} className="text-gray-600 dark:text-gray-300 text-sm hover:text-black dark:hover:text-white transition-colors">
                       {link.label}
                     </a>
                   </li>
@@ -82,15 +82,15 @@ export default function SiteFooter() {
 
           </div>
 
-          <button onClick={() => setIsOpen(true)} className="text-xs font-bold uppercase tracking-widest text-gray-700 hover:text-black">
+          <button onClick={() => setIsOpen(true)} className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
             Give Feedback
           </button>
           
-          <div className="mt-16 pt-8 border-t border-black/10 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-xs uppercase tracking-widest font-black">
+          <div className="mt-16 pt-8 border-t border-black/10 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest font-black">
               © 2026 audo · The Pre-Launch Standard
             </p>
-            <p className="text-gray-500 text-xs">
+            <p className="text-gray-500 dark:text-gray-400 text-xs">
               Built by a founder, for founders.
             </p>
           </div>

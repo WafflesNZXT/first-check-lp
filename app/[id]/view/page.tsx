@@ -7,6 +7,8 @@ import AuditStatus from '@/components/AuditStatus'
 type ChecklistItem = {
   issue: string
   fix: string
+  selector?: string
+  code_example?: string
   category: string
   priority?: string
   completed?: boolean

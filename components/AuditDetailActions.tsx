@@ -80,7 +80,7 @@ export default function AuditDetailActions({ websiteUrl }: Props) {
         type="button"
         onClick={handleReaudit}
         disabled={isRunning}
-        className="rounded-xl border border-black px-4 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+        className="rounded-xl border border-black dark:border-slate-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-black dark:hover:bg-slate-200 hover:text-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
       >
         {isRunning ? 'Running Re-Audit...' : 'Run Re-Audit'}
       </button>
@@ -88,7 +88,7 @@ export default function AuditDetailActions({ websiteUrl }: Props) {
       <button
         type="button"
         onClick={handleDownloadPdf}
-        className="rounded-xl border border-gray-300 bg-green-300 px-4 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-green-400"
+        className="rounded-xl border border-green-300 dark:border-green-700 bg-green-300 dark:bg-green-900/45 px-4 py-2 text-xs font-black uppercase tracking-widest text-green-950 dark:text-green-200 hover:bg-green-400 dark:hover:bg-green-900/65 transition-colors"
       >
         Download PDF
       </button>

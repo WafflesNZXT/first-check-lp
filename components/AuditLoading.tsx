@@ -10,7 +10,7 @@ const STAGES = [
   'Finalizing roadmap',
 ] as const
 
-export default function AuditLoading() {
+export default function AuditLoading({ processingNotice }: { processingNotice?: string | null }) {
   const [activeStage, setActiveStage] = useState(0)
 
   const completedStages = useMemo(() => {
@@ -34,6 +34,8 @@ export default function AuditLoading() {
 
       <div className="space-y-3">
         {STAGES.map((stage, index) => {
+          const isFinalStage = index === STAGES.length - 1
+          const label = isFinalStage && processingNotice ? processingNotice : stage
           const isCompleted = completedStages[index]
           const isActive = activeStage === index
 
@@ -61,7 +63,7 @@ export default function AuditLoading() {
               </span>
 
               <p className={`text-sm ${isCompleted ? 'text-green-700' : isActive ? 'text-black font-semibold' : 'text-gray-400'}`}>
-                {stage}
+                {label}
               </p>
             </div>
           )

@@ -36,26 +36,6 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: error.message }), { status: 400 })
     }
 
-    const { data: profile, error: profileReadError } = await supabase
-      .from('profiles')
-      .select('audit_count')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (profileReadError) {
-      console.warn('read profile audit_count error', profileReadError)
-    } else {
-      const nextAuditCount = (profile?.audit_count ?? 0) + 1
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({ audit_count: nextAuditCount })
-        .eq('id', user.id)
-
-      if (profileUpdateError) {
-        console.warn('update profile audit_count error', profileUpdateError)
-      }
-    }
-
     const newAudit = data?.[0]
     return new Response(JSON.stringify({ id: newAudit?.id }), { status: 200 })
   } catch (err: any) {

@@ -7,12 +7,16 @@ import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
 import AuditShareControls from '../../../../components/AuditShareControls'
 import AuditDetailActions from '../../../../components/AuditDetailActions'
+import BenchmarkCompare from '../../../../components/BenchmarkCompare'
+import WeeklyMonitoringToggle from '../../../../components/WeeklyMonitoringToggle'
 import { Logo } from '../../../../components/Logo'
 import { getUserFromCookie } from '@/lib/auth'
 
 type ChecklistItem = {
   issue: string
   fix: string
+  selector?: string
+  code_example?: string
   category: string
   priority?: string
   completed?: boolean
@@ -36,6 +40,7 @@ type AuditRecord = {
   status: string
   created_at: string
   screenshot_url: string | null
+  monitor_weekly?: boolean | null
 }
 
 type ProfileRecord = {
@@ -131,8 +136,19 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
     previousScores = data as PreviousAuditScores
   }
 
+  let monitorWeekly = false
+  const { data: monitorData, error: monitorError } = await supabase
+    .from('audits')
+    .select('monitor_weekly')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!monitorError && monitorData && typeof monitorData.monitor_weekly === 'boolean') {
+    monitorWeekly = monitorData.monitor_weekly
+  }
+
   return (
-    <div className="print-shell min-h-screen bg-[#fcfcfc] p-4 sm:p-6 lg:p-12 xl:p-24 relative">
+    <div className="print-shell min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-12 xl:p-24 relative transition-colors">
       <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 lg:space-y-16">
         <div className="print-only print-logo-header">
           <Logo size={64} />
@@ -152,10 +168,10 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Header & Breadcrumbs --- */}
         <header className="space-y-4">
           <div className="print-hide flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/dashboard" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+            <Link href="/dashboard" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors">
               ← Back to dashboard
             </Link>
-            <p className="text-[10px] text-gray-300 font-mono select-all break-all">id: {id}</p>
+            <p className="text-[10px] text-gray-300 dark:text-gray-600 font-mono select-all break-all">id: {id}</p>
           </div>
         </header>
 
@@ -166,10 +182,10 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Hero Section: centered headline & scores (screenshot temporarily hidden) --- */}
         <section className="flex flex-col items-center gap-6 sm:gap-8">
           <div className="space-y-6 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black leading-[0.95] break-words">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black dark:text-white leading-[0.95] break-words">
               {hostname}
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
               {typedAudit.report_content?.summary || "no summary available."}
             </p>
           </div>
@@ -198,14 +214,14 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Audit status / progress (client) --- */}
         <AuditStatus audit={typedAudit} />
 
-        <AuditDetail audit={typedAudit} profile={profile} viewerIsOwner={isOwner} />
+        <AuditDetail audit={typedAudit} profile={profile} viewerIsOwner={isOwner} monitorWeekly={monitorWeekly} />
         
       </div>
     </div>
   )
 }
 
-function AuditDetail({ audit, profile, viewerIsOwner }: { audit: AuditRecord, profile: ProfileRecord, viewerIsOwner: boolean }) {
+function AuditDetail({ audit, profile, viewerIsOwner, monitorWeekly }: { audit: AuditRecord, profile: ProfileRecord, viewerIsOwner: boolean, monitorWeekly: boolean }) {
   const isPro = profile?.subscription_status === 'active'
   const isFreeAudit = (profile?.audit_count ?? 0) <= 2
   const isLocked = viewerIsOwner && !isPro && !isFreeAudit
@@ -222,6 +238,10 @@ function AuditDetail({ audit, profile, viewerIsOwner }: { audit: AuditRecord, pr
         />
       </div>
 
+      <div className="print-hide">
+        <WeeklyMonitoringToggle auditId={audit.id} initialEnabled={monitorWeekly} />
+      </div>
+
       <section className="print-score-grid flex flex-col items-center gap-6 sm:gap-8">
         <div className="space-y-6 text-center">
           <div className="flex flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4 justify-center">
@@ -232,17 +252,29 @@ function AuditDetail({ audit, profile, viewerIsOwner }: { audit: AuditRecord, pr
         </div>
       </section>
 
+      <div className="print-hide">
+        <BenchmarkCompare
+          auditId={audit.id}
+          currentSiteUrl={audit.website_url}
+          currentScores={{
+            performance: audit.performance_score ?? 0,
+            ux: audit.ux_score ?? 0,
+            seo: audit.seo_score ?? 0,
+          }}
+        />
+      </div>
+
       <div className="relative print-break-before">
         {isLocked && (
-          <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 p-6 sm:p-12 text-center">
-            <LockIcon className="w-12 h-12 mb-4 text-black" />
-            <h3 className="text-2xl text-black font-black tracking-tighter mb-2">Upgrade to Pro</h3>
-            <p className="text-gray-500 mb-8 max-w-xs">
+          <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/65 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-12 text-center">
+            <LockIcon className="w-12 h-12 mb-4 text-black dark:text-white" />
+            <h3 className="text-2xl text-black dark:text-white font-black tracking-tighter mb-2">Upgrade to Pro</h3>
+            <p className="text-gray-500 dark:text-gray-300 mb-8 max-w-xs">
               You&apos;ve used your 2 free audits. Subscribe to unlock the full checklist and fix your site.
             </p>
             <Link
               href="/pricing"
-              className="bg-black text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
+              className="bg-black dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
             >
               Unlock All Fixes — $12/mo
             </Link>
@@ -278,13 +310,13 @@ function LockIcon({ className = '' }: { className?: string }) {
 /** * Score UI Helper 
  */
 function ScoreCircle({ label, score }: { label: string, score: number }) {
-  const color = score > 80 ? 'text-green-500' : score > 50 ? 'text-yellow-500' : 'text-red-500'
-  const bgColor = score > 80 ? 'bg-green-50' : score > 50 ? 'bg-yellow-50' : 'bg-red-50'
+  const color = score > 80 ? 'text-green-600 dark:text-green-300' : score > 50 ? 'text-amber-600 dark:text-amber-300' : 'text-rose-600 dark:text-rose-300'
+  const bgColor = score > 80 ? 'bg-green-50 dark:bg-green-950/35' : score > 50 ? 'bg-amber-50 dark:bg-amber-950/35' : 'bg-rose-50 dark:bg-rose-950/35'
 
   return (
-    <div className={`print-card ${bgColor} p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] border border-gray-100 shadow-sm text-center min-w-[88px] sm:min-w-[100px] transition-transform hover:scale-105`}>
+    <div className={`print-card ${bgColor} p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] border border-gray-100 dark:border-slate-800 shadow-sm text-center min-w-[88px] sm:min-w-[100px] transition-transform hover:scale-105`}>
       <div className={`text-2xl sm:text-3xl font-black ${color}`}>{score || 0}</div>
-      <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 mt-1">{label}</div>
+      <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500 mt-1">{label}</div>
     </div>
   )
 
@@ -296,10 +328,10 @@ function ComparisonCard({ current, previous }: { current: AuditRecord, previous:
   const seoDelta = (current.seo_score ?? 0) - (previous?.seo_score ?? 0)
 
   return (
-    <section className="print-card rounded-[2rem] border border-white/45 bg-white/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] p-5 sm:p-6 space-y-4">
+    <section className="print-card rounded-[2rem] border border-white/45 dark:border-slate-700/70 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] p-5 sm:p-6 space-y-4 transition-colors">
       <div className="flex flex-col gap-1">
-        <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500">Comparison</p>
-        <h2 className="text-lg sm:text-xl font-black text-black tracking-tight">Latest Re-Audit Delta</h2>
+        <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Comparison</p>
+        <h2 className="text-lg sm:text-xl font-black text-black dark:text-white tracking-tight">Latest Re-Audit Delta</h2>
       </div>
 
       <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -312,7 +344,7 @@ function ComparisonCard({ current, previous }: { current: AuditRecord, previous:
 }
 
 function DeltaPill({ label, delta }: { label: string, delta: number }) {
-  const tone = delta > 0 ? 'bg-green-50 text-green-700 border-green-200' : delta < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-100 text-gray-700 border-gray-200'
+  const tone = delta > 0 ? 'bg-green-50 dark:bg-green-950/35 text-green-700 dark:text-green-300 border-green-200 dark:border-green-900/70' : delta < 0 ? 'bg-red-50 dark:bg-red-950/35 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900/70' : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700'
   const sign = delta > 0 ? '+' : ''
 
   return (

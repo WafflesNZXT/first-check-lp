@@ -54,12 +54,12 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-gray-400">Share Audit</p>
-          <p className="text-sm text-gray-500">{isPublic ? 'Anyone with the link can view this audit.' : 'Only you can view this audit.'}</p>
-          {isPublic && origin && <p className="text-xs text-gray-400 mt-1 break-all">{`${origin}${auditPath}`}</p>}
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Share Audit</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">{isPublic ? 'Anyone with the link can view this audit.' : 'Only you can view this audit.'}</p>
+          {isPublic && origin && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 break-all">{`${origin}${auditPath}`}</p>}
         </div>
 
         <div className="flex items-center gap-2">
@@ -69,13 +69,13 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
               onClick={handleToggleShare}
               disabled={isSaving}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                isPublic ? 'bg-black' : 'bg-gray-200'
+                isPublic ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-slate-700'
               } ${isSaving ? 'opacity-60' : ''}`}
               aria-pressed={isPublic}
               aria-label="Toggle share audit"
             >
               <span
-                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                className={`inline-block h-6 w-6 transform rounded-full bg-white dark:bg-slate-900 transition-transform ${
                   isPublic ? 'translate-x-7' : 'translate-x-1'
                 }`}
               />
@@ -86,7 +86,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
             type="button"
             onClick={handleCopyLink}
             disabled={!isPublic}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold uppercase tracking-wider text-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-xs font-bold uppercase tracking-wider text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {copyState === 'copied' ? 'Copied!' : copyState === 'failed' ? 'Retry Copy' : 'Copy Preview Link'}
           </button>

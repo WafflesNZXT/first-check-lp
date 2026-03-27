@@ -85,7 +85,6 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
           const href = `/dashboard/audit/${audit.id}`
           const { completed, total } = getChecklistStats(audit)
           const isChecklistComplete = total > 0 && completed >= total
-          const remaining = Math.max(total - completed, 0)
 
           return (
             <div
@@ -102,14 +101,14 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
                   router.push(href)
                 }
               }}
-              className="cursor-pointer bg-white border border-gray-100 p-4 sm:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col gap-4 sm:gap-6 shadow-sm hover:border-black transition-all group"
+              className="cursor-pointer bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 sm:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col gap-4 sm:gap-6 shadow-sm hover:border-black dark:hover:border-slate-500 transition-all group"
             >
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start w-full">
               <div>
-                <p className="font-bold text-base sm:text-lg lg:text-xl text-black lowercase tracking-tight group-hover:underline break-all">
+                <p className="font-sans font-bold text-base sm:text-lg lg:text-xl text-black dark:text-white lowercase tracking-tight group-hover:underline break-all">
                   {String(audit.website_url || '').replace('https://', '')}
                 </p>
-                <p className="text-xs text-gray-400">{audit.created_at ? new Date(audit.created_at).toLocaleDateString() : ''}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{audit.created_at ? new Date(audit.created_at).toLocaleDateString() : ''}</p>
               </div>
 
               <span className="px-4 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest self-start">
@@ -117,40 +116,38 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                isChecklistComplete ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+              <span className={`inline-flex items-center h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
+                isChecklistComplete ? 'bg-black text-white dark:bg-white dark:text-slate-900' : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
               }`}>
                 {isChecklistComplete ? 'Checklist Complete' : `${completed}/${total || 0} Fixed`}
               </span>
 
-              {!isChecklistComplete && total > 0 && (
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border border-gray-200 text-gray-500">
-                  {remaining} Remaining
-                </span>
-              )}
-
-              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                audit.is_public ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'
+              <span className={`inline-flex items-center h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
+                audit.is_public ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300'
               }`}>
                 {audit.is_public ? 'Public Link On' : 'Private'}
               </span>
             </div>
 
-            {audit.is_public && (
-              <div className="flex justify-end">
+            <div className="flex justify-end min-h-[34px]">
+              {audit.is_public ? (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleCopyPreviewLink(audit.id)
                   }}
-                  className="px-3 py-1.5 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-50"
+                  className="inline-flex items-center h-8 px-3 rounded-full border border-gray-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
                 >
                   {copiedAuditId === audit.id ? 'Copied!' : 'Copy Link'}
                 </button>
-              </div>
-            )}
+              ) : (
+                <span className="inline-flex items-center h-8 px-3 rounded-full border border-transparent text-[10px] font-black uppercase tracking-widest invisible">
+                  Copy Link
+                </span>
+              )}
+            </div>
           </div>
           )
         })()
