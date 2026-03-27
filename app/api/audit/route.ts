@@ -202,7 +202,9 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("❌ Supabase Update Error:", error.message);
-      await updateAuditById(auditId, { status: 'failed', error_message: error.message })
+      if (auditId) {
+        await updateAuditById(auditId, { status: 'failed', error_message: error.message })
+      }
       throw new Error(error.message);
     }
 
