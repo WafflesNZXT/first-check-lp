@@ -5,7 +5,49 @@ import { redirect } from 'next/navigation'
 import AuditChecklist from '../../../../components/AuditChecklist'
 import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
+import AuditShareControls from '../../../../components/AuditShareControls'
+import AuditDetailActions from '../../../../components/AuditDetailActions'
+import { Logo } from '../../../../components/Logo'
 import { getUserFromCookie } from '@/lib/auth'
+
+type ChecklistItem = {
+  issue: string
+  fix: string
+  category: string
+  priority?: string
+  completed?: boolean
+}
+
+type AuditReport = {
+  summary?: string
+  checklist?: ChecklistItem[]
+  completed_tasks?: string[]
+}
+
+type AuditRecord = {
+  id: string
+  user_id: string
+  is_public: boolean | null
+  website_url: string
+  report_content: AuditReport | null
+  performance_score: number
+  ux_score: number
+  seo_score: number
+  status: string
+  created_at: string
+  screenshot_url: string | null
+}
+
+type ProfileRecord = {
+  subscription_status: string | null
+  audit_count: number | null
+} | null
+
+type PreviousAuditScores = {
+  performance_score: number
+  ux_score: number
+  seo_score: number
+} | null
 
 export default async function AuditPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies()
@@ -17,13 +59,6 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
       cookies: {
         get(name) {
           return cookieStore.get(name)?.value
-        },
-        set(name, value) {
-          // cookieStore.set expects an object; attempt to call if available
-          try { (cookieStore as any).set?.({ name, value }) } catch (e) { /* no-op */ }
-        },
-        remove(name) {
-          try { (cookieStore as any).delete?.(name) } catch (e) { /* no-op */ }
         }
       }
     }
@@ -31,7 +66,7 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
 
   const { data: audit, error } = await supabase
     .from('audits')
-    .select('id, website_url, report_content, performance_score, ux_score, seo_score, status, created_at, screenshot_url')
+    .select('id, user_id, is_public, website_url, report_content, performance_score, ux_score, seo_score, status, created_at, screenshot_url')
     .eq('id', id)
     .single()
 
@@ -45,64 +80,97 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  if (!audit) return <div>Audit not found — no row for id {id}</div>
+  const typedAudit = audit as AuditRecord | null
+
+  if (!typedAudit) return <div>Audit not found — no row for id {id}</div>
 
   let hostname = "unknown site";
     try {
-    // Add https prefix if the user forgot it, so URL() doesn't get confused
-    const urlToParse = audit.website_url.startsWith('http') 
-        ? audit.website_url 
-        : `https://${audit.website_url}`;
+    const urlToParse = typedAudit.website_url.startsWith('http') 
+      ? typedAudit.website_url 
+      : `https://${typedAudit.website_url}`;
     hostname = new URL(urlToParse).hostname;
-    } catch (e) {
-    hostname = audit.website_url; // Fallback to raw input
+    } catch {
+    hostname = typedAudit.website_url; // Fallback to raw input
     }
 
-  // Try to get user from access token cookie to avoid an extra network call
-  const tokenUser = getUserFromCookie(cookieStore)
-  let currentUser = tokenUser
+  let currentUser = getUserFromCookie(cookieStore)
   if (!currentUser) {
     const { data } = await supabase.auth.getUser()
-    currentUser = data.user
+    currentUser = data.user ? { id: data.user.id, email: data.user.email ?? null } : null
   }
   if (!currentUser) redirect('/signin')
 
-  const userId = currentUser?.id
-  if (!userId) redirect('/signin')
+  const userId = currentUser.id
+  const isOwner = userId === typedAudit.user_id
+  if (!isOwner) redirect('/dashboard')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('subscription_status, audit_count')
-    .eq('id', userId)
-    .maybeSingle()
+  let profile: ProfileRecord = null
+  if (isOwner && userId) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('subscription_status, audit_count')
+      .eq('id', userId)
+      .maybeSingle()
+    profile = data
+  }
+
+  let previousScores: PreviousAuditScores = null
+  if (typedAudit.status === 'completed') {
+    const { data } = await supabase
+      .from('audits')
+      .select('performance_score, ux_score, seo_score')
+      .eq('user_id', userId)
+      .eq('website_url', typedAudit.website_url)
+      .eq('status', 'completed')
+      .lt('created_at', typedAudit.created_at)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    previousScores = data as PreviousAuditScores
+  }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] p-8 md:p-24 relative">
-      <div className="max-w-5xl mx-auto space-y-16">
-        <EmailAuditButton
-          email={currentUser?.email || ''}
-          auditData={audit.report_content}
-          hostname={hostname}
-        />
+    <div className="print-shell min-h-screen bg-[#fcfcfc] p-4 sm:p-6 lg:p-12 xl:p-24 relative">
+      <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 lg:space-y-16">
+        <div className="print-only print-logo-header">
+          <Logo size={64} />
+          <p className="text-xl font-black lowercase tracking-tight text-black break-all">{hostname}</p>
+        </div>
+
+        {isOwner && (
+          <div className="print-hide">
+            <EmailAuditButton
+              email={currentUser?.email || ''}
+              auditData={typedAudit.report_content}
+              hostname={hostname}
+            />
+          </div>
+        )}
         
         {/* --- Header & Breadcrumbs --- */}
         <header className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="text-sm font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+          <div className="print-hide flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Link href="/dashboard" className="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
               ← Back to dashboard
             </Link>
-            <p className="text-[10px] text-gray-300 font-mono select-all">id: {id}</p>
+            <p className="text-[10px] text-gray-300 font-mono select-all break-all">id: {id}</p>
           </div>
         </header>
 
+        {previousScores && (
+          <ComparisonCard current={typedAudit} previous={previousScores} />
+        )}
+
         {/* --- Hero Section: centered headline & scores (screenshot temporarily hidden) --- */}
-        <section className="flex flex-col items-center gap-8">
+        <section className="flex flex-col items-center gap-6 sm:gap-8">
           <div className="space-y-6 text-center">
-            <h1 className="text-6xl font-black lowercase tracking-tighter text-black leading-none">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black leading-[0.95] break-words">
               {hostname}
             </h1>
-            <p className="text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto">
-              {audit.report_content?.summary || "no summary available."}
+            <p className="text-base sm:text-lg lg:text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
+              {typedAudit.report_content?.summary || "no summary available."}
             </p>
           </div>
         </section>
@@ -128,25 +196,35 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         </article> */}
         
         {/* --- Audit status / progress (client) --- */}
-        <AuditStatus audit={audit} />
+        <AuditStatus audit={typedAudit} />
 
-        <AuditDetail audit={audit} profile={profile} />
+        <AuditDetail audit={typedAudit} profile={profile} viewerIsOwner={isOwner} />
         
       </div>
     </div>
   )
 }
 
-function AuditDetail({ audit, profile }: { audit: any, profile: any }) {
+function AuditDetail({ audit, profile, viewerIsOwner }: { audit: AuditRecord, profile: ProfileRecord, viewerIsOwner: boolean }) {
   const isPro = profile?.subscription_status === 'active'
   const isFreeAudit = (profile?.audit_count ?? 0) <= 2
-  const isLocked = !isPro && !isFreeAudit
+  const isLocked = viewerIsOwner && !isPro && !isFreeAudit
 
   return (
-    <div className="space-y-12">
-      <section className="flex flex-col items-center gap-8">
+    <div className="space-y-8 sm:space-y-12">
+      <AuditDetailActions websiteUrl={audit.website_url} />
+
+      <div className="print-hide">
+        <AuditShareControls
+          auditId={audit.id}
+          initialIsPublic={!!audit.is_public}
+          canManage={viewerIsOwner}
+        />
+      </div>
+
+      <section className="print-score-grid flex flex-col items-center gap-6 sm:gap-8">
         <div className="space-y-6 text-center">
-          <div className="flex gap-4 pt-4 justify-center">
+          <div className="flex flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4 justify-center">
             <ScoreCircle label="perf" score={audit.performance_score} />
             <ScoreCircle label="ux" score={audit.ux_score} />
             <ScoreCircle label="seo" score={audit.seo_score} />
@@ -154,17 +232,17 @@ function AuditDetail({ audit, profile }: { audit: any, profile: any }) {
         </div>
       </section>
 
-      <div className="relative">
+      <div className="relative print-break-before">
         {isLocked && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-[2.5rem] border-2 border-dashed border-gray-200 p-12 text-center">
+          <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 p-6 sm:p-12 text-center">
             <LockIcon className="w-12 h-12 mb-4 text-black" />
             <h3 className="text-2xl text-black font-black tracking-tighter mb-2">Upgrade to Pro</h3>
             <p className="text-gray-500 mb-8 max-w-xs">
-              You've used your 2 free audits. Subscribe to unlock the full checklist and fix your site.
+              You&apos;ve used your 2 free audits. Subscribe to unlock the full checklist and fix your site.
             </p>
             <Link
               href="/pricing"
-              className="bg-black text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
+              className="bg-black text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
             >
               Unlock All Fixes — $12/mo
             </Link>
@@ -172,7 +250,7 @@ function AuditDetail({ audit, profile }: { audit: any, profile: any }) {
         )}
 
         <div className={isLocked ? 'filter blur-xl pointer-events-none select-none' : ''}>
-          <AuditChecklist audit={audit} />
+          <AuditChecklist audit={{ id: audit.id, report_content: audit.report_content ?? undefined }} />
         </div>
       </div>
     </div>
@@ -204,10 +282,42 @@ function ScoreCircle({ label, score }: { label: string, score: number }) {
   const bgColor = score > 80 ? 'bg-green-50' : score > 50 ? 'bg-yellow-50' : 'bg-red-50'
 
   return (
-    <div className={`${bgColor} p-5 rounded-[1.5rem] border border-gray-100 shadow-sm text-center min-w-[100px] transition-transform hover:scale-105`}>
-      <div className={`text-3xl font-black ${color}`}>{score || 0}</div>
+    <div className={`print-card ${bgColor} p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] border border-gray-100 shadow-sm text-center min-w-[88px] sm:min-w-[100px] transition-transform hover:scale-105`}>
+      <div className={`text-2xl sm:text-3xl font-black ${color}`}>{score || 0}</div>
       <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 mt-1">{label}</div>
     </div>
   )
 
+}
+
+function ComparisonCard({ current, previous }: { current: AuditRecord, previous: PreviousAuditScores }) {
+  const perfDelta = (current.performance_score ?? 0) - (previous?.performance_score ?? 0)
+  const uxDelta = (current.ux_score ?? 0) - (previous?.ux_score ?? 0)
+  const seoDelta = (current.seo_score ?? 0) - (previous?.seo_score ?? 0)
+
+  return (
+    <section className="print-card rounded-[2rem] border border-white/45 bg-white/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] p-5 sm:p-6 space-y-4">
+      <div className="flex flex-col gap-1">
+        <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500">Comparison</p>
+        <h2 className="text-lg sm:text-xl font-black text-black tracking-tight">Latest Re-Audit Delta</h2>
+      </div>
+
+      <div className="flex flex-wrap gap-2 sm:gap-3">
+        <DeltaPill label="Performance" delta={perfDelta} />
+        <DeltaPill label="UX" delta={uxDelta} />
+        <DeltaPill label="SEO" delta={seoDelta} />
+      </div>
+    </section>
+  )
+}
+
+function DeltaPill({ label, delta }: { label: string, delta: number }) {
+  const tone = delta > 0 ? 'bg-green-50 text-green-700 border-green-200' : delta < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-100 text-gray-700 border-gray-200'
+  const sign = delta > 0 ? '+' : ''
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-widest ${tone}`}>
+      {`${sign}${delta} ${label} Score`}
+    </span>
+  )
 }

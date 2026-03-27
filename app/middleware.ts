@@ -1,64 +1,34 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getUserFromCookie } from '@/lib/auth'
+
+function hasSupabaseSessionCookie(request: NextRequest) {
+  const cookies = request.cookies.getAll()
+  return cookies.some((cookie) => {
+    const name = cookie.name
+    return (
+      name === 'sb-access-token' ||
+      name === 'sb-refresh-token' ||
+      /(^sb-.*-auth-token$)|(^sb-auth-token$)|(^sb-.*-refresh-token$)|(^sb-.*-access-token$)/.test(name)
+    )
+  })
+}
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
-
-  // Avoid an auth network call when there are no Supabase cookies (fast path)
-  const hasAccessCookie = !!request.cookies.get('sb-access-token')
-  const hasRefreshCookie = !!request.cookies.get('sb-refresh-token')
-
-  let user = null
-  if (hasAccessCookie || hasRefreshCookie) {
-    const result = await supabase.auth.getUser()
-    user = result.data.user
-  }
+  const tokenUser = getUserFromCookie(request.cookies)
+  const isAuthenticated = !!tokenUser || hasSupabaseSessionCookie(request)
+  const isLoggedInForRedirect = isAuthenticated
 
   // Protect dashboard
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!isAuthenticated && request.nextUrl.pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/signin', request.url))
   }
 
   // Redirect if already logged in
-  if (user && (request.nextUrl.pathname === '/signin' || request.nextUrl.pathname === '/signup')) {
+  if (isLoggedInForRedirect && (request.nextUrl.pathname === '/signin' || request.nextUrl.pathname === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  return response
+  return NextResponse.next()
 }
 
 export const config = {

@@ -30,16 +30,16 @@ export default function AuditStatus({ audit }: { audit: any }) {
   return (
     <div className="space-y-6">
       {audit.status === 'processing' && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex justify-between items-center">
-            <div className="w-3/4">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+            <div className="w-full sm:w-3/4">
               <ProgressBar status={audit.status} />
             </div>
-            <div className="pl-4">
+            <div className="sm:pl-4">
               <button
                 onClick={cancelAudit}
                 disabled={loading}
-                className="bg-red-50 text-red-600 px-4 py-2 rounded-2xl font-bold hover:bg-red-100 disabled:opacity-50"
+                className="w-full sm:w-auto bg-red-50 text-red-600 px-4 py-2 rounded-2xl font-bold hover:bg-red-100 disabled:opacity-50"
               >
                 {loading ? 'Cancelling...' : 'Cancel run'}
               </button>

@@ -257,3 +257,88 @@ a[href],
     animation: none !important;
   }
 }
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  :root {
+    --background: #ffffff;
+    --foreground: #000000;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  nav,
+  footer,
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-shell {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-logo-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #000;
+  }
+
+  .print-card {
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .print-progress-track {
+    background: #fff !important;
+    border: 1px solid #000 !important;
+  }
+
+  .print-progress-fill {
+    background: #000 !important;
+    border-right: 1px solid #000 !important;
+  }
+
+  .print-break-before {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .sticky {
+    position: static !important;
+    top: auto !important;
+  }
+
+  a,
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  span,
+  div {
+    color: #000 !important;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ProgressBar from '@/components/ProgressBar'
+import AuditLoading from '@/components/AuditLoading'
 
 export default function AuditInput() {
   const [url, setUrl] = useState('')
@@ -97,18 +97,18 @@ export default function AuditInput() {
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
       <form onSubmit={startAudit}>
-        <div className="relative flex items-center">
+        <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
           <input
             type="url"
             required
             placeholder="https://yourstartup.com"
-            className="w-full p-6 pr-40 bg-white border border-gray-200 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-black outline-none transition-all text-lg text-black"
+            className="w-full p-4 sm:p-6 sm:pr-40 bg-white border border-gray-200 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm focus:ring-2 focus:ring-black outline-none transition-all text-base sm:text-lg text-black"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
           <button
             disabled={loading || activeStatus === 'processing'}
-            className="absolute right-3 bg-black text-white px-8 py-4 rounded-3xl font-bold hover:bg-gray-800 transition-all disabled:opacity-50"
+            className="w-full sm:w-auto sm:absolute sm:right-3 bg-black text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-3xl font-bold hover:bg-gray-800 transition-all disabled:opacity-50"
           >
             {loading ? 'Starting...' : activeStatus === 'processing' ? 'Running...' : 'Run Audit'}
           </button>
@@ -116,9 +116,7 @@ export default function AuditInput() {
       </form>
 
       {activeStatus === 'processing' && (
-        <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-          <ProgressBar status="processing" />
-        </div>
+        <AuditLoading />
       )}
     </div>
   )

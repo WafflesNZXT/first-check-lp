@@ -32,7 +32,7 @@ export default function EmailAuditButton({ email, auditData, hostname }: { email
     <button
       onClick={handleClick}
       disabled={loading}
-      className="fixed bottom-8 right-8 bg-black text-white px-6 py-3 rounded-full font-bold shadow-2xl hover:scale-105 transition-transform flex items-center gap-2 disabled:opacity-60"
+      className="fixed z-40 bottom-4 left-4 right-4 sm:left-auto sm:right-8 sm:bottom-8 bg-black text-white px-5 sm:px-6 py-3 rounded-full font-bold shadow-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2 disabled:opacity-60"
     >
       <MailIcon className="w-4 h-4" />
       {loading ? 'Sending...' : 'Email Me This Audit'}

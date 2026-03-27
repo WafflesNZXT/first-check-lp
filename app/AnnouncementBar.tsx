@@ -68,7 +68,7 @@ export function AnnouncementBar() {
   if (dismissed || !timeLeft) return null;
 
   return (
-    <div ref={ref} className="w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 relative z-50">
+    <div ref={ref} className="announcement-bar print-hide w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 relative z-50">
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
 
         {/* Left spacer for centering */}

@@ -9,6 +9,7 @@ type ChecklistItem = {
   fix: string
   category: string
   priority?: string
+  completed?: boolean
 }
 
 type Audit = {
@@ -33,15 +34,24 @@ type ConfettiPiece = {
 
 const CONFETTI_COLORS = ['bg-black', 'bg-gray-500', 'bg-gray-400', 'bg-gray-300', 'bg-yellow-400', 'bg-yellow-300']
 
-export default function AuditChecklist({ audit }: { audit: Audit }) {
-  const initialCompleted: string[] = audit?.report_content?.completed_tasks || []
+export default function AuditChecklist({ audit, readOnly = false }: { audit: Audit, readOnly?: boolean }) {
+  const initialChecklist = audit?.report_content?.checklist || []
+  const initialCompleted: string[] =
+    audit?.report_content?.completed_tasks ||
+    initialChecklist.filter((item) => item.completed).map((item) => item.issue)
   const [completedTasks, setCompletedTasks] = useState<string[]>(initialCompleted)
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(initialChecklist)
   const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
   const confettiBurstIdRef = useRef(0)
-  const checklist = audit?.report_content?.checklist || []
-  const allTasksCompleted = checklist.length > 0 && checklist.every((item) => completedTasks.includes(item.issue))
+  const allTasksCompleted = checklistItems.length > 0 && checklistItems.every((item) => completedTasks.includes(item.issue))
+  const completedCount = checklistItems.filter((item) => completedTasks.includes(item.issue)).length
+  const completionPercent = checklistItems.length > 0
+    ? Math.round((completedCount / checklistItems.length) * 100)
+    : 0
 
   const triggerConfetti = () => {
+    if (readOnly) return
+
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return
     }
@@ -78,14 +88,23 @@ export default function AuditChecklist({ audit }: { audit: Audit }) {
     }, 1700)
   }
 
-  const toggleTask = async (taskIssue: string) => {
+  const handleToggleTask = async (taskIssue: string) => {
+    if (readOnly) return
+
     const newCompleted = completedTasks.includes(taskIssue)
       ? completedTasks.filter((t) => t !== taskIssue)
       : [...completedTasks, taskIssue]
 
-    const willBeFullyCompleted = checklist.length > 0 && checklist.every((item) => newCompleted.includes(item.issue))
+    const updatedChecklist = checklistItems.map((item) =>
+      item.issue === taskIssue
+        ? { ...item, completed: !completedTasks.includes(taskIssue) }
+        : item
+    )
+
+    const willBeFullyCompleted = updatedChecklist.length > 0 && updatedChecklist.every((item) => newCompleted.includes(item.issue))
 
     setCompletedTasks(newCompleted)
+    setChecklistItems(updatedChecklist)
 
     if (!allTasksCompleted && willBeFullyCompleted) {
       triggerConfetti()
@@ -93,6 +112,7 @@ export default function AuditChecklist({ audit }: { audit: Audit }) {
 
     const newReportContent = {
       ...(audit?.report_content || {}),
+      checklist: updatedChecklist,
       completed_tasks: newCompleted,
     }
 
@@ -125,19 +145,46 @@ export default function AuditChecklist({ audit }: { audit: Audit }) {
       )}
 
       <div className="space-y-6">
+        <div className="sticky top-2 sm:top-4 z-30">
+          <div className="print-card rounded-[1.5rem] sm:rounded-[2rem] border border-white/45 bg-white/80 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Checklist Progress
+              </p>
+              <p className="text-lg sm:text-xl font-black text-black tabular-nums">
+                {completionPercent}%
+              </p>
+            </div>
+            <div className="print-progress-track mt-2.5 h-2.5 w-full rounded-full bg-black/10 overflow-hidden">
+              <div
+                className="print-progress-fill h-full rounded-full bg-black transition-[width] duration-500 ease-out"
+                style={{ width: `${completionPercent}%` }}
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={completionPercent}
+                aria-label="Checklist completion"
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-gray-500">
+              {completedCount} of {checklistItems.length} completed
+            </p>
+          </div>
+        </div>
+
         <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">
           Improvement Roadmap
         </h3>
 
-        {checklist.map((item, index) => (
+        {checklistItems.map((item, index) => (
           <div
             key={index}
-            onClick={() => toggleTask(item.issue)}
-            className={`group cursor-pointer p-6 rounded-3xl border-2 transition-all duration-300 ${
+            onClick={() => handleToggleTask(item.issue)}
+            className={`group p-6 rounded-3xl border-2 transition-all duration-300 ${
               completedTasks.includes(item.issue)
                 ? 'bg-gray-50 border-gray-100 opacity-60'
-                : 'bg-white border-white shadow-sm hover:border-black'
-            }`}
+                : 'bg-white border-white shadow-sm'
+            } ${readOnly ? '' : 'cursor-pointer hover:border-black'}`}
           >
             <div className="flex gap-4 items-start">
               <div
