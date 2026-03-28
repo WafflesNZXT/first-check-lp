@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <DashboardThemeShell fontClassName={roboto.className}>
       <DashboardSidebar />
-      <div className="pl-[84px] sm:pl-[92px]">{children}</div>
+      <div className="pl-[56px] sm:pl-[64px]">{children}</div>
     </DashboardThemeShell>
   )
 }

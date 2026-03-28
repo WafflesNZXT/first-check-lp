@@ -5,6 +5,7 @@ import { getUserFromCookie } from '@/lib/auth'
 import AuditInput from '@/components/AuditInput'
 import AuditList from '@/components/AuditList' // The new client component
 import DashboardBoot from '../../components/DashboardBoot'
+import RecentAuditsRefreshButton from '@/components/RecentAuditsRefreshButton'
 
 type ChecklistItem = {
   completed?: boolean
@@ -127,7 +128,10 @@ export default async function DashboardPage() {
         </section>
 
         <section>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-6">Recent Audits</h3>
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Recent Audits</h3>
+            <RecentAuditsRefreshButton />
+          </div>
           {recentCompletedAudits.length > 0 ? (
             <AuditList initialAudits={recentCompletedAudits} userId={userId} />
           ) : (

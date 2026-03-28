@@ -10,6 +10,7 @@ import AuditDetailActions from '../../../../components/AuditDetailActions'
 import BenchmarkCompare from '../../../../components/BenchmarkCompare'
 import WeeklyMonitoringToggle from '../../../../components/WeeklyMonitoringToggle'
 import { Logo } from '../../../../components/Logo'
+import AccessibilityFixAll from '../../../../components/AccessibilityFixAll'
 import { getUserFromCookie } from '@/lib/auth'
 
 type ChecklistItem = {
@@ -26,6 +27,39 @@ type AuditReport = {
   summary?: string
   checklist?: ChecklistItem[]
   completed_tasks?: string[]
+  top_heaviest_assets?: HeaviestAsset[]
+  third_party_tax?: ThirdPartyTaxItem[]
+  total_third_party_weight_ms?: number
+  wcag_issues?: WcagIssue[]
+  accessibility_fix_all?: AccessibilityFix[]
+}
+
+type HeaviestAsset = {
+  asset: string
+  type: 'image' | 'script' | 'font' | 'other'
+  estimated_impact_ms: number
+  recommendation: string
+}
+
+type ThirdPartyTaxItem = {
+  asset: string
+  category: 'analytics' | 'ads' | 'chat' | 'marketing' | 'other'
+  estimated_fcp_impact_ms: number
+  recommendation: 'remove' | 'keep'
+}
+
+type WcagIssue = {
+  issue: string
+  selector: string
+  wcag_criterion: string
+  severity: 'critical' | 'high' | 'medium' | 'low'
+  fix: string
+}
+
+type AccessibilityFix = {
+  selector: string
+  aria_label?: string
+  alt_text?: string
 }
 
 type AuditRecord = {
@@ -41,6 +75,16 @@ type AuditRecord = {
   created_at: string
   screenshot_url: string | null
   monitor_weekly?: boolean | null
+  allow_collaborator_comments?: boolean | null
+  checklist_comments?: ChecklistComment[] | null
+}
+
+type ChecklistComment = {
+  id: string
+  issue: string
+  text: string
+  author_email: string
+  created_at: string
 }
 
 type ProfileRecord = {
@@ -71,7 +115,7 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
 
   const { data: audit, error } = await supabase
     .from('audits')
-    .select('id, user_id, is_public, website_url, report_content, performance_score, ux_score, seo_score, status, created_at, screenshot_url')
+    .select('id, user_id, is_public, website_url, report_content, performance_score, ux_score, seo_score, status, created_at, screenshot_url, allow_collaborator_comments, checklist_comments')
     .eq('id', id)
     .single()
 
@@ -104,11 +148,31 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
     const { data } = await supabase.auth.getUser()
     currentUser = data.user ? { id: data.user.id, email: data.user.email ?? null } : null
   }
-  if (!currentUser) redirect('/signin')
+  if (!currentUser) redirect(`/signin?next=${encodeURIComponent(`/dashboard/audit/${id}`)}`)
 
   const userId = currentUser.id
   const isOwner = userId === typedAudit.user_id
-  if (!isOwner) redirect('/dashboard')
+
+  let collaboratorAccess: 'view' | 'edit' | null = null
+  if (!isOwner && currentUser.email) {
+    const normalizedEmail = currentUser.email.toLowerCase()
+    const { data: shareRow } = await supabase
+      .from('audit_shares')
+      .select('access_level')
+      .eq('audit_id', typedAudit.id)
+      .eq('shared_with_email', normalizedEmail)
+      .maybeSingle()
+
+    const accessLevel = String((shareRow as { access_level?: string } | null)?.access_level || 'view').toLowerCase()
+    if (accessLevel === 'view' || accessLevel === 'edit') {
+      collaboratorAccess = accessLevel
+    }
+  }
+
+  if (!isOwner && !collaboratorAccess) redirect('/dashboard')
+
+  const canEditChecklist = isOwner || collaboratorAccess === 'edit'
+  const canComment = isOwner || (!!typedAudit.allow_collaborator_comments && !!collaboratorAccess)
 
   let profile: ProfileRecord = null
   if (isOwner && userId) {
@@ -147,9 +211,24 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
     monitorWeekly = monitorData.monitor_weekly
   }
 
+  let auditSequenceNumber = 1
+  if (isOwner && userId) {
+    const { data: userAudits } = await supabase
+      .from('audits')
+      .select('id, created_at')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: true })
+
+    if (Array.isArray(userAudits)) {
+      const idx = userAudits.findIndex((row) => row.id === typedAudit.id)
+      auditSequenceNumber = idx >= 0 ? idx + 1 : 1
+    }
+  }
+
   return (
-    <div className="print-shell min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-12 xl:p-24 relative transition-colors">
-      <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 lg:space-y-16">
+    <div className="print-shell min-h-screen bg-[#fcfcfc] dark:bg-slate-950 px-3 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-12 xl:px-20 xl:py-20 relative transition-colors overflow-x-hidden">
+      <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12 lg:space-y-16">
         <div className="print-only print-logo-header">
           <Logo size={64} />
           <p className="text-xl font-black lowercase tracking-tight text-black break-all">{hostname}</p>
@@ -182,10 +261,10 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Hero Section: centered headline & scores (screenshot temporarily hidden) --- */}
         <section className="flex flex-col items-center gap-6 sm:gap-8">
           <div className="space-y-6 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black dark:text-white leading-[0.95] break-words">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black dark:text-white leading-[0.95] break-words">
               {hostname}
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
+            <p className="text-sm sm:text-lg lg:text-xl text-gray-500 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
               {typedAudit.report_content?.summary || "no summary available."}
             </p>
           </div>
@@ -214,33 +293,62 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Audit status / progress (client) --- */}
         <AuditStatus audit={typedAudit} />
 
-        <AuditDetail audit={typedAudit} profile={profile} viewerIsOwner={isOwner} monitorWeekly={monitorWeekly} />
+        <AuditDetail
+          audit={typedAudit}
+          profile={profile}
+          viewerIsOwner={isOwner}
+          monitorWeekly={monitorWeekly}
+          auditSequenceNumber={auditSequenceNumber}
+          canEditChecklist={canEditChecklist}
+          canComment={canComment}
+          viewerEmail={currentUser.email || undefined}
+        />
         
       </div>
     </div>
   )
 }
 
-function AuditDetail({ audit, profile, viewerIsOwner, monitorWeekly }: { audit: AuditRecord, profile: ProfileRecord, viewerIsOwner: boolean, monitorWeekly: boolean }) {
+function AuditDetail({
+  audit,
+  profile,
+  viewerIsOwner,
+  monitorWeekly,
+  auditSequenceNumber,
+  canEditChecklist,
+  canComment,
+  viewerEmail,
+}: {
+  audit: AuditRecord,
+  profile: ProfileRecord,
+  viewerIsOwner: boolean,
+  monitorWeekly: boolean,
+  auditSequenceNumber: number,
+  canEditChecklist: boolean,
+  canComment: boolean,
+  viewerEmail?: string,
+}) {
   const isPro = profile?.subscription_status === 'active'
-  const isFreeAudit = (profile?.audit_count ?? 0) <= 2
-  const isLocked = viewerIsOwner && !isPro && !isFreeAudit
+  const isLocked = viewerIsOwner && !isPro && auditSequenceNumber === 3
 
   return (
-    <div className="space-y-8 sm:space-y-12">
-      <AuditDetailActions websiteUrl={audit.website_url} />
+    <div className="space-y-6 sm:space-y-12">
+      <AuditDetailActions auditId={audit.id} websiteUrl={audit.website_url} canManage={viewerIsOwner} />
 
       <div className="print-hide">
         <AuditShareControls
           auditId={audit.id}
           initialIsPublic={!!audit.is_public}
           canManage={viewerIsOwner}
+          allowCollaboratorComments={!!audit.allow_collaborator_comments}
         />
       </div>
 
-      <div className="print-hide">
-        <WeeklyMonitoringToggle auditId={audit.id} initialEnabled={monitorWeekly} />
-      </div>
+      {viewerIsOwner && (
+        <div className="print-hide">
+          <WeeklyMonitoringToggle auditId={audit.id} initialEnabled={monitorWeekly} />
+        </div>
+      )}
 
       <section className="print-score-grid flex flex-col items-center gap-6 sm:gap-8">
         <div className="space-y-6 text-center">
@@ -251,6 +359,120 @@ function AuditDetail({ audit, profile, viewerIsOwner, monitorWeekly }: { audit: 
           </div>
         </div>
       </section>
+
+      {Array.isArray(audit.report_content?.third_party_tax) && audit.report_content.third_party_tax.length > 0 && (
+        <section className="w-full rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Script Impact</p>
+              <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">3rd-Party Tax</h3>
+            </div>
+            <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-rose-600 dark:text-rose-300 text-left sm:text-right break-words">
+              Total Weight: ~{Math.max(0, Math.round(Number(audit.report_content.total_third_party_weight_ms || 0)))}ms FCP
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-slate-700">
+                  <th className="py-2 pr-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Asset</th>
+                  <th className="py-2 pr-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Category</th>
+                  <th className="py-2 pr-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">FCP Impact</th>
+                  <th className="py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Recommendation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {audit.report_content.third_party_tax.map((item, index) => (
+                  <tr key={`${item.asset}-${index}`} className="border-b border-gray-100 dark:border-slate-800 last:border-b-0 align-top">
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-black dark:text-white break-all">{item.asset}</td>
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 uppercase">{item.category}</td>
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">~{Math.max(0, Math.round(Number(item.estimated_fcp_impact_ms || 0)))}ms</td>
+                    <td className="py-3 text-xs sm:text-sm">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                        item.recommendation === 'remove'
+                          ? 'bg-red-50 dark:bg-red-900/35 text-red-600 dark:text-red-300'
+                          : 'bg-emerald-50 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-300'
+                      }`}>
+                        {item.recommendation}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {Array.isArray(audit.report_content?.top_heaviest_assets) && audit.report_content.top_heaviest_assets.length > 0 && (
+        <section className="w-full rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-4">
+          <div>
+            <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Performance Diagnostics</p>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">Weight Watchers</h3>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-slate-700">
+                  <th className="py-2 pr-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Asset</th>
+                  <th className="py-2 pr-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Type</th>
+                  <th className="py-2 pr-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Impact</th>
+                  <th className="py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Recommendation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {audit.report_content.top_heaviest_assets.map((asset, index) => (
+                  <tr key={`${asset.asset}-${index}`} className="border-b border-gray-100 dark:border-slate-800 last:border-b-0 align-top">
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-black dark:text-white break-all">{asset.asset}</td>
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 uppercase">{asset.type}</td>
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">~{Math.max(0, Math.round(Number(asset.estimated_impact_ms || 0)))}ms</td>
+                    <td className="py-3 text-xs sm:text-sm text-gray-700 dark:text-gray-200">{asset.recommendation}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {Array.isArray(audit.report_content?.wcag_issues) && audit.report_content.wcag_issues.length > 0 && (
+        <section className="w-full rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-4">
+          <div className="space-y-2">
+            <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Accessibility</p>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">WCAG 2.1 Compliance</h3>
+          </div>
+
+          <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/25 px-4 py-3 text-sm font-black text-red-700 dark:text-red-300">
+            {audit.report_content.wcag_issues.filter((entry) => entry.severity === 'critical').length} critical issues found that could pose a legal compliance risk.
+          </div>
+
+          <AccessibilityFixAll fixes={Array.isArray(audit.report_content.accessibility_fix_all) ? audit.report_content.accessibility_fix_all : []} />
+
+          <div className="space-y-3">
+            {audit.report_content.wcag_issues.map((issue, index) => (
+              <article key={`${issue.selector}-${index}`} className="rounded-2xl border border-gray-200 dark:border-slate-700 p-3 sm:p-4 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                    issue.severity === 'critical'
+                      ? 'bg-red-50 dark:bg-red-900/35 text-red-600 dark:text-red-300'
+                      : issue.severity === 'high'
+                      ? 'bg-amber-50 dark:bg-amber-900/35 text-amber-600 dark:text-amber-300'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300'
+                  }`}>
+                    {issue.severity}
+                  </span>
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">{issue.wcag_criterion}</span>
+                </div>
+                <p className="text-sm font-bold text-black dark:text-white">{issue.issue}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-300 break-all">{issue.selector}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-200">{issue.fix}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="print-hide">
         <BenchmarkCompare
@@ -264,9 +486,9 @@ function AuditDetail({ audit, profile, viewerIsOwner, monitorWeekly }: { audit: 
         />
       </div>
 
-      <div className="relative print-break-before">
+      <div className={`relative print-break-before ${isLocked ? 'max-h-[28rem] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]' : ''}`}>
         {isLocked && (
-          <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/65 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 p-6 sm:p-12 text-center">
+          <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-start bg-white/60 dark:bg-slate-900/65 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 p-6 pt-8 sm:p-12 sm:pt-10 text-center">
             <LockIcon className="w-12 h-12 mb-4 text-black dark:text-white" />
             <h3 className="text-2xl text-black dark:text-white font-black tracking-tighter mb-2">Upgrade to Pro</h3>
             <p className="text-gray-500 dark:text-gray-300 mb-8 max-w-xs">
@@ -282,7 +504,16 @@ function AuditDetail({ audit, profile, viewerIsOwner, monitorWeekly }: { audit: 
         )}
 
         <div className={isLocked ? 'filter blur-xl pointer-events-none select-none' : ''}>
-          <AuditChecklist audit={{ id: audit.id, report_content: audit.report_content ?? undefined }} />
+          <AuditChecklist
+            audit={{
+              id: audit.id,
+              report_content: audit.report_content ?? undefined,
+              checklist_comments: audit.checklist_comments ?? undefined,
+            }}
+            readOnly={!canEditChecklist}
+            canComment={canComment}
+            viewerEmail={viewerEmail}
+          />
         </div>
       </div>
     </div>

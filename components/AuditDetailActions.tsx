@@ -4,16 +4,19 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Props = {
+  auditId: string
   websiteUrl: string
+  canManage?: boolean
 }
 
 async function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export default function AuditDetailActions({ websiteUrl }: Props) {
+export default function AuditDetailActions({ auditId, websiteUrl, canManage = true }: Props) {
   const router = useRouter()
   const [isRunning, setIsRunning] = useState(false)
+  const [isDownloadingSocial, setIsDownloadingSocial] = useState(false)
 
   const handleReaudit = async () => {
     if (isRunning) return
@@ -74,16 +77,49 @@ export default function AuditDetailActions({ websiteUrl }: Props) {
     window.print()
   }
 
+  const handleDownloadSocialImage = async () => {
+    if (isDownloadingSocial) return
+    setIsDownloadingSocial(true)
+
+    try {
+      const response = await fetch(`/api/og/${encodeURIComponent(auditId)}`, {
+        method: 'GET',
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate social image')
+      }
+
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = `audo-share-${auditId}.png`
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(objectUrl)
+    } catch (error) {
+      console.error(error)
+      alert('Could not download social share image. Please try again.')
+    } finally {
+      setIsDownloadingSocial(false)
+    }
+  }
+
   return (
     <div className="print-hide flex flex-wrap items-center gap-3 justify-end">
-      <button
-        type="button"
-        onClick={handleReaudit}
-        disabled={isRunning}
-        className="rounded-xl border border-black dark:border-slate-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-black dark:hover:bg-slate-200 hover:text-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
-      >
-        {isRunning ? 'Running Re-Audit...' : 'Run Re-Audit'}
-      </button>
+      {canManage && (
+        <button
+          type="button"
+          onClick={handleReaudit}
+          disabled={isRunning}
+          className="rounded-xl border border-black dark:border-slate-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-black dark:hover:bg-slate-200 hover:text-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
+        >
+          {isRunning ? 'Running Re-Audit...' : 'Run Re-Audit'}
+        </button>
+      )}
 
       <button
         type="button"
@@ -91,6 +127,15 @@ export default function AuditDetailActions({ websiteUrl }: Props) {
         className="rounded-xl border border-green-300 dark:border-green-700 bg-green-300 dark:bg-green-900/45 px-4 py-2 text-xs font-black uppercase tracking-widest text-green-950 dark:text-green-200 hover:bg-green-400 dark:hover:bg-green-900/65 transition-colors"
       >
         Download PDF
+      </button>
+
+      <button
+        type="button"
+        onClick={handleDownloadSocialImage}
+        disabled={isDownloadingSocial}
+        className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60"
+      >
+        {isDownloadingSocial ? 'Preparing...' : 'Download Social Share Image'}
       </button>
     </div>
   )

@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { History, LayoutGrid } from 'lucide-react'
+import { History, LayoutGrid, Sparkles } from 'lucide-react'
+import { Settings } from 'lucide-react'
 
 type DashboardNavItem = {
   href: string
@@ -24,6 +25,18 @@ const NAV_ITEMS: DashboardNavItem[] = [
     icon: History,
     isActive: (pathname) => pathname.startsWith('/dashboard/history'),
   },
+  {
+    href: '/dashboard/predict',
+    label: 'Predict',
+    icon: Sparkles,
+    isActive: (pathname) => pathname.startsWith('/dashboard/predict'),
+  },
+  {
+    href: '/dashboard/settings',
+    label: 'Settings',
+    icon: Settings,
+    isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
+  },
 ]
 
 export default function DashboardSidebar() {
@@ -31,11 +44,11 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className="print-hide group/dashboard fixed left-3 sm:left-4 z-[65] rounded-2xl border border-black/10 dark:border-slate-700 bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl shadow-sm w-16 hover:w-52 transition-[width] duration-200 ease-out overflow-hidden"
-      style={{ top: 'calc(var(--announcement-offset, 0px) + 12px)' }}
+      className="print-hide group/dashboard fixed left-0 z-[65] border-r border-black/10 dark:border-slate-700 bg-white/90 dark:bg-slate-900/92 backdrop-blur-xl shadow-sm w-14 sm:w-16 hover:w-44 transition-[width] duration-200 ease-out overflow-hidden"
+      style={{ top: 'var(--announcement-offset, 0px)', height: 'calc(100vh - var(--announcement-offset, 0px))' }}
       aria-label="Dashboard navigation"
     >
-      <nav className="p-2 space-y-1.5">
+      <nav className="p-1.5 sm:p-2 space-y-1.5">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           const active = item.isActive(pathname)

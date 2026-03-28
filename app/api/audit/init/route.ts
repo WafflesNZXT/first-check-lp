@@ -26,6 +26,38 @@ export async function POST(req: Request) {
     const user = getUser.data.user
     if (!user) return new Response(JSON.stringify({ error: 'not_authenticated' }), { status: 401 })
 
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('subscription_status')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profileError) {
+      console.error('read profile error', profileError)
+      return new Response(JSON.stringify({ error: 'Unable to verify subscription. Please try again.' }), { status: 500 })
+    }
+
+    const isPro = profile?.subscription_status === 'active'
+
+    if (!isPro) {
+      const { count, error: countError } = await supabase
+        .from('audits')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      if (countError) {
+        console.error('count audits error', countError)
+        return new Response(JSON.stringify({ error: 'Unable to verify audit limit. Please try again.' }), { status: 500 })
+      }
+
+      if ((count ?? 0) >= 3) {
+        return new Response(
+          JSON.stringify({ error: 'Free plan limit reached. You can run up to 3 audits total. Upgrade to Pro to continue.' }),
+          { status: 403 }
+        )
+      }
+    }
+
     const { data, error } = await supabase
       .from('audits')
       .insert([{ user_id: user.id, website_url: url, status: 'processing' }])

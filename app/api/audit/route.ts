@@ -23,9 +23,38 @@ const auditSchema = z.object({
     priority: z.enum(['high', 'medium', 'low']),
     category: z.enum(['ux', 'seo', 'performance', 'copy'])
   })).describe("A list of 5-8 actionable tasks to improve the site"),
+  top_heaviest_assets: z.array(z.object({
+    asset: z.string().describe('URL or identifier of the heavy asset'),
+    type: z.enum(['image', 'script', 'font', 'other']),
+    estimated_impact_ms: z.number().describe('Estimated load-time impact in milliseconds'),
+    recommendation: z.string().describe('Actionable optimization recommendation such as Convert to WebP or Defer Script')
+  })).length(5).describe('Top 5 heaviest assets observed in the scraped page data'),
+  third_party_tax: z.array(z.object({
+    asset: z.string().describe('Third-party script or stylesheet URL'),
+    category: z.enum(['analytics', 'ads', 'chat', 'marketing', 'other']),
+    estimated_fcp_impact_ms: z.number().describe('Estimated impact on First Contentful Paint in milliseconds'),
+    recommendation: z.enum(['remove', 'keep']).describe('Whether this third-party asset should be removed or kept')
+  })).describe('Categorized list of third-party scripts and stylesheets with FCP impact'),
+  total_third_party_weight_ms: z.number().describe('Total estimated FCP weight added by third-party assets in milliseconds'),
+  wcag_issues: z.array(z.object({
+    issue: z.string().describe('Accessibility issue that violates WCAG 2.1'),
+    selector: z.string().describe('Specific selector of the failing element'),
+    wcag_criterion: z.string().describe('WCAG 2.1 criterion reference, e.g. 1.1.1 Non-text Content'),
+    severity: z.enum(['critical', 'high', 'medium', 'low']),
+    fix: z.string().describe('Concrete fix recommendation')
+  })).describe('WCAG 2.1 compliance issues extracted from the checklist and page analysis'),
+  accessibility_fix_all: z.array(z.object({
+    selector: z.string().describe('Element selector that needs accessibility metadata'),
+    aria_label: z.string().optional().describe('Suggested aria-label when relevant'),
+    alt_text: z.string().optional().describe('Suggested alt text when relevant')
+  })).describe('Fix-all accessibility metadata suggestions for failing elements'),
 })
 
-function buildPrompt(url: string, siteContent: string) {
+function buildPrompt(url: string, siteContent: string, thirdPartyResources: string[]) {
+  const thirdPartyBlock = thirdPartyResources.length > 0
+    ? thirdPartyResources.slice(0, 60).map((entry) => `- ${entry}`).join('\n')
+    : '- none found from parser'
+
   return `Analyze ${url} based on this content: ${siteContent.substring(0, 20000)}. 
            Provide a brief 2-3 sentence roast. 
            Then, generate a high-clarity checklist of the most critical fixes. 
@@ -33,7 +62,81 @@ function buildPrompt(url: string, siteContent: string) {
            For EVERY checklist item include:
            - selector: the exact CSS selector where the issue exists.
            - code_example: 5-6 lines of copy-paste-ready code tailored to the most likely framework/language detected from the page content (HTML/CSS/JS/React/Next/Tailwind/etc).
-           Keep code_example concise, valid, and directly tied to the selector.`
+           Keep code_example concise, valid, and directly tied to the selector.
+           Also identify the Top 5 Heaviest Assets (images, scripts, or fonts) that most impact load time based on the scraped content.
+           For each heavy asset include:
+           - asset: resource URL/name
+           - type: image/script/font/other
+           - estimated_impact_ms: integer estimate of latency impact
+           - recommendation: concise optimization step (e.g., Convert to WebP, Defer Script, Subset Font).
+
+           Third-party candidates parsed from page:
+           ${thirdPartyBlock}
+
+           From those third-party candidates, categorize each into Analytics, Ads, Chat, Marketing, or Other.
+           Estimate impact on First Contentful Paint for each and provide a Remove/Keep recommendation.
+           Also provide the total third-party weight in milliseconds.
+
+           Accessibility requirements:
+           - Identify WCAG 2.1 violations from the checklist and page analysis.
+           - Mark severity (critical/high/medium/low).
+           - Provide selectors and precise fixes.
+           - Build a fix-all accessibility metadata list containing aria-label and alt-text suggestions for failing elements.`
+}
+
+function extractAttributeTagUrls(content: string, tagName: 'script' | 'link', attributeName: 'src' | 'href') {
+  const urls: string[] = []
+  const regex = new RegExp(`<${tagName}[^>]*${attributeName}=["']([^"']+)["'][^>]*>`, 'gim')
+  let match: RegExpExecArray | null = regex.exec(content)
+  while (match) {
+    const value = String(match[1] || '').trim()
+    if (value) urls.push(value)
+    match = regex.exec(content)
+  }
+  return urls
+}
+
+function extractLikelyExternalResourceUrls(content: string) {
+  const urls: string[] = []
+  const regex = /(https?:\/\/[^\s"'<>]+\.(js|css|woff2?|ttf|otf))(\?[^\s"'<>]*)?/gim
+  let match: RegExpExecArray | null = regex.exec(content)
+  while (match) {
+    const value = String(match[0] || '').trim()
+    if (value) urls.push(value)
+    match = regex.exec(content)
+  }
+  return urls
+}
+
+function extractThirdPartyResources(pageUrl: string, siteContent: string) {
+  let pageHost = ''
+  try {
+    pageHost = new URL(pageUrl.startsWith('http') ? pageUrl : `https://${pageUrl}`).hostname
+  } catch {
+    pageHost = ''
+  }
+
+  const raw = [
+    ...extractAttributeTagUrls(siteContent, 'script', 'src'),
+    ...extractAttributeTagUrls(siteContent, 'link', 'href'),
+    ...extractLikelyExternalResourceUrls(siteContent),
+  ]
+
+  const normalized = raw
+    .map((entry) => {
+      try {
+        const parsed = new URL(entry)
+        if (!/^https?:$/.test(parsed.protocol)) return null
+        if (pageHost && parsed.hostname === pageHost) return null
+        parsed.hash = ''
+        return parsed.toString()
+      } catch {
+        return null
+      }
+    })
+    .filter((value): value is string => Boolean(value))
+
+  return Array.from(new Set(normalized)).slice(0, 80)
 }
 
 function sleep(ms: number) {
@@ -98,10 +201,11 @@ async function updateAuditById(auditId: string, payload: Record<string, unknown>
 }
 
 async function runAuditGeneration(url: string, siteContent: string, modelName: string) {
+  const thirdPartyResources = extractThirdPartyResources(url, siteContent)
   const { object } = await generateObject({
     model: google(modelName),
     schema: auditSchema,
-    prompt: buildPrompt(url, siteContent),
+    prompt: buildPrompt(url, siteContent, thirdPartyResources),
   })
 
   return object
@@ -171,7 +275,12 @@ export async function POST(req: Request) {
     const completionPayload: Record<string, unknown> = {
       report_content: {
         summary: auditData.summary,
-        checklist: auditData.checklist
+        checklist: auditData.checklist,
+        top_heaviest_assets: auditData.top_heaviest_assets,
+        third_party_tax: auditData.third_party_tax,
+        total_third_party_weight_ms: auditData.total_third_party_weight_ms,
+        wcag_issues: auditData.wcag_issues,
+        accessibility_fix_all: auditData.accessibility_fix_all,
       },
       performance_score: performanceScore,
       seo_score: seoScore,

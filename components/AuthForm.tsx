@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
@@ -11,12 +11,16 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const rawNextPath = searchParams.get('next') || '/dashboard'
+  const nextPath = rawNextPath.startsWith('/') ? rawNextPath : '/dashboard'
+  const authLinkHref = `${mode === 'signin' ? '/signup' : '/signin'}${searchParams.get('next') ? `?next=${encodeURIComponent(nextPath)}` : ''}`
 
   useEffect(() => {
     if (mode === 'signin') {
-      router.prefetch('/dashboard')
+      router.prefetch(nextPath)
     }
-  }, [mode, router])
+  }, [mode, nextPath, router])
 
 
   // Use shared client from `lib/supabase` to avoid recreating client each render
@@ -64,7 +68,7 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
           }
 
           // Success: navigate immediately after session exchange attempt
-          router.replace('/dashboard')
+          router.replace(nextPath)
         }
       })()
 
@@ -126,7 +130,7 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
       
       <div className="text-center">
         <Link
-          href={mode === 'signin' ? '/signup' : '/signin'}
+          href={authLinkHref}
           className="text-sm text-gray-400 hover:text-black transition-colors"
         >
           {mode === 'signin' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}

@@ -30,6 +30,10 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
   const router = useRouter()
 
   useEffect(() => {
+    setAudits(initialAudits || [])
+  }, [initialAudits])
+
+  useEffect(() => {
     const channel = supabase
       .channel('audit-status')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audits', filter: `user_id=eq.${userId}` }, (payload) => {

@@ -20,6 +20,15 @@ type Audit = {
     completed_tasks?: string[]
     checklist?: ChecklistItem[]
   }
+  checklist_comments?: ChecklistComment[]
+}
+
+type ChecklistComment = {
+  id: string
+  issue: string
+  text: string
+  author_email: string
+  created_at: string
 }
 
 type ConfettiPiece = {
@@ -36,14 +45,29 @@ type ConfettiPiece = {
 
 const CONFETTI_COLORS = ['bg-black', 'bg-gray-500', 'bg-gray-400', 'bg-gray-300', 'bg-yellow-400', 'bg-yellow-300']
 
-export default function AuditChecklist({ audit, readOnly = false }: { audit: Audit, readOnly?: boolean }) {
+export default function AuditChecklist({
+  audit,
+  readOnly = false,
+  canComment = false,
+  viewerEmail,
+}: {
+  audit: Audit,
+  readOnly?: boolean,
+  canComment?: boolean,
+  viewerEmail?: string,
+}) {
   const initialChecklist = audit?.report_content?.checklist || []
+  const initialComments = Array.isArray(audit?.checklist_comments) ? audit.checklist_comments : []
   const initialCompleted: string[] =
     audit?.report_content?.completed_tasks ||
     initialChecklist.filter((item) => item.completed).map((item) => item.issue)
   const [completedTasks, setCompletedTasks] = useState<string[]>(initialCompleted)
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(initialChecklist)
+  const [checklistComments, setChecklistComments] = useState<ChecklistComment[]>(initialComments)
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
+  const [isCommentSaving, setIsCommentSaving] = useState(false)
   const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
+  const [copiedSnippetIssue, setCopiedSnippetIssue] = useState<string | null>(null)
   const confettiBurstIdRef = useRef(0)
   const allTasksCompleted = checklistItems.length > 0 && checklistItems.every((item) => completedTasks.includes(item.issue))
   const completedCount = checklistItems.filter((item) => completedTasks.includes(item.issue)).length
@@ -51,9 +75,13 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
     ? Math.round((completedCount / checklistItems.length) * 100)
     : 0
 
-  const copySnippet = async (snippet: string) => {
+  const copySnippet = async (snippet: string, issue: string) => {
     try {
       await navigator.clipboard.writeText(snippet)
+      setCopiedSnippetIssue(issue)
+      window.setTimeout(() => {
+        setCopiedSnippetIssue((current) => (current === issue ? null : current))
+      }, 1200)
     } catch {
     }
   }
@@ -131,6 +159,40 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
       .eq('id', audit.id)
   }
 
+  const handleAddComment = async (issue: string) => {
+    if (!canComment || isCommentSaving) return
+
+    const nextText = String(commentDrafts[issue] || '').trim()
+    if (!nextText) return
+
+    setIsCommentSaving(true)
+
+    const nextComment: ChecklistComment = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      issue,
+      text: nextText,
+      author_email: viewerEmail || 'unknown@user',
+      created_at: new Date().toISOString(),
+    }
+
+    const updatedComments = [...checklistComments, nextComment]
+    setChecklistComments(updatedComments)
+
+    const { error } = await supabase
+      .from('audits')
+      .update({ checklist_comments: updatedComments })
+      .eq('id', audit.id)
+
+    if (error) {
+      setChecklistComments((prev) => prev.filter((comment) => comment.id !== nextComment.id))
+      setIsCommentSaving(false)
+      return
+    }
+
+    setCommentDrafts((prev) => ({ ...prev, [issue]: '' }))
+    setIsCommentSaving(false)
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-12 relative">
       {confettiPieces.length > 0 && (
@@ -150,6 +212,12 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
               }}
             />
           ))}
+        </div>
+      )}
+
+      {copiedSnippetIssue && (
+        <div className="pointer-events-none fixed bottom-5 right-5 z-50 rounded-full border border-gray-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white shadow-lg backdrop-blur-sm">
+          Copied!
         </div>
       )}
 
@@ -224,11 +292,11 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation()
-                          copySnippet(item.code_example as string)
+                          copySnippet(item.code_example as string, item.issue)
                         }}
                         className="rounded-full border border-gray-200 dark:border-slate-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
                       >
-                        Copy
+                        {copiedSnippetIssue === item.issue ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                     <pre className="p-3 text-xs leading-5 text-gray-700 dark:text-gray-200 whitespace-pre-wrap break-words overflow-x-auto">
@@ -245,6 +313,46 @@ export default function AuditChecklist({ audit, readOnly = false }: { audit: Aud
                     <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-red-50 dark:bg-red-900/35 text-red-500 dark:text-red-300">
                       High Priority
                     </span>
+                  )}
+                </div>
+
+                <div className="mt-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/50 p-3" onClick={(event) => event.stopPropagation()}>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">Comments</p>
+
+                  <div className="mt-2 space-y-2">
+                    {checklistComments.filter((comment) => comment.issue === item.issue).length === 0 ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">No comments yet.</p>
+                    ) : (
+                      checklistComments
+                        .filter((comment) => comment.issue === item.issue)
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                        .map((comment) => (
+                          <div key={comment.id} className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5">
+                            <p className="text-xs text-black dark:text-white whitespace-pre-wrap break-words">{comment.text}</p>
+                            <p className="mt-1 text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400">{comment.author_email}</p>
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  {canComment && (
+                    <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={commentDrafts[item.issue] || ''}
+                        onChange={(event) => setCommentDrafts((prev) => ({ ...prev, [item.issue]: event.target.value }))}
+                        placeholder="Add a comment for this checklist item"
+                        className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void handleAddComment(item.issue)}
+                        disabled={isCommentSaving}
+                        className="rounded-xl bg-black dark:bg-white text-white dark:text-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-60"
+                      >
+                        Add Comment
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
