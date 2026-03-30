@@ -88,7 +88,7 @@ type ChecklistComment = {
 }
 
 type ProfileRecord = {
-  subscription_status: string | null
+  plan_type: string | null
   audit_count: number | null
 } | null
 
@@ -178,7 +178,7 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
   if (isOwner && userId) {
     const { data } = await supabase
       .from('profiles')
-      .select('subscription_status, audit_count')
+      .select('plan_type, audit_count')
       .eq('id', userId)
       .maybeSingle()
     profile = data
@@ -328,7 +328,7 @@ function AuditDetail({
   canComment: boolean,
   viewerEmail?: string,
 }) {
-  const isPro = profile?.subscription_status === 'active'
+  const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
   const isLocked = viewerIsOwner && !isPro && auditSequenceNumber === 3
 
   return (

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_status')
+      .select('plan_type')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: 'Unable to verify subscription. Please try again.' }), { status: 500 })
     }
 
-    const isPro = profile?.subscription_status === 'active'
+    const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
 
     if (!isPro) {
       const { count, error: countError } = await supabase

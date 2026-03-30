@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { generateObject } from 'ai'; 
+import { generateObject, generateText } from 'ai'; 
 import { z } from 'zod'; 
 import { createClient } from '@supabase/supabase-js';
 
@@ -202,13 +202,54 @@ async function updateAuditById(auditId: string, payload: Record<string, unknown>
 
 async function runAuditGeneration(url: string, siteContent: string, modelName: string) {
   const thirdPartyResources = extractThirdPartyResources(url, siteContent)
-  const { object } = await generateObject({
-    model: google(modelName),
-    schema: auditSchema,
-    prompt: buildPrompt(url, siteContent, thirdPartyResources),
-  })
+  const prompt = buildPrompt(url, siteContent, thirdPartyResources)
 
-  return object
+  // Helper to strip markdown fenced code blocks and surrounding backticks
+  function sanitizeAIResponse(raw: string) {
+    if (!raw) return raw
+    // capture first fenced code block's inner content: ```json\n...\n```
+    const fenced = /```(?:\w+)?\n([\s\S]*?)```/i.exec(raw)
+    if (fenced && fenced[1]) return fenced[1].trim()
+    // capture single backtick wrapped JSON: `{"a":1}`
+    const single = /^\s*`([^`]*)`\s*$/s.exec(raw.trim())
+    if (single && single[1]) return single[1].trim()
+    return raw.trim()
+  }
+
+  try {
+    const { object } = await generateObject({
+      model: google(modelName),
+      schema: auditSchema,
+      prompt,
+    })
+
+    return object
+  } catch (objectError) {
+    try {
+      // Log the objectError for debugging
+      console.warn('generateObject failed, attempting text fallback:', (objectError as any)?.message || objectError)
+
+      // Attempt a text generation fallback and try to parse JSON manually
+      const generated = await generateText({ model: google(modelName), prompt })
+      // Support possible return shapes from the `ai` library
+      const rawText = (generated as any)?.text ?? (generated as any)?.output ?? String(generated)
+
+      // Log first 100 chars of raw AI response to help debugging
+      console.error('Raw AI response (first 100 chars):', String(rawText).slice(0, 100))
+
+      const sanitized = sanitizeAIResponse(String(rawText))
+      const parsed = JSON.parse(sanitized)
+
+      // Run through schema validation explicitly to ensure parity with generateObject
+      const validated = auditSchema.parse(parsed)
+      return validated as unknown as Record<string, unknown>
+    } catch (fallbackError) {
+      // Attach original objectError message for more context
+      const objMsg = String((objectError as any)?.message || objectError || '')
+      const fbMsg = String((fallbackError as any)?.message || fallbackError || '')
+      throw new Error(`generateObject failed: ${objMsg}; fallback parse failed: ${fbMsg}`)
+    }
+  }
 }
 
 async function runAuditGenerationWithRetry(
