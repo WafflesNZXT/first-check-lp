@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { AnalysisLoader } from './Analysisloader';
 import { useScrollReveal } from './useScrollReveal';
+import Partners from '@/components/Partners';
 
 type HeroResult = {
   performance: number;
@@ -133,26 +134,30 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="max-w-6xl mx-auto relative z-10 flex items-start">
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-stretch">
-            <div className="space-y-6 md:space-y-8 text-left">
-              {/* <span className="hero-badge px-4 py-1.5 text-[10px] font-black border border-white/20 bg-black/45 backdrop-blur-sm text-white rounded-full hidden md:inline-flex items-center gap-2 uppercase tracking-[0.2em]">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                Dashboard-First SaaS Audits
-              </span> */}
+          <div className="max-w-6xl mx-auto relative z-10 flex flex-col items-center">
+          <div className="w-full grid grid-cols-1 gap-8 items-stretch justify-center">
+            <div className="space-y-6 md:space-y-8 text-center">
 
-              <h1 className="hero-title relative z-10 text-5xl md:text-8xl font-extrabold tracking-tighter text-white text-center md:text-left leading-[0.95] py-2 drop-shadow-[0_16px_45px_rgba(0,0,0,0.72)]">
-                Keep Shipping <br /> What Matters.
+              {/* Founder's Note badge */}
+              <span
+                className="inline-flex items-center px-3 py-1.5 mb-2 border border-gray-300/40 rounded-full text-xs font-semibold uppercase tracking-wide text-gray-500 bg-white/70 backdrop-blur-sm"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Built by a developer who got sick of vague Lighthouse warnings.
+              </span>
+
+
+              <h1 className="hero-title relative z-10 text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter text-white text-center leading-[0.95] py-2 drop-shadow-[0_16px_45px_rgba(0,0,0,0.72)]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Fix what’s killing your conversions.<br />
+                <span className="block">Before you ship the next thing.</span>
               </h1>
 
-              <p className="hero-subtitle text-white text-base md:text-lg max-w-2xl leading-relaxed bg-black/45 border border-white/20 rounded-2xl px-6 py-5 shadow-2xl shadow-black/40 backdrop-blur-sm">
-                <span className="font-black">Run audits anytime from your dashboard</span> and get prioritized fixes for conversion leaks, technical blockers, and SEO issues in one workflow.
+
+              <p className="hero-subtitle text-white text-base md:text-lg max-w-xl mx-auto leading-relaxed bg-black/45 border border-white/20 rounded-2xl px-6 py-5 shadow-2xl shadow-black/40 backdrop-blur-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Stop shipping blind. AI might give signals, but audo gives the workflow. Get a prioritized checklist with ready-to-paste code snippets for every SEO, performance, and accessibility gap.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-gray-200">
+              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-200 mx-auto">
                 <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
                   <Clock3 className="w-3.5 h-3.5 text-blue-400" />
                   Run anytime
@@ -163,15 +168,15 @@ export default function Home() {
                 </span>
                 <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
                   <Zap className="w-3.5 h-3.5 text-blue-400" />
-                  $29 beta access
+                  $29 one-time beta access
                 </span>
               </div>
             </div>
 
-            {/* Free Quick Score Widget */}
-            <div className="relative h-full hero-float">
+            {/* Free Quick Score Widget (compact, centered) */}
+            <div className="relative h-full hero-float mx-auto w-full max-w-md box-border overflow-hidden">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/40 via-white/10 to-transparent rounded-3xl blur opacity-80" />
-              <div className="relative bg-black/45 border border-white/20 rounded-3xl px-6 pb-7 pt-9 md:px-8 md:pb-10 md:pt-11 backdrop-blur-sm h-full min-h-[450px] md:min-h-[530px] flex flex-col">
+              <div className="relative bg-black/45 border border-white/20 rounded-3xl px-4 pb-5 pt-6 md:px-6 md:pb-6 md:pt-7 backdrop-blur-sm h-full min-h-[300px] md:min-h-[360px] flex flex-col overflow-hidden">
                 <div className="flex flex-col items-center text-center gap-3 mb-7 md:mb-9">
                   <div className="space-y-1">
                     <p className="text-white font-black text-xl md:text-2xl leading-none">Free Quick Score</p>
@@ -194,18 +199,18 @@ export default function Home() {
                             <p className="text-gray-300 text-sm leading-relaxed">Paste your URL to get instant scores and first issues to fix. Upgrade to unlock full dashboard audits and tracked improvements.</p>
                           </div>
 
-                          <form onSubmit={handleHeroSubmit} className="flex flex-col sm:flex-row gap-3">
+                          <form onSubmit={handleHeroSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
                             <input
                               type="url"
                               value={heroUrl}
                               onChange={(e) => setHeroUrl(e.target.value)}
                               placeholder="https://yourstartup.com"
                               required
-                              className="flex-1 bg-black/35 border border-white/20 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-white placeholder:text-gray-400"
+                              className="flex-1 min-w-0 bg-black/35 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-white placeholder:text-gray-400"
                             />
                             <button
                               type="submit"
-                              className="hero-cta bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white border border-blue-300/70 font-black px-9 py-4 rounded-2xl hover:from-blue-500 hover:via-blue-400 hover:to-indigo-400 hover:border-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap shadow-[0_14px_34px_rgba(37,99,235,0.55)]"
+                              className="hero-cta bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white border border-blue-300/70 font-black px-6 py-3 rounded-2xl hover:from-blue-500 hover:via-blue-400 hover:to-indigo-400 hover:border-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap shadow-[0_10px_24px_rgba(37,99,235,0.45)] text-sm w-full sm:w-auto flex-shrink-0"
                             >
                               Get Free Score
                               <ArrowRight className="w-5 h-5" />
@@ -381,19 +386,19 @@ export default function Home() {
               </aside>
 
               <article className="lg:col-span-8 rounded-2xl border border-white/20 bg-white p-3 md:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] hero-float-delayed">
-                <div className="rounded-xl overflow-hidden border border-black/10 bg-[#0b1220] p-4 md:p-6 min-h-[320px] md:min-h-[380px] text-white">
+                <div className="rounded-xl overflow-hidden border border-black/10 bg-[#0b1220] p-4 md:p-6 min-h-[240px] md:min-h-[380px] text-white w-full box-border overflow-hidden">
                   {previewView === 'overview' && (
                     <div className="h-full flex flex-col gap-4">
                       <p className="text-xs uppercase tracking-[0.2em] text-blue-200 font-black">Dashboard / Overview</p>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         {[
                           { label: 'Performance', score: 84, tone: 'text-yellow-300 border-yellow-300/40 bg-yellow-500/10' },
                           { label: 'Accessibility', score: 96, tone: 'text-green-300 border-green-300/40 bg-green-500/10' },
                           { label: 'SEO', score: 92, tone: 'text-green-300 border-green-300/40 bg-green-500/10' },
                         ].map((item) => (
-                          <div key={item.label} className={`rounded-xl border p-3 text-center ${item.tone}`}>
-                            <p className="text-2xl font-black">{item.score}</p>
-                            <p className="text-[11px] font-bold mt-1">{item.label}</p>
+                          <div key={item.label} className={`rounded-xl border p-3 text-center ${item.tone} min-h-[84px] flex flex-col items-center justify-center`}>
+                            <p className="text-2xl md:text-3xl font-black">{item.score}</p>
+                            <p className="text-[11px] md:text-[12px] font-bold mt-1">{item.label}</p>
                           </div>
                         ))}
                       </div>
@@ -538,10 +543,10 @@ export default function Home() {
                   <p className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">Proof section lacks specific outcomes</p>
                 </div>
               </div>
-              <div className="hidden md:block absolute -bottom-6 -left-8 rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-xl">
+              {/* <div className="hidden md:block absolute -bottom-6 -left-8 rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-xl">
                 <p className="text-xs uppercase tracking-widest text-gray-500 font-bold">delivery</p>
                 <p className="text-lg font-black text-black inline-flex items-center gap-2">Live in dashboard <Clock3 className="w-4 h-4" /></p>
-              </div>
+              </div> */}
             </div>
           </div>
         </section>
@@ -557,7 +562,7 @@ export default function Home() {
             <div className="grid grid-cols-12 rounded-3xl border border-black/10 bg-white overflow-hidden">
               <div className="col-span-4 p-5 border-r border-black/10">
                 <p className="font-black text-sm">audo</p>
-                <p className="text-xs text-blue-700 font-bold mt-1">$29 beta access</p>
+                <p className="text-xs text-blue-700 font-bold mt-1">$29 one-timebeta access</p>
               </div>
               <div className="col-span-8 p-5 text-sm text-gray-700">Dashboard workflow, prioritized issues, and re-runs as your site evolves.</div>
             </div>
@@ -581,7 +586,8 @@ export default function Home() {
         <section className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
           <div className="reveal grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 rounded-3xl border border-black/10 bg-white p-8 md:p-10 relative overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-blue-100" />
+              <div className="hidden md:block absolute -right-16 -top-12 w-44 h-44 rounded-full bg-blue-100 -z-10 pointer-events-none" />
+              <div className="block md:hidden absolute right-3 -top-6 w-20 h-20 rounded-full bg-blue-100 opacity-80 -z-10 pointer-events-none" />
               <p className="text-xs uppercase tracking-[0.2em] text-blue-700 font-black">What you get</p>
               <h3 className="mt-3 text-3xl md:text-4xl font-black tracking-tight max-w-xl">Dashboard audits with fixes you can ship immediately.</h3>
               <ul className="mt-8 space-y-3 text-sm text-gray-700 max-w-xl">

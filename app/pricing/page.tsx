@@ -311,8 +311,9 @@ export default function Pricing() {
             <div className="relative bg-white border border-black/10 rounded-[1.75rem] p-8 space-y-8 shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
               
               <div className="flex items-center justify-between">
-                {/* <div className="bg-blue-50 border border-blue-200 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-700">Most Popular</div> */}
-                <div className="bg-green-50 border border-green-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-green-700">Available Now</div>
+                <div className="bg-gray-100 border border-gray-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-700" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                  Limited Time Beta
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -326,8 +327,7 @@ export default function Pricing() {
                 <div className="flex items-end gap-2">
                   <span className="text-6xl font-black tracking-tighter">$29</span>
                   <div className="pb-2 space-y-0.5">
-                    <span className="text-gray-700 font-medium text-sm block">/beta access</span>
-                    <span className="text-gray-500 text-xs block">early access pricing</span>
+                    <span className="text-gray-700 font-medium text-sm block">(One-time payment for Beta access)</span>
                   </div>
                 </div>
               </div>
@@ -369,12 +369,15 @@ export default function Pricing() {
               <button
                 onClick={openPurchaseModal}
                 className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
               >
-                Improve my site
+                Get Lifetime Beta Access
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
               </button>
 
-              <p className="text-center text-gray-500 text-xs">Includes dashboard access and full audit workflow.</p>
+              <p className="text-center text-gray-500 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
+                No subscription. No credit card required to start.
+              </p>
             </div>
           </div>
 
