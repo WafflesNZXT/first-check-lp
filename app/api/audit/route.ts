@@ -211,7 +211,7 @@ async function runAuditGeneration(url: string, siteContent: string, modelName: s
     const fenced = /```(?:\w+)?\n([\s\S]*?)```/i.exec(raw)
     if (fenced && fenced[1]) return fenced[1].trim()
     // capture single backtick wrapped JSON: `{"a":1}`
-    const single = /^\s*`([^`]*)`\s*$/s.exec(raw.trim())
+    const single = /^\s*`([^`]*)`\s*$/.exec(raw.trim())
     if (single && single[1]) return single[1].trim()
     return raw.trim()
   }
