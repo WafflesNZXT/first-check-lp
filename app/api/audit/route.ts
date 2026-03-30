@@ -204,13 +204,22 @@ async function runAuditGeneration(url: string, siteContent: string, modelName: s
   const thirdPartyResources = extractThirdPartyResources(url, siteContent)
   const prompt = buildPrompt(url, siteContent, thirdPartyResources)
 
-  // Helper to strip markdown fenced code blocks and surrounding backticks
+  // Helper to extract the JSON object from the AI response by finding
+  // the first '{' and the last '}' and slicing between them (inclusive).
+  // Falls back to previous fenced/backtick stripping if braces aren't found.
   function sanitizeAIResponse(raw: string) {
     if (!raw) return raw
-    // capture first fenced code block's inner content: ```json\n...\n```
+
+    const firstBrace = raw.indexOf('{')
+    const lastBrace = raw.lastIndexOf('}')
+
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
+      return raw.slice(firstBrace, lastBrace + 1).trim()
+    }
+
+    // Fallback: strip fenced code blocks and single-backtick wrappers
     const fenced = /```(?:\w+)?\n([\s\S]*?)```/i.exec(raw)
     if (fenced && fenced[1]) return fenced[1].trim()
-    // capture single backtick wrapped JSON: `{"a":1}`
     const single = /^\s*`([^`]*)`\s*$/.exec(raw.trim())
     if (single && single[1]) return single[1].trim()
     return raw.trim()
