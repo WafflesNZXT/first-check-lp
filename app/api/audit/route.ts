@@ -485,7 +485,7 @@ export async function POST(request: Request) {
 }
 
 async function runAuditGenerationWithRetry(url: string, siteContent: string, onFallback?: () => Promise<void> | void) {
-  const primary = 'gemini-3.5-flash-lite-preview'
+  const primary = 'gemini-3.1-flash-lite-preview'
   const fallback = 'gemini-2.5-flash-lite'
   try {
     return await runAuditGeneration(url, siteContent, primary)
