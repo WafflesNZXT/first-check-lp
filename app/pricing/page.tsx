@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout } from 'lucide-react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
-import { submitLead } from '../actions';
-
+import { createClient } from '@/utils/supabase/client';
+// Removed submitLead and client-side lead logic — checkout handled server-side
 // Score color helper
 function scoreColor(score: number) {
   if (score >= 90) return 'text-green-400';
@@ -206,45 +206,39 @@ function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 export default function Pricing() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [fitModalOpen, setFitModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  useEffect(() => {
-    if (!modalOpen && !fitModalOpen) return;
+  // Check client-side auth first, then call checkout API — provides immediate redirect for unauthenticated users
+  async function startCheckout() {
+    try {
+      setIsRedirecting(true);
 
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        setModalOpen(false);
-        setFitModalOpen(false);
+      // Client-side check to avoid sending requests to the server when not logged in
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/signup?next=/pricing';
+        return;
       }
-    }
 
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [modalOpen, fitModalOpen]);
+      const res = await fetch('/api/stripe/checkout', { method: 'POST' });
+      if (res.status === 401) {
+        // Fallback: server still thinks user is unauthenticated
+        window.location.href = '/signup?next=/pricing';
+        return;
+      }
 
-  function openPurchaseModal() {
-    setSubmitted(false);
-    setIsSubmitting(false);
-    setModalOpen(true);
-  }
-
-  async function handleModalSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    setIsSubmitting(true);
-    const res = await submitLead(formData);
-    setIsSubmitting(false);
-    if (res.success) {
-      setSubmitted(true);
-      setTimeout(() => {
-        window.location.href = "https://buy.stripe.com/00wfZh0KLccHdso1i30x202";
-      }, 1200);
-    } else {
-      alert('Error: ' + res.error);
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Checkout error: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong triggering the checkout.');
+    } finally {
+      setIsRedirecting(false);
     }
   }
 
@@ -356,24 +350,26 @@ export default function Pricing() {
               ))}
             </ul>
 
-              <div className="-mt-2 flex items-center justify-center">
+              <div className="-mt-2">
                 <button
-                  type="button"
-                  onClick={() => setFitModalOpen(true)}
-                  className="text-xs font-bold text-gray-600 hover:text-black transition-colors underline underline-offset-4"
+                  onClick={startCheckout}
+                  disabled={isRedirecting}
+                  className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20 disabled:opacity-60"
+                  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
                 >
-                  Is it for me?
+                  {isRedirecting ? (
+                    <>
+                      Redirecting...
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </>
+                  ) : (
+                    <>
+                      Get Lifetime Beta Access
+                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </div>
-
-              <button
-                onClick={openPurchaseModal}
-                className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20"
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-              >
-                Get Lifetime Beta Access
-                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-              </button>
 
               <p className="text-center text-gray-500 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
                 No subscription. No credit card required to start.
@@ -485,119 +481,7 @@ export default function Pricing() {
 
       </div>
 
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-white border border-black/10 rounded-2xl max-w-md w-full p-8 shadow-2xl text-black">
-            <button className="absolute top-4 right-4 text-gray-500 hover:text-black transition-colors" onClick={() => setModalOpen(false)}>
-              <X className="w-5 h-5" />
-            </button>
-            {!submitted ? (
-              <form onSubmit={handleModalSubmit} className="space-y-6">
-                <input type="text" name="honeypot" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold">Start dashboard access</h3>
-                  <p className="text-gray-600 text-sm">You’ll be redirected to payment, then continue inside your dashboard.</p>
-                </div>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Founder email</label>
-                    <input name="email" type="email" required placeholder="you@startup.com" className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black placeholder:text-gray-400" />
-                  </div>
-                  {/* <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Website URL</label>
-                    <input name="website_url" type="url" required placeholder="https://yourstartup.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-600" />
-                  </div> */}
-                </div>
-                <button type="submit" disabled={isSubmitting} className="w-full bg-black text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isSubmitting ? 'Processing...' : 'START DASHBOARD ACCESS — $29'}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <p className="text-center text-gray-500 text-xs">Beta access pricing.</p>
-              </form>
-            ) : (
-              <div className="py-12 text-center space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-blue-50 flex items-center justify-center border border-blue-200">
-                  <Check className="w-8 h-8 text-blue-700" />
-                </div>
-                <h3 className="text-lg font-bold">Redirecting to payment...</h3>
-                <p className="text-gray-600 text-sm">Hang tight, you’ll be with Stripe in a second.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Is it for me? Modal */}
-      {fitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setFitModalOpen(false)} />
-          <div className="relative bg-white border border-black/10 rounded-2xl max-w-md w-full p-8 shadow-2xl text-black">
-            <button className="absolute top-4 right-4 text-gray-500 hover:text-black transition-colors" onClick={() => setFitModalOpen(false)}>
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold">Is it for you?</h3>
-                <p className="text-gray-600 text-sm">
-                  If your site is “fine” but growth feels stuck, a clear dashboard workflow is usually the missing lever.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-[#fafafa] border border-black/10 rounded-2xl p-5 space-y-3">
-                  <p className="text-black font-bold text-sm">You’ll get value if you’re:</p>
-                  <ul className="space-y-2 text-sm text-gray-700">
-                    {[
-                      "Getting traffic but conversions feel random",
-                      "Not sure what to fix first across SEO, speed, UX, and copy",
-                      "Tired of generic tools that don’t turn into a workflow",
-                      "Shipping fast and need a repeatable audit loop",
-                    ].map((t) => (
-                      <li key={t} className="flex items-start gap-3">
-                        <Check className="w-4 h-4 mt-0.5 text-blue-700 flex-shrink-0" />
-                        <span>{t}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-2">
-                  <p className="text-black font-bold text-sm">What you lose by waiting</p>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    Every week you don’t fix bottlenecks, you keep paying for the same outcome: the same bounce, the same drop-off, the same “we’ll improve it later.”
-                    Meanwhile, other founders are tightening their funnels and compounding learnings.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFitModalOpen(false);
-                    openPurchaseModal();
-                  }}
-                  className="w-full bg-black text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-                >
-                  Start dashboard access — $29
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFitModalOpen(false)}
-                  className="w-full bg-white border border-black/10 text-gray-700 font-bold py-3 rounded-xl hover:bg-black/5 transition-all"
-                >
-                  I want to miss out
-                </button>
-                <p className="text-center text-gray-500 text-xs">Beta access pricing.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Legacy modal UI removed — checkout now triggers directly via startCheckout */}
 
     </main>
   );

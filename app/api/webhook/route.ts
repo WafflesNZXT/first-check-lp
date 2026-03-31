@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-02-25.clover',
+  apiVersion: '2026-02-25.clover', // Use the required API version
 });
 
 const supabaseAdmin = createClient(
@@ -33,74 +33,51 @@ export async function POST(req: Request) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+    const userId = session.metadata?.userId; // Getting this from our Checkout Route
     const customerEmail = session.customer_details?.email;
 
-    // Update lead payment status in Supabase
-    if (customerEmail) {
+    if (userId) {
+      // 1. UPDATE THE USER TO PRO IN SUPABASE
       const { error } = await supabaseAdmin
-        .from('leads')
-        .update({
-          payment_status: 'paid',
-          status: 'pending_review',
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', customerEmail)
-        .eq('payment_status', 'pending');
+      .from('profiles')
+      .update({
+        plan_type: 'pro',
+        stripe_customer_id: session.customer as string,
+        subscription_id: session.subscription as string,
+        audit_count: 100, // Or whatever limit you want for Pro
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
 
-      if (error) {
-        console.error('Supabase Update Error:', error);
+      if (error) console.error('Supabase Profile Update Error:', error);
+
+      // 2. SEND WELCOME EMAIL TO CUSTOMER
+      if (customerEmail) {
+        await resend.emails.send({
+          from: 'Wafi from audo <onboarding@resend.dev>',
+          to: customerEmail,
+          subject: 'Your audo PRO access is confirmed!',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Welcome to audo Pro!</h2>
+              <p>Hey! Your payment was successful and your dashboard is now unlocked.</p>
+              <p>You now have <strong>Unlimited Audits</strong> and access to the Predictor page.</p>
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Go to Dashboard</a>
+              <p style="margin-top: 20px;">- Wafi</p>
+            </div>
+          `,
+        });
+
+        // 3. NOTIFICATION EMAIL TO YOU
+        await resend.emails.send({
+          from: 'audo Sales <onboarding@resend.dev>',
+          to: 'wafi.syed5@gmail.com', // Your email
+          subject: `💰 New Pro Subscriber: ${customerEmail}`,
+          text: `User ${customerEmail} just upgraded to Pro for $29/mo!`,
+        });
       }
 
-      // Email to customer asking for their URL
-      await resend.emails.send({
-        from: 'Wafi from audo <onboarding@resend.dev>',
-        to: customerEmail,
-        subject: 'Your audo access is confirmed — one quick step',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Payment confirmed!</h2>
-            <p style="color: #555; font-size: 16px; margin-bottom: 24px;">Hey, Wafi here from audo. Your $29 dashboard access is confirmed.</p>
-            
-            <p style="font-size: 16px; margin-bottom: 8px;">One quick step to finish setup:</p>
-            
-            <div style="background: #f5f5f5; border-left: 4px solid #2563eb; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-              <p style="margin: 0; font-size: 16px; font-weight: 700;">Add your website URL in the setup flow:</p>
-              <ul style="margin: 12px 0 0 0; padding-left: 20px; color: #333;">
-                <li style="margin-bottom: 8px;">Open your success page after checkout</li>
-                <li style="margin-bottom: 8px;">Submit your website URL</li>
-                <li>Then continue in your dashboard to run your first audit</li>
-              </ul>
-            </div>
-            
-            <p style="font-size: 16px; color: #555;">Once your URL is saved, you&apos;re ready to start using the dashboard workflow.</p>
-            
-            <p style="font-size: 16px; margin-top: 32px;">Talk soon,<br><strong>Wafi Syed</strong><br>Founder, audo<br><a href="https://usefirstcheck.vercel.app" style="color: #2563eb;">usefirstcheck.vercel.app</a></p>
-          </div>
-        `,
-      });
-
-      // Notification email to you
-      await resend.emails.send({
-        from: 'audo Notifications <onboarding@resend.dev>',
-        to: 'wafi.syed5@gmail.com',
-        subject: `New dashboard access order — ${customerEmail}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">New order received!</h2>
-            <p style="font-size: 16px; color: #555;">Someone just paid for dashboard access.</p>
-            
-            <div style="background: #f5f5f5; padding: 16px 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0 0 8px 0;"><strong>Customer email:</strong> ${customerEmail}</p>
-              <p style="margin: 0 0 8px 0;"><strong>Amount:</strong> $29</p>
-              <p style="margin: 0;"><strong>Status:</strong> Waiting for URL setup completion.</p>
-            </div>
-            
-            <p style="font-size: 14px; color: #888;">Check your Supabase leads table for the full record.</p>
-          </div>
-        `,
-      });
-
-      console.log(`[New Order] Payment confirmed for ${customerEmail}`);
+      console.log(`🚀 User ${userId} successfully upgraded to PRO`);
     }
   }
 
