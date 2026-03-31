@@ -12,9 +12,9 @@ const supabase = createClient(
 
 const auditSchema = z.object({
   summary: z.string().describe("A 2-3 sentence high-level punchy roast."),
-  performance_score: z.number(),
-  seo_score: z.number(),
-  ux_score: z.number(),
+  performance_score: z.number().int().min(40).max(100).describe('Integer score 40-100 for performance'),
+  seo_score: z.number().int().min(40).max(100).describe('Integer score 40-100 for SEO'),
+  ux_score: z.number().int().min(40).max(100).describe('Integer score 40-100 for UX'),
   checklist: z.array(z.object({
     title: z.string().describe("A short, punchy name for the bug (e.g., 'Hero Image Layout Shift')"),
     issue_description: z.string().describe('A 1-sentence explanation of what is wrong'),
@@ -24,7 +24,7 @@ const auditSchema = z.object({
     code_example: z.string().describe("A practical 5-6 line code snippet implementing the fix in the site's likely stack/framework"),
     severity: z.enum(['critical', 'high', 'medium', 'low']),
     category: z.enum(['ux', 'seo', 'performance', 'copy'])
-  })).describe("A list of 5-8 actionable tasks to improve the site"),
+  })).min(5).max(8).describe("A list of 5-8 actionable tasks to improve the site"),
   top_heaviest_assets: z.array(z.object({
     asset: z.string().describe('URL or identifier of the heavy asset'),
     type: z.enum(['image', 'script', 'font', 'other']),
@@ -36,7 +36,7 @@ const auditSchema = z.object({
     category: z.enum(['analytics', 'ads', 'chat', 'marketing', 'other']),
     estimated_fcp_impact_ms: z.number().describe('Estimated impact on First Contentful Paint in milliseconds'),
     recommendation: z.enum(['remove', 'keep']).describe('Whether this third-party asset should be removed or kept')
-  })).describe('Categorized list of third-party scripts and stylesheets with FCP impact'),
+  })).min(1).describe('Categorized list of third-party scripts and stylesheets with FCP impact'),
   total_third_party_weight_ms: z.number().describe('Total estimated FCP weight added by third-party assets in milliseconds'),
   wcag_issues: z.array(z.object({
     issue: z.string().describe('Accessibility issue that violates WCAG 2.1'),
@@ -44,12 +44,12 @@ const auditSchema = z.object({
     wcag_criterion: z.string().describe('WCAG 2.1 criterion reference, e.g. 1.1.1 Non-text Content'),
     severity: z.enum(['critical', 'high', 'medium', 'low']),
     fix: z.string().describe('Concrete fix recommendation')
-  })).describe('WCAG 2.1 compliance issues extracted from the checklist and page analysis'),
+  })).min(1).describe('WCAG 2.1 compliance issues extracted from the checklist and page analysis'),
   accessibility_fix_all: z.array(z.object({
     selector: z.string().describe('Element selector that needs accessibility metadata'),
     aria_label: z.string().optional().describe('Suggested aria-label when relevant'),
     alt_text: z.string().optional().describe('Suggested alt text when relevant')
-  })).describe('Fix-all accessibility metadata suggestions for failing elements'),
+  })).min(1).describe('Fix-all accessibility metadata suggestions for failing elements'),
 })
 
 function buildPrompt(url: string, siteContent: string, thirdPartyResources: string[]) {
@@ -84,7 +84,17 @@ function buildPrompt(url: string, siteContent: string, thirdPartyResources: stri
            - Identify WCAG 2.1 violations from the checklist and page analysis.
            - Mark severity (critical/high/medium/low).
            - Provide selectors and precise fixes.
-           - Build a fix-all accessibility metadata list containing aria-label and alt-text suggestions for failing elements.`
+             - Build a fix-all accessibility metadata list containing aria-label and alt-text suggestions for failing elements.
+
+             CRITICAL INSTRUCTIONS:
+             1. DO NOT use Markdown headers (###) or tables (|---|) inside JSON strings.
+             2. Provide RAW TEXT only for descriptions (no markdown, no headings, no tables).
+             3. You MUST provide integer numeric scores between 40 and 100 for 'performance_score', 'seo_score', and 'ux_score'.
+             4. Fill EVERY array. If no third-party assets are found, invent a logical performance fix and include it in 'third_party_tax' or 'top_heaviest_assets'.
+             5. Structure the 'checklist' with exactly 5 distinct objects. DO NOT merge multiple fixes into a single object.
+             6. Return only a single top-level JSON object — no surrounding markdown, explanations, or headings.
+             7. If a field is unknown, return an explicit null, but keep arrays present and non-empty.
+            `
 }
 
 function extractAttributeTagUrls(content: string, tagName: 'script' | 'link', attributeName: 'src' | 'href') {
