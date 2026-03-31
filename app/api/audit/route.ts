@@ -16,11 +16,13 @@ const auditSchema = z.object({
   seo_score: z.number(),
   ux_score: z.number(),
   checklist: z.array(z.object({
-    issue: z.string().describe("The problem found"),
-    fix: z.string().describe("The exact technical or design step to fix it"),
+    title: z.string().describe("A short, punchy name for the bug (e.g., 'Hero Image Layout Shift')"),
+    issue_description: z.string().describe('A 1-sentence explanation of what is wrong'),
+    recommendation: z.string().describe("The exact technical or design step to fix it"),
+    task: z.string().describe("Duplicate of title for UI safety"),
     selector: z.string().describe("Most specific CSS selector targeting the affected element (e.g. #header, .btn-primary, nav > ul > li:nth-child(2))"),
     code_example: z.string().describe("A practical 5-6 line code snippet implementing the fix in the site's likely stack/framework"),
-    priority: z.enum(['high', 'medium', 'low']),
+    severity: z.enum(['critical', 'high', 'medium', 'low']),
     category: z.enum(['ux', 'seo', 'performance', 'copy'])
   })).describe("A list of 5-8 actionable tasks to improve the site"),
   top_heaviest_assets: z.array(z.object({
@@ -59,7 +61,8 @@ function buildPrompt(url: string, siteContent: string, thirdPartyResources: stri
            Provide a brief 2-3 sentence roast. 
            Then, generate a high-clarity checklist of the most critical fixes. 
            Each fix must be specific and actionable.
-           For EVERY checklist item include:
+           For EACH checklist item provide a "title" (the bug name), an "issue_description" (what is breaking), and a "recommendation" (how to fix it).
+           For EVERY checklist item also include:
            - selector: the exact CSS selector where the issue exists.
            - code_example: 5-6 lines of copy-paste-ready code tailored to the most likely framework/language detected from the page content (HTML/CSS/JS/React/Next/Tailwind/etc).
            Keep code_example concise, valid, and directly tied to the selector.
@@ -204,103 +207,139 @@ async function runAuditGeneration(url: string, siteContent: string, modelName: s
   const thirdPartyResources = extractThirdPartyResources(url, siteContent)
   const prompt = buildPrompt(url, siteContent, thirdPartyResources)
 
-  // Helper to extract the JSON object from the AI response by finding
-  // the first '{' and the last '}' and slicing between them (inclusive).
-  // Falls back to previous fenced/backtick stripping if braces aren't found.
   function sanitizeAIResponse(raw: string) {
     if (!raw) return raw
-
-    const firstBrace = raw.indexOf('{')
-    const lastBrace = raw.lastIndexOf('}')
-
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
-      return raw.slice(firstBrace, lastBrace + 1).trim()
-    }
-
-    // Fallback: strip fenced code blocks and single-backtick wrappers
-    const fenced = /```(?:\w+)?\n([\s\S]*?)```/i.exec(raw)
-    if (fenced && fenced[1]) return fenced[1].trim()
-    const single = /^\s*`([^`]*)`\s*$/.exec(raw.trim())
-    if (single && single[1]) return single[1].trim()
+    const first = raw.indexOf('{')
+    const last = raw.lastIndexOf('}')
+    if (first !== -1 && last !== -1 && last >= first) return raw.slice(first, last + 1).trim()
     return raw.trim()
   }
 
-  try {
-    const { object } = await generateObject({
-      model: google(modelName),
-      schema: auditSchema,
-      prompt,
-    })
-
-    return object
-  } catch (objectError) {
-    try {
-      // Log the objectError for debugging
-      console.warn('generateObject failed, attempting text fallback:', (objectError as any)?.message || objectError)
-
-      // Attempt a text generation fallback and try to parse JSON manually
-      const generated = await generateText({ model: google(modelName), prompt })
-      // Support possible return shapes from the `ai` library
-      const rawText = (generated as any)?.text ?? (generated as any)?.output ?? String(generated)
-
-      // Log first 100 chars of raw AI response to help debugging
-      console.error('Raw AI response (first 100 chars):', String(rawText).slice(0, 100))
-
-      const sanitized = sanitizeAIResponse(String(rawText))
-      const parsed = JSON.parse(sanitized)
-
-      // Run through schema validation explicitly to ensure parity with generateObject
-      const validated = auditSchema.parse(parsed)
-      return validated as unknown as Record<string, unknown>
-    } catch (fallbackError) {
-      // Attach original objectError message for more context
-      const objMsg = String((objectError as any)?.message || objectError || '')
-      const fbMsg = String((fallbackError as any)?.message || fallbackError || '')
-      throw new Error(`generateObject failed: ${objMsg}; fallback parse failed: ${fbMsg}`)
+  function parseMarkdownChecklist(markdown: string) {
+    const candidate: any = {
+      summary: undefined,
+      performance_score: 0,
+      seo_score: 0,
+      ux_score: 0,
+      checklist: [],
+      top_heaviest_assets: [],
+      third_party_tax: [],
+      total_third_party_weight_ms: 0,
+      wcag_issues: [],
+      accessibility_fix_all: [],
     }
-  }
-}
 
-async function runAuditGenerationWithRetry(
-  url: string,
-  siteContent: string,
-  onFallbackStart?: () => Promise<void> | void
-) {
-  const primaryModel = 'gemini-3.1-flash-lite-preview'
-  const fallbackModel = 'gemini-2.5-flash-lite'
-  const maxAttempts = 3
-  const baseDelayMs = 1200
+    const roastMatch = markdown.match(/###\s*Roast[\s\S]*?\n([\s\S]*?)(?:\n---|\n###|\n\n#|$)/i)
+    if (roastMatch) candidate.summary = roastMatch[1].trim().split('\n').map((s: string) => s.trim()).join(' ')
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      return await runAuditGeneration(url, siteContent, primaryModel)
-    } catch (error) {
-      if (!isRetryableGeminiError(error)) throw error
-      if (attempt < maxAttempts) {
-        const delay = baseDelayMs * (2 ** (attempt - 1))
-        await sleep(delay)
+    const fixesSectionMatch = markdown.match(/###\s*Critical Fixes[\s\S]*/i)
+    const fixesText = fixesSectionMatch ? fixesSectionMatch[0] : markdown
+
+    const itemBlocks = fixesText.split(/^\s*\d+\.\s+/m).map((s: string) => s.trim()).filter(Boolean)
+
+    function shortDescription(text: string): string | undefined {
+      if (!text) return undefined
+      const s = text.replace(/\s+/g, ' ').trim()
+      const match = s.match(/(.+?[\.\!\?])\s+/)
+      if (match) return match[1].trim()
+      return s.length > 140 ? s.slice(0, 137) + '...' : s
+    }
+
+    for (const block of itemBlocks) {
+      const titleMatch = block.match(/Title:\s*([^\n\*\r]+)/i) || block.match(/\*\*Title:\s*([^\*]+)/i)
+      let title = titleMatch ? titleMatch[1].trim().replace(/\*+/g, '').trim() : undefined
+
+      const issueMatch = block.match(/issue_description:\s*([^\n\r]+)/i) || block.match(/\*\*issue_description:\*\*\s*([^\n\r]+)/i)
+      let issue_description = issueMatch ? issueMatch[1].trim().replace(/\*+/g, '').trim() : undefined
+
+      const recMatch = block.match(/recommendation:\s*([^\n\r]+)/i) || block.match(/\*\*recommendation:\*\*\s*([^\n\r]+)/i) || block.match(/Fix:\s*([^\n\r]+)/i)
+      const recommendation = recMatch ? recMatch[1].trim().replace(/\*+/g, '').trim() : undefined
+
+      const selMatch = block.match(/selector:\s*([^\n\r]+)/i) || block.match(/\*\*selector:\*\*\s*([^\n\r]+)/i)
+      const selector = selMatch ? selMatch[1].trim().replace(/\*+/g, '').trim() : undefined
+
+      const codeMatch = block.match(/```[a-zA-Z]*\n([\s\S]*?)```/)
+      const code_example = codeMatch ? codeMatch[1].trim() : undefined
+
+      // Heuristics: if no explicit title, use the first short line as title
+      if (!title) {
+        const lines = block.split('\n').map(l => l.trim()).filter(Boolean)
+        if (lines.length > 0) {
+          const first = lines[0]
+          if (first.length < 100 && !first.toLowerCase().startsWith('recommend') && !first.toLowerCase().startsWith('fix') && !first.includes(':')) {
+            title = first.replace(/\*+/g, '')
+          }
+        }
+      }
+
+      // If no explicit issue_description, take a short sentence from the block (excluding title/recommendation lines)
+      if (!issue_description) {
+        const withoutCode = block.replace(/```[\s\S]*?```/g, '')
+        const lines = withoutCode.split('\n').map(l => l.trim()).filter(Boolean)
+        const candidateLines = lines.filter(l => !(l.toLowerCase().startsWith('recommend') || l.toLowerCase().startsWith('fix') || l.toLowerCase().startsWith('title') || l.toLowerCase().startsWith('selector')))
+        if (candidateLines.length > 0) {
+          const firstGood = candidateLines[0]
+          issue_description = shortDescription(firstGood)
+        }
+      }
+
+      if (title || issue_description || recommendation) {
+        candidate.checklist.push({
+          title: title ?? (issue_description ? (issue_description.slice(0, 60) + (issue_description.length > 60 ? '...' : '')) : 'Untitled issue'),
+          issue_description: issue_description ?? null,
+          recommendation: recommendation ?? null,
+          task: title ?? (issue_description ? issue_description : 'Untitled issue'),
+          selector: selector ?? null,
+          code_example: code_example ?? null,
+          severity: 'medium',
+          category: null,
+          raw: block,
+        })
       }
     }
+
+    return candidate
   }
 
   try {
-    if (onFallbackStart) {
-      await onFallbackStart()
+    const { object } = await generateObject({ model: google(modelName), schema: auditSchema, prompt })
+    return object
+  } catch (objectError) {
+    console.warn('generateObject failed:', (objectError as any)?.message || objectError)
+
+    try {
+      const gen = await generateText({ model: google(modelName), prompt })
+      const rawText = (gen as any)?.text ?? (gen as any)?.output ?? String(gen)
+      console.error('Raw Gemini response (first 2000 chars):', String(rawText).slice(0, 2000))
+
+      let sanitized = sanitizeAIResponse(String(rawText))
+      if (!sanitized || !sanitized.trim().startsWith('{')) {
+        sanitized = String(rawText).replace(/```[\s\S]*?```/g, '').replace(/^#+\s.*$/gm, '').trim()
+      }
+
+      try {
+        const parsed = JSON.parse(sanitized)
+        return parsed as unknown as Record<string, unknown>
+      } catch (parseErr) {
+        console.warn('JSON.parse failed on sanitized text, attempting markdown salvage')
+        const candidate = parseMarkdownChecklist(String(rawText))
+        if (candidate.checklist && candidate.checklist.length > 0) return candidate as unknown as Record<string, unknown>
+        throw parseErr
+      }
+    } catch (fallbackErr) {
+      throw new Error(`generateObject failed: ${(objectError as any)?.message || objectError}; fallback error: ${(fallbackErr as any)?.message || fallbackErr}`)
     }
-    return await runAuditGeneration(url, siteContent, fallbackModel)
-  } catch (fallbackError) {
-    const finalMessage = String((fallbackError as { message?: string })?.message || fallbackError || 'Unknown model error')
-    throw new Error(`Failed after ${maxAttempts} attempts with ${primaryModel} and fallback ${fallbackModel}. Last error: ${finalMessage}`)
   }
 }
 
-export async function POST(req: Request) {
-  let auditId: string | undefined = undefined
+export async function POST(request: Request) {
+  let url = ''
+  let auditId: string | null = null
   try {
-    const body = await req.json()
-    const { url } = body
-    auditId = body.auditId
-    
+    const body = await request.json()
+    url = String(body?.url ?? body?.target ?? '').startsWith('http') ? String(body?.url ?? body?.target ?? '') : `https://${String(body?.url ?? body?.target ?? '')}`
+    auditId = body?.auditId ?? null
+
     console.log(`🚀 Starting audit for: ${url} (ID: ${auditId})`);
 
     // 1. SCRAPE THE CONTENT (Crucial: This is how the AI "sees" the site)
@@ -322,11 +361,51 @@ export async function POST(req: Request) {
     const uxScore = toIntegerScore(auditData.ux_score)
 
     // 4. Update Supabase
+    // Normalize checklist items to match frontend keys: task, recommendation, severity
+    const normalizedChecklist = Array.isArray(auditData.checklist)
+      ? auditData.checklist.map((item: any) => {
+          const title = item?.title ?? item?.task ?? item?.issue ?? (typeof item === 'string' ? item : 'No title provided')
+          const issue_description = item?.issue_description ?? item?.issue ?? item?.description ?? null
+          const recommendation = item?.recommendation ?? item?.fix ?? item?.solution ?? null
+          const code_example = item?.code_example ?? item?.codeExample ?? item?.code ?? null
+          const severity = item?.severity ?? item?.priority ?? 'medium'
+
+          return {
+            title,
+            issue_description,
+            recommendation,
+            task: title, // duplicate for safety
+            selector: item?.selector ?? item?.sel ?? null,
+            code_example,
+            severity,
+            category: item?.category ?? null,
+            raw: item,
+            // Frontend expects `issue` and `fix` fields
+            issue: title ?? issue_description ?? (typeof item === 'string' ? item : 'No title provided'),
+            fix: recommendation ?? issue_description ?? null,
+            priority: severity,
+          }
+        })
+      : []
+
+    // Deduplicate top_heaviest_assets by `asset` (keep highest estimated_impact_ms)
+    const rawTopAssets = Array.isArray(auditData.top_heaviest_assets) ? auditData.top_heaviest_assets : []
+    const topAssetsMap = new Map<string, any>()
+    for (const a of rawTopAssets) {
+      const key = String(a?.asset ?? '').trim()
+      if (!key) continue
+      const existing = topAssetsMap.get(key)
+      const aImpact = Number(a?.estimated_impact_ms) || 0
+      const existingImpact = existing ? Number(existing?.estimated_impact_ms) || 0 : 0
+      if (!existing || aImpact > existingImpact) topAssetsMap.set(key, a)
+    }
+    const dedupedTopAssets = Array.from(topAssetsMap.values())
+
     const completionPayload: Record<string, unknown> = {
       report_content: {
         summary: auditData.summary,
-        checklist: auditData.checklist,
-        top_heaviest_assets: auditData.top_heaviest_assets,
+        checklist: normalizedChecklist,
+        top_heaviest_assets: dedupedTopAssets,
         third_party_tax: auditData.third_party_tax,
         total_third_party_weight_ms: auditData.total_third_party_weight_ms,
         wcag_issues: auditData.wcag_issues,
@@ -402,5 +481,17 @@ export async function POST(req: Request) {
       }
     }
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+}
+
+async function runAuditGenerationWithRetry(url: string, siteContent: string, onFallback?: () => Promise<void> | void) {
+  const primary = 'gemini-3.5-flash-lite-preview'
+  const fallback = 'gemini-2.5-flash-lite'
+  try {
+    return await runAuditGeneration(url, siteContent, primary)
+  } catch (err) {
+    console.warn('Primary model failed, attempting fallback model:', (err as any)?.message || err)
+    if (onFallback) await onFallback()
+    return await runAuditGeneration(url, siteContent, fallback)
   }
 }

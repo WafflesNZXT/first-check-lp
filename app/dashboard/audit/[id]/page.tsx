@@ -264,11 +264,18 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black dark:text-white leading-[0.95] break-words">
               {hostname}
             </h1>
-            <p className="text-sm sm:text-lg lg:text-xl text-gray-500 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
-              {typedAudit.report_content?.summary || "no summary available."}
-            </p>
+
+            <div className="mt-4 w-full max-w-2xl mx-auto">
+              <div className="bg-gray-50 dark:bg-slate-900 p-6 rounded-2xl">
+                <p className="text-sm sm:text-lg lg:text-xl text-gray-500 dark:text-gray-300 leading-relaxed break-words">
+                  {typedAudit.report_content?.summary || 'No summary available.'}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
+
+        <hr className="my-6 border-gray-100 dark:border-slate-800" />
 
         {/* --- 📄 The Roast Report --- */}
         {/* <article className="prose prose-slate max-w-none bg-white p-8 md:p-16 rounded-[3rem] border border-gray-100 shadow-sm text-black">

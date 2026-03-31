@@ -72,15 +72,24 @@ export default async function PublicAuditViewPage({ params }: { params: Promise<
         </header>
 
         <section className="flex flex-col items-center gap-6 sm:gap-8">
-          <div className="space-y-6 text-center">
+          <div className="space-y-6 text-center w-full">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black leading-[0.95] break-words">{hostname}</h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0 break-words">
-              {typedAudit.report_content?.summary || 'no summary available.'}
-            </p>
+
+            <div className="mt-4 w-full max-w-2xl mx-auto">
+              <div className="bg-gray-50 dark:bg-slate-900 p-6 rounded-2xl">
+                <p className="text-base sm:text-lg lg:text-xl text-gray-700 dark:text-gray-200 leading-relaxed break-words">
+                  {typedAudit.report_content?.summary || 'No summary available.'}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
+        <hr className="my-6 border-gray-200 dark:border-slate-800" />
+
         <AuditStatus audit={typedAudit} />
+
+        <hr className="my-6 border-gray-200 dark:border-slate-800" />
 
         <section className="flex flex-col items-center gap-6 sm:gap-8">
           <div className="space-y-6 text-center">
@@ -91,6 +100,8 @@ export default async function PublicAuditViewPage({ params }: { params: Promise<
             </div>
           </div>
         </section>
+
+        <hr className="my-6 border-gray-200 dark:border-slate-800" />
 
         <AuditChecklist audit={{ id: typedAudit.id, report_content: typedAudit.report_content ?? undefined }} readOnly />
       </div>
