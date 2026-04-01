@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 type PredictResponse = {
   predicted_seo_score: number
@@ -31,6 +32,30 @@ export default function PredictPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<PredictResponse | null>(null)
+  const [isPro, setIsPro] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    async function loadProfile() {
+      try {
+        const userRes = await supabase.auth.getUser()
+        const user = userRes.data.user
+        if (!user) {
+          if (mounted) setIsPro(false)
+          return
+        }
+
+        const { data } = await supabase.from('profiles').select('plan_type').eq('id', user.id).maybeSingle()
+        const plan = data?.plan_type
+        if (mounted) setIsPro(plan === 'pro' || plan === 'admin')
+      } catch (err) {
+        if (mounted) setIsPro(false)
+      }
+    }
+
+    loadProfile()
+    return () => { mounted = false }
+  }, [])
 
   const runPrediction = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -59,9 +84,21 @@ export default function PredictPage() {
     }
   }
 
+  const locked = isPro === false
+
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+      <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 relative">
+        {locked && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-auto">
+            <div className="bg-white/90 dark:bg-slate-900/85 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-center shadow-lg max-w-sm w-full">
+              <h3 className="text-lg font-black text-black dark:text-white mb-2">Upgrade to Pro</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Predict is a Pro feature. Upgrade to unlock content forecasting and fine-grained model insights.</p>
+              <a href="/pricing" className="inline-block bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-2xl font-black">Unlock Predict</a>
+            </div>
+          </div>
+        )}
+
         <header className="space-y-2">
           <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">SEO Forecast</p>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black dark:text-white">Predict Content Performance</h1>
@@ -76,7 +113,7 @@ export default function PredictPage() {
             className="w-full min-h-[220px] sm:min-h-[280px] rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-sm sm:text-base text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
           />
 
-          <div className="flex justify-end">
+          <div className={`flex justify-end ${locked ? 'pointer-events-none opacity-60' : ''}`}>
             <button
               type="submit"
               disabled={loading || !content.trim()}
@@ -92,7 +129,7 @@ export default function PredictPage() {
         )}
 
         {result && (
-          <section className="space-y-4">
+          <section className={`space-y-4 ${locked ? 'pointer-events-none opacity-60' : ''}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <ScoreGauge label="Predicted Score" score={result.predicted_score} tone="dark" />
               <ScoreGauge label="Current Score" score={result.current_score} tone="violet" />

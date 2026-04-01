@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('plan_type')
+      .select('plan_type,audit_count,max_audits')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -39,22 +39,45 @@ export async function POST(req: Request) {
 
     const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
 
+    // If the profile contains a `max_audits` value, use that to enforce limits.
+    // Otherwise, fall back to the legacy free-plan hard limit based on audit rows.
     if (!isPro) {
-      const { count, error: countError } = await supabase
-        .from('audits')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+      const currentAuditCount = Number(profile?.audit_count ?? 0)
+      const maxAudits = profile?.max_audits != null ? Number(profile.max_audits) : null
 
-      if (countError) {
-        console.error('count audits error', countError)
-        return new Response(JSON.stringify({ error: 'Unable to verify audit limit. Please try again.' }), { status: 500 })
-      }
+      if (maxAudits != null) {
+        // Use a fresh count of audit rows to avoid relying on a possibly stale `audit_count` value.
+        const { count: rowCount, error: rowCountError } = await supabase
+          .from('audits')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
 
-      if ((count ?? 0) >= 3) {
-        return new Response(
-          JSON.stringify({ error: 'Free plan limit reached. You can run up to 3 audits total. Upgrade to Pro to continue.' }),
-          { status: 403 }
-        )
+        if (rowCountError) {
+          console.error('count audits error', rowCountError)
+          return new Response(JSON.stringify({ error: 'Unable to verify audit limit. Please try again.' }), { status: 500 })
+        }
+
+        if ((rowCount ?? 0) >= Number(maxAudits)) {
+          return new Response(JSON.stringify({ error: 'Audit limit reached for your plan. Upgrade to continue.' }), { status: 403 })
+        }
+      } else {
+        // Legacy behavior: free plan limited to 3 audits based on number of audit rows
+        const { count, error: countError } = await supabase
+          .from('audits')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+
+        if (countError) {
+          console.error('count audits error', countError)
+          return new Response(JSON.stringify({ error: 'Unable to verify audit limit. Please try again.' }), { status: 500 })
+        }
+
+        if ((count ?? 0) >= 3) {
+          return new Response(
+            JSON.stringify({ error: 'Free plan limit reached. You can run up to 3 audits total. Upgrade to Pro to continue.' }),
+            { status: 403 }
+          )
+        }
       }
     }
 

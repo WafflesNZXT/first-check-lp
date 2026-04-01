@@ -34,7 +34,9 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId; // Getting this from our Checkout Route
+    console.log("Found User ID in Webhook:", userId)
     const customerEmail = session.customer_details?.email;
+    
 
     if (userId) {
       // 1. UPDATE THE USER TO PRO IN SUPABASE
@@ -44,10 +46,12 @@ export async function POST(req: Request) {
         plan_type: 'pro',
         stripe_customer_id: session.customer as string,
         subscription_id: session.subscription as string,
-        audit_count: 100, // Or whatever limit you want for Pro
+        max_audits: 100, 
         updated_at: new Date().toISOString()
       })
       .eq('id', userId);
+
+      console.log("UPDATE RESULT:", { error });
 
       if (error) console.error('Supabase Profile Update Error:', error);
 

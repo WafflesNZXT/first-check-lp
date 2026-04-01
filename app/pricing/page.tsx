@@ -267,7 +267,7 @@ export default function Pricing() {
             <div className="text-right">
               <div className="flex items-baseline gap-2">
                 <span className="text-gray-500 line-through text-sm font-bold">$49</span>
-                <span className="text-black font-black text-2xl">$29</span>
+                <span className="text-black font-black text-2xl">$29/month</span>
               </div>
               <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">beta access</p>
             </div>
@@ -319,10 +319,10 @@ export default function Pricing() {
               <div className="space-y-1 min-w-0">
                 <span className="text-gray-600 line-through text-lg font-bold">$49</span>
                 <div className="flex items-end gap-2">
-                  <span className="text-6xl font-black tracking-tighter">$29</span>
-                  <div className="pb-2 space-y-0.5">
+                  <span className="text-6xl font-black tracking-tighter">$29/month</span>
+                  {/* <div className="pb-2 space-y-0.5">
                     <span className="text-gray-700 font-medium text-sm block">(One-time payment for Beta access)</span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
               <div className="mt-2 md:mt-0 md:ml-auto">

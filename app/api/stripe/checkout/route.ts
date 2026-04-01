@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?canceled=true`,
       metadata: {
-        userId: user.id, // CRITICAL: This is how the webhook knows which user to upgrade
+        userId: user.id, 
       },
     });
 

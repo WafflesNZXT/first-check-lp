@@ -505,7 +505,7 @@ function AuditDetail({
               href="/pricing"
               className="bg-black dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
             >
-              Unlock All Fixes — $12/mo
+              Unlock All Fixes — $29/mo
             </Link>
           </div>
         )}

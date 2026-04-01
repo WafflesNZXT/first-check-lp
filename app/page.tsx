@@ -24,6 +24,7 @@ import {
 import { AnalysisLoader } from './Analysisloader';
 import { useScrollReveal } from './useScrollReveal';
 import Partners from '@/components/Partners';
+import TrustedByCarousel from '@/components/TrustedByCarousel';
 
 type HeroResult = {
   performance: number;
@@ -168,7 +169,7 @@ export default function Home() {
                 </span>
                 <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
                   <Zap className="w-3.5 h-3.5 text-blue-400" />
-                  $29 one-time beta access
+                  $29/month
                 </span>
               </div>
             </div>
@@ -335,6 +336,8 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        <TrustedByCarousel />
 
         <div className="max-w-6xl mx-auto mt-24 md:mt-32 relative z-20 translate-y-24 md:translate-y-60">
           <div className="reveal rounded-3xl border border-white/20 bg-black/40 backdrop-blur-sm p-4 md:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
@@ -514,6 +517,20 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Testimonial */}
+        <div className="max-w-4xl mx-auto px-6 mt-8 md:mt-10 mb-10">
+          <div className="relative rounded-2xl border border-white/10 bg-gradient-to-r from-[#071125]/60 via-[#0b1220]/60 to-[#071125]/60 p-6 md:p-8 backdrop-blur-sm shadow-[0_30px_80px_rgba(2,6,23,0.6)]">
+            <div className="absolute left-0 top-0 h-full w-1.5 bg-blue-500 rounded-l-2xl" />
+            <div className="flex items-start gap-4">
+              <div className="text-4xl md:text-5xl text-blue-400 leading-none mt-1">“</div>
+              <div>
+                <p className="text-lg md:text-xl text-white font-semibold italic leading-relaxed">I implemented Audo’s suggested changes to my landing page and saw sales immediately after. The audit highlighted exactly where my messaging was falling short. Highly recommend for any founder looking to clarify their value prop.</p>
+                <p className="mt-4 text-sm text-gray-300 font-bold">— Founder, Market Ontology</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* HOW IT WORKS */}
         <section id="how-it-works" className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
           <div className="reveal grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
@@ -562,7 +579,7 @@ export default function Home() {
             <div className="grid grid-cols-12 rounded-3xl border border-black/10 bg-white overflow-hidden">
               <div className="col-span-4 p-5 border-r border-black/10">
                 <p className="font-black text-sm">audo</p>
-                <p className="text-xs text-blue-700 font-bold mt-1">$29 one-timebeta access</p>
+                <p className="text-xs text-blue-700 font-bold mt-1">$29/month</p>
               </div>
               <div className="col-span-8 p-5 text-sm text-gray-700">Dashboard workflow, prioritized issues, and re-runs as your site evolves.</div>
             </div>
