@@ -519,13 +519,21 @@ export default function Home() {
 
         {/* Testimonial */}
         <div className="max-w-4xl mx-auto px-6 mt-8 md:mt-10 mb-10">
-          <div className="relative rounded-2xl border border-white/10 bg-gradient-to-r from-[#071125]/60 via-[#0b1220]/60 to-[#071125]/60 p-6 md:p-8 backdrop-blur-sm shadow-[0_30px_80px_rgba(2,6,23,0.6)]">
-            <div className="absolute left-0 top-0 h-full w-1.5 bg-blue-500 rounded-l-2xl" />
-            <div className="flex items-start gap-4">
-              <div className="text-4xl md:text-5xl text-blue-400 leading-none mt-1">“</div>
+          <div className="relative rounded-2xl border border-white/10 bg-gradient-to-r from-[#071125]/60 via-[#0b1220]/60 to-[#071125]/60 p-6 md:p-8 backdrop-blur-sm shadow-[0_30px_80px_rgba(2,6,23,0.6)] hover:shadow-[0_40px_100px_rgba(2,6,23,0.72)] transition-all transform hover:-translate-y-1 overflow-hidden">
+            <div className="absolute left-0 inset-y-0 w-2 bg-blue-500 rounded-l-2xl" />
+            <div className="flex items-start gap-5">
+              <div className="flex-shrink-0 mt-1">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                  <Quote className="w-6 h-6 text-white" />
+                </div>
+              </div>
               <div>
-                <p className="text-lg md:text-xl text-white font-semibold italic leading-relaxed">I implemented Audo’s suggested changes to my landing page and saw sales immediately after. The audit highlighted exactly where my messaging was falling short. Highly recommend for any founder looking to clarify their value prop.</p>
-                <p className="mt-4 text-sm text-gray-300 font-bold">— Founder, Market Ontology</p>
+                <p className="text-lg md:text-xl text-white font-extrabold leading-relaxed" style={{ textShadow: '0 6px 18px rgba(0,0,0,0.45)' }}>I implemented Audo’s suggested changes to my landing page and saw sales immediately after. The audit highlighted exactly where my messaging was falling short. Highly recommend for any founder looking to clarify their value prop.</p>
+                <div className="mt-4">
+                  <p className="inline-flex items-center gap-3 text-sm text-blue-200 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" /> — Founder, Market Ontology
+                  </p>
+                </div>
               </div>
             </div>
           </div>
