@@ -429,7 +429,7 @@ export default function Home() {
 
                           <div className="rounded-2xl border border-gray-100 bg-white p-4">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Portfolio Snapshot</p>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
                               <div className="rounded-xl border border-violet-100 bg-violet-50 p-3"><p className="text-[10px] font-black uppercase tracking-wide text-violet-700">SEO Avg</p><p className="text-2xl font-black text-violet-900">89</p></div>
                               <div className="rounded-xl border border-blue-100 bg-blue-50 p-3"><p className="text-[10px] font-black uppercase tracking-wide text-blue-700">Performance Avg</p><p className="text-2xl font-black text-blue-900">84</p></div>
                               <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3"><p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">Accessibility Avg</p><p className="text-2xl font-black text-emerald-900">95</p></div>
@@ -494,12 +494,12 @@ export default function Home() {
                               </div>
                             </div>
 
-                            <div className="rounded-xl border border-gray-200 bg-white p-3 flex items-center justify-between gap-3">
+                            <div className="rounded-xl border border-gray-200 bg-white p-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                               <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Weekly Monitoring</p>
                                 <p className="text-xs text-gray-600 mt-1">Run this audit every week and track changes.</p>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex w-full sm:w-auto items-center justify-start sm:justify-end gap-2">
                                 <button
                                   type="button"
                                   onClick={() => setPreviewWeeklyEnabled((previousValue) => !previousValue)}
@@ -509,7 +509,7 @@ export default function Home() {
                                 >
                                   <span className={`h-5 w-5 rounded-full bg-white transition-transform ${previewWeeklyEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                                 </button>
-                                <span className="text-[10px] uppercase tracking-wider text-gray-400">preview only</span>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400 whitespace-nowrap">preview only</span>
                               </div>
                             </div>
 
@@ -609,22 +609,24 @@ export default function Home() {
                       <p className="text-sm text-gray-500 mt-1">Search, filter, and scan all completed audits in one place.</p>
                     </div>
                     <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
-                      <div className="grid grid-cols-5 gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                        <p>Site</p><p>Date</p><p>Performance</p><p>Accessibility</p><p>SEO</p>
-                      </div>
-                      {[
-                        { site: 'samplesite.com', date: 'Apr 8', p: 88, a: 100, s: 100 },
-                        { site: 'docs.samplesite.com', date: 'Apr 6', p: 81, a: 94, s: 96 },
-                        { site: 'pricing.samplesite.com', date: 'Apr 3', p: 76, a: 91, s: 92 },
-                      ].map((row) => (
-                        <div key={row.site} className="grid grid-cols-5 gap-2 px-4 py-3 border-b border-gray-100 text-sm">
-                          <p className="font-semibold">{row.site}</p>
-                          <p className="text-gray-600">{row.date}</p>
-                          <p className="font-bold">{row.p}</p>
-                          <p className="font-bold">{row.a}</p>
-                          <p className="font-bold">{row.s}</p>
+                      <div className="overflow-x-auto">
+                        <div className="min-w-[640px] grid grid-cols-5 gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                          <p className="whitespace-nowrap">Site</p><p className="whitespace-nowrap">Date</p><p className="whitespace-nowrap">Performance</p><p className="whitespace-nowrap">Accessibility</p><p className="whitespace-nowrap">SEO</p>
                         </div>
-                      ))}
+                        {[
+                          { site: 'samplesite.com', date: 'Apr 8', p: 88, a: 100, s: 100 },
+                          { site: 'docs.samplesite.com', date: 'Apr 6', p: 81, a: 94, s: 96 },
+                          { site: 'pricing.samplesite.com', date: 'Apr 3', p: 76, a: 91, s: 92 },
+                        ].map((row) => (
+                          <div key={row.site} className="min-w-[640px] grid grid-cols-5 gap-2 px-4 py-3 border-b border-gray-100 text-sm">
+                            <p className="font-semibold whitespace-nowrap">{row.site}</p>
+                            <p className="text-gray-600 whitespace-nowrap">{row.date}</p>
+                            <p className="font-bold whitespace-nowrap">{row.p}</p>
+                            <p className="font-bold whitespace-nowrap">{row.a}</p>
+                            <p className="font-bold whitespace-nowrap">{row.s}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
