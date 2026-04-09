@@ -38,7 +38,7 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
             email,
             password,
             options: {
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
+              emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
             },
           })
           if (error) throw error
@@ -74,8 +74,8 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
 
       const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth request timed out')), 10000))
       await Promise.race([authPromise, timeout])
-    } catch (error: any) {
-      setMessage(error.message)
+    } catch (error: unknown) {
+      setMessage(error instanceof Error ? error.message : 'Authentication failed')
     } finally {
       setLoading(false)
     }

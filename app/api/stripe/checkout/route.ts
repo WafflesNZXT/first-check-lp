@@ -6,7 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-02-25.clover', // Ensure this matches your Stripe library version
 });
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const supabase = await getServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
@@ -15,9 +15,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const existingCustomerId = profile?.stripe_customer_id ?? null;
+
     // Create the Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
-      customer_email: user.email,
+      ...(existingCustomerId ? { customer: existingCustomerId } : { customer_email: user.email }),
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID_PRO, // Using the .env variable
@@ -25,16 +33,18 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?upgraded=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?canceled=true`,
+      client_reference_id: user.id,
       metadata: {
         userId: user.id, 
       },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe Checkout Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Stripe checkout failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

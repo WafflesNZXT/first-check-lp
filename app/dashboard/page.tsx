@@ -8,6 +8,7 @@ import AuditList from '@/components/AuditList' // The new client component
 import DashboardBoot from '../../components/DashboardBoot'
 import RecentAuditsRefreshButton from '@/components/RecentAuditsRefreshButton'
 import DashboardHeaderActions from '@/components/DashboardHeaderActions'
+import StripeCheckoutConfirm from '@/components/StripeCheckoutConfirm'
 
 type ChecklistItem = {
   completed?: boolean
@@ -45,7 +46,11 @@ function getAverage(values: number[]) {
   return Math.round(total / values.length)
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ upgraded?: string | string[]; session_id?: string | string[] }>
+}) {
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,10 +99,21 @@ export default async function DashboardPage() {
     return total + getChecklistRemaining(audit.report_content)
   }, 0)
 
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+
+  const upgradedParam = resolvedSearchParams?.upgraded
+  const showUpgradeBanner = Array.isArray(upgradedParam)
+    ? upgradedParam.includes('1')
+    : upgradedParam === '1'
+
+  const sessionParam = resolvedSearchParams?.session_id
+  const sessionId = Array.isArray(sessionParam) ? sessionParam[0] : sessionParam
+
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
       <DashboardBoot />
       <div className="max-w-5xl mx-auto">
+        <StripeCheckoutConfirm sessionId={sessionId} />
         <header className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-10 sm:mb-16">
           <div className="flex items-center gap-2">
             <Logo size={48} className="text-black dark:text-white" />
@@ -105,6 +121,16 @@ export default async function DashboardPage() {
           </div>
           <DashboardHeaderActions />
         </header>
+
+        {showUpgradeBanner && (
+          <section className="mb-8 sm:mb-10">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 sm:px-6 sm:py-5">
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Welcome to Pro</p>
+              <h2 className="mt-1 text-lg sm:text-xl font-black tracking-tight text-emerald-900">Your Pro features are now unlocked</h2>
+              <p className="mt-2 text-sm text-emerald-800">You now have access to Predict, up to 100 audits, and full dashboard workflow tools.</p>
+            </div>
+          </section>
+        )}
 
         <section className="mb-10 sm:mb-14">
           <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-7 shadow-sm">

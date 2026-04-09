@@ -31,5 +31,22 @@ export default async function SettingsPage() {
   }
   if (!currentUser) return null;
 
-  return <SettingsClient email={currentUser.email ?? ''} />;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plan_type,audit_count,max_audits,stripe_customer_id,subscription_id')
+    .eq('id', currentUser.id)
+    .maybeSingle();
+
+  return (
+    <SettingsClient
+      email={currentUser.email ?? ''}
+      initialBilling={{
+        planType: profile?.plan_type ?? 'free',
+        auditCount: Number(profile?.audit_count ?? 0),
+        maxAudits: Number(profile?.max_audits ?? 2),
+        hasStripeCustomer: Boolean(profile?.stripe_customer_id),
+        hasSubscription: Boolean(profile?.subscription_id),
+      }}
+    />
+  );
 }

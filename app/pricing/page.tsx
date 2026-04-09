@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Nav from '@/components/Nav';
 import { createClient } from '@/utils/supabase/client';
 // Removed submitLead and client-side lead logic — checkout handled server-side
@@ -242,7 +243,10 @@ function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 export default function Pricing() {
+  const searchParams = useSearchParams();
+  const shouldAutoCheckout = searchParams.get('checkout') === '1';
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [hasAutoCheckoutStarted, setHasAutoCheckoutStarted] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewView, setPreviewView] = useState<'dashboard' | 'history' | 'predict'>('dashboard');
   const [previewShareEnabled, setPreviewShareEnabled] = useState(true);
@@ -306,7 +310,7 @@ export default function Pricing() {
   }
 
   // Check client-side auth first, then call checkout API — provides immediate redirect for unauthenticated users
-  async function startCheckout() {
+  const startCheckout = useCallback(async () => {
     try {
       setIsRedirecting(true);
 
@@ -314,14 +318,14 @@ export default function Pricing() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        window.location.href = '/signup?next=/pricing';
+        window.location.href = `/signup?next=${encodeURIComponent('/pricing?checkout=1')}`;
         return;
       }
 
       const res = await fetch('/api/stripe/checkout', { method: 'POST' });
       if (res.status === 401) {
         // Fallback: server still thinks user is unauthenticated
-        window.location.href = '/signup?next=/pricing';
+        window.location.href = `/signin?next=${encodeURIComponent('/pricing?checkout=1')}`;
         return;
       }
 
@@ -337,7 +341,14 @@ export default function Pricing() {
     } finally {
       setIsRedirecting(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoCheckout || hasAutoCheckoutStarted || isRedirecting) return;
+
+    setHasAutoCheckoutStarted(true);
+    void startCheckout();
+  }, [shouldAutoCheckout, hasAutoCheckoutStarted, isRedirecting, startCheckout]);
 
   return (
     <main className="min-h-screen bg-white text-black">
