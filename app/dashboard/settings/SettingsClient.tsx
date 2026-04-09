@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import DashboardHeaderActions from '@/components/DashboardHeaderActions'
 
 export default function SettingsClient({ email }: { email: string }) {
   const [showChangePw, setShowChangePw] = useState(false)
@@ -47,9 +48,13 @@ export default function SettingsClient({ email }: { email: string }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4 md:px-8">
-      <div className="rounded-3xl border border-black/10 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.04)] p-6 md:p-10">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-8">Settings</h1>
+    <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
+      <div className="max-w-2xl mx-auto py-2 sm:py-4">
+        <div className="rounded-3xl border border-black/10 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)] p-6 md:p-10">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-black dark:text-white mb-8">Settings</h1>
+        <div className="mb-8 flex justify-end">
+          <DashboardHeaderActions />
+        </div>
         <div className="mb-8 space-y-6">
           <div>
             <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>
@@ -90,7 +95,7 @@ export default function SettingsClient({ email }: { email: string }) {
                   <button type="button" className="text-gray-500 dark:text-gray-400 hover:underline text-sm" onClick={() => setShowChangePw(false)}>
                     Cancel
                   </button>
-                  {pwMsg && <span className="text-xs ml-2">{pwMsg}</span>}
+                  {pwMsg && <span className="text-xs ml-2 text-gray-600 dark:text-gray-300">{pwMsg}</span>}
                 </div>
               </form>
             )}
@@ -142,6 +147,7 @@ export default function SettingsClient({ email }: { email: string }) {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )

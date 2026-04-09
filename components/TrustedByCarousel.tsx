@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 
 export default function TrustedByCarousel() {
   const logos = [
@@ -8,6 +9,7 @@ export default function TrustedByCarousel() {
     { key: 'dobda', label: 'Dobda' },
     { key: 'inobex', label: 'Inobex' },
   ]
+  const marqueeLogos = [...logos, ...logos, ...logos]
 
   const renderLogo = (logo: { key: string; label: string }) => {
     if (logo.key === 'dobda') {
@@ -28,9 +30,9 @@ export default function TrustedByCarousel() {
       return (
         <>
           <div className="flex items-center justify-center w-12 h-10 flex-shrink-0">
-            <img src="/inobex-logo.svg" alt="Inobex" className="w-12 h-10 object-contain" />
+            <Image src="/inobex-logo.svg" alt="Inobex" width={48} height={40} className="w-12 h-10 object-contain" />
           </div>
-          <div className="text-sm font-bold tracking-wider text-[#0ea5e9]">{logo.label}</div>
+          <div className="text-sm font-bold tracking-wider text-[#0b3b7a]">{logo.label}</div>
         </>
       )
     }
@@ -51,47 +53,66 @@ export default function TrustedByCarousel() {
   return (
     <div className="max-w-6xl mx-auto mt-10 md:mt-12 mb-12 md:mb-16 z-20 relative">
       <style>{`
-        @keyframes fc-marquee { from { transform: translateX(0%); } to { transform: translateX(-50%); } }
-        .fc-marquee { animation: fc-marquee 28s linear infinite; }
-        .fc-marquee:hover { animation-play-state: paused; }
+        @keyframes fc-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
 
-        /* show full color by default */
-        .fc-marquee .logo > * { filter: none; transition: filter 220ms ease, transform 220ms ease; }
-        /* when the marquee is hovered, dim all non-hovered logos */
-        .fc-marquee:hover .logo:not(:hover) > * { filter: grayscale(100%) brightness(0.6); }
+        .fc-marquee-track {
+          display: flex;
+          width: max-content;
+          animation: fc-marquee 36s linear infinite;
+          will-change: transform;
+        }
 
-        /* sizing helpers for SVG/img inside logos */
-        .fc-marquee .logo img, .fc-marquee .logo svg { height: 34px; width: auto; }
+        .fc-marquee-group {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
+          flex-shrink: 0;
+          min-width: max-content;
+          padding-right: 2rem;
+        }
 
-        .fc-marquee .logo { cursor: pointer; transition: transform 220ms ease; }
-        .fc-marquee .logo:hover { transform: translateY(-3px) scale(1.02); z-index: 10; }
+        .fc-marquee-wrap:hover .fc-marquee-track { animation-play-state: paused; }
+
+        .fc-marquee-track .logo > * { filter: none; transition: filter 220ms ease, transform 220ms ease; }
+        .fc-marquee-wrap:hover .logo:not(:hover) > * { filter: grayscale(100%) brightness(0.6); }
+
+        .fc-marquee-track .logo img, .fc-marquee-track .logo svg { height: 34px; width: auto; }
+
+        .fc-marquee-track .logo { cursor: pointer; transition: transform 220ms ease; }
+        .fc-marquee-track .logo:hover { transform: translateY(-3px) scale(1.02); z-index: 10; }
+
+        .fc-marquee-mask {
+          mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
       `}</style>
 
-      <div className="px-4 md:px-6 py-3 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-sm overflow-hidden">
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Trusted by</p>
+      <p className="text-xs font-black uppercase tracking-widest text-gray-700 mb-3 px-4 md:px-6">Trusted by</p>
 
-        <div className="w-full overflow-hidden">
-          <div className="fc-marquee flex items-center gap-8 w-[200%]">
-            <div className="flex items-center gap-8">
-              {logos.map((logo, i) => (
-                <div key={`l-${i}`} className="flex items-center justify-center w-56 h-14 flex-shrink-0 opacity-95">
-                  <div className="logo group flex items-center gap-3">{renderLogo(logo)}</div>
+      <div className="relative fc-marquee-wrap overflow-hidden bg-transparent">
+        <div className="w-full overflow-hidden fc-marquee-mask">
+          <div className="fc-marquee-track">
+            <div className="fc-marquee-group">
+              {marqueeLogos.map((logo, i) => (
+                <div key={`a-${logo.key}-${i}`} className="flex items-center justify-center w-56 h-14 flex-shrink-0 opacity-95">
+                  <div className="logo flex items-center gap-3">{renderLogo(logo)}</div>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-8">
-              {logos.map((logo, i) => (
-                <div key={`r-${i}`} className="flex items-center justify-center w-56 h-14 flex-shrink-0 opacity-95">
-                  <div className="logo group flex items-center gap-3">{renderLogo(logo)}</div>
+            <div className="fc-marquee-group" aria-hidden>
+              {marqueeLogos.map((logo, i) => (
+                <div key={`b-${logo.key}-${i}`} className="flex items-center justify-center w-56 h-14 flex-shrink-0 opacity-95">
+                  <div className="logo flex items-center gap-3">{renderLogo(logo)}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
-
-      {/* no global hover rule here — keep highlight scoped to the hovered logo only */}
     </div>
   )
 }

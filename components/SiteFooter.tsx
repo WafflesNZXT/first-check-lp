@@ -1,9 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import FeedbackModal from './FeedbackModal'
 import { supabase } from '@/lib/supabase'
+import { Logo } from '@/components/Logo'
 
 export default function SiteFooter() {
   const pathname = usePathname()
@@ -33,15 +35,15 @@ export default function SiteFooter() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
 
             <div className="md:col-span-2 space-y-4">
-              <div className="text-2xl font-black tracking-[-0.06em] lowercase text-black dark:text-white">
-                audo
-              </div>
+              <Link href="/" aria-label="audo home" className="inline-flex text-black dark:text-white">
+                <Logo size={44} className="text-black dark:text-white" />
+              </Link>
               <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
                 Dashboard-first website auditing for startup teams. Run audits, prioritize fixes, and keep progress visible in one place.
               </p>
-              <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
+              {/* <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
                 By Wafi Syed
-              </p>
+              </p> */}
             </div>
 
             <div className="space-y-4">

@@ -7,18 +7,29 @@ type Theme = 'light' | 'dark'
 
 const SESSION_THEME_KEY = 'dashboard-theme'
 
-function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light'
-  const stored = sessionStorage.getItem(SESSION_THEME_KEY)
-  return stored === 'dark' ? 'dark' : 'light'
-}
-
 export default function DashboardThemeShell({ children, fontClassName }: { children: React.ReactNode, fontClassName: string }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const [theme, setTheme] = useState<Theme>('light')
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
+    const stored = sessionStorage.getItem(SESSION_THEME_KEY)
+    const initialTheme: Theme = stored === 'dark' ? 'dark' : 'light'
+
+    setTheme(initialTheme)
+    document.documentElement.classList.toggle('dark', initialTheme === 'dark')
+    setIsHydrated(true)
+
+    return () => {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isHydrated) return
+
     sessionStorage.setItem(SESSION_THEME_KEY, theme)
-  }, [theme])
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+  }, [theme, isHydrated])
 
   return (
     <div className={`${fontClassName} ${theme === 'dark' ? 'dark' : ''}`}>

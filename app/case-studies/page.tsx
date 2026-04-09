@@ -344,7 +344,7 @@ function CategoryBadge({ category }: { category: string }) {
 export default function CaseStudies() {
   return (
     <main className="min-h-screen bg-white text-black font-sans">
-      <Nav />
+      <Nav useHomeStyleTop />
 
       <div className="max-w-6xl mx-auto px-6 py-24 space-y-24">
 

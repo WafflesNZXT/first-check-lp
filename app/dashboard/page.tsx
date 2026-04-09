@@ -2,10 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserFromCookie } from '@/lib/auth'
+import { Logo } from '@/components/Logo'
 import AuditInput from '@/components/AuditInput'
 import AuditList from '@/components/AuditList' // The new client component
 import DashboardBoot from '../../components/DashboardBoot'
 import RecentAuditsRefreshButton from '@/components/RecentAuditsRefreshButton'
+import DashboardHeaderActions from '@/components/DashboardHeaderActions'
 
 type ChecklistItem = {
   completed?: boolean
@@ -97,12 +99,11 @@ export default async function DashboardPage() {
       <DashboardBoot />
       <div className="max-w-5xl mx-auto">
         <header className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-10 sm:mb-16">
-          <h1 className="font-sans text-xl sm:text-2xl font-bold text-black dark:text-white tracking-tighter"><strong>audo</strong> Dashboard</h1>
-          <form action="/auth/signout" method="post">
-            <button className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-              Sign out
-            </button>
-          </form>
+          <div className="flex items-center gap-2">
+            <Logo size={48} className="text-black dark:text-white" />
+            <h1 className="font-sans text-xl sm:text-2xl font-bold text-black dark:text-white tracking-tighter">Dashboard</h1>
+          </div>
+          <DashboardHeaderActions />
         </header>
 
         <section className="mb-10 sm:mb-14">

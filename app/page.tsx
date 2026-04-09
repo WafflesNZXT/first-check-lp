@@ -1,55 +1,136 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import Nav from '@/components/Nav';
 import {
-  AlertCircle,
   ArrowRight,
   BrainCircuit,
   Check,
-  Clock3,
   DollarSign,
-  Lock,
+  History as HistoryIcon,
+  LayoutGrid,
   MessageSquareText,
   Quote,
+  Repeat2,
+  Share2,
+  FileDown,
   Search,
   ShieldCheck,
   Sparkles,
   Target,
   X,
-  Zap,
 } from 'lucide-react';
-import { AnalysisLoader } from './Analysisloader';
 import { useScrollReveal } from './useScrollReveal';
-import Partners from '@/components/Partners';
 import TrustedByCarousel from '@/components/TrustedByCarousel';
 
 type HeroResult = {
   performance: number;
   accessibility: number;
   seo: number;
-  issues: string[];
-  totalIssues: number;
+  totalIssues?: number;
 };
 
-function scoreColor(score: number) {
-  if (score >= 90) return 'text-green-400';
-  if (score >= 50) return 'text-yellow-400';
-  return 'text-red-400';
-}
+type PreviewChecklistItem = {
+  issue: string;
+  fix: string;
+  category: string;
+  priority: 'high' | 'medium';
+  comment: string;
+  completed: boolean;
+};
 
-function scoreBg(score: number) {
-  if (score >= 90) return 'bg-green-400/10 border-green-400/20';
-  if (score >= 50) return 'bg-yellow-400/10 border-yellow-400/20';
-  return 'bg-red-400/10 border-red-400/20';
-}
+const INITIAL_PREVIEW_CHECKLIST: PreviewChecklistItem[] = [
+  {
+    issue: 'Hero headline lacks specific user outcome',
+    fix: 'Clarify user + pain + promised result in one line.',
+    category: 'copy',
+    priority: 'high',
+    comment: 'This is likely costing trust on first paint.',
+    completed: true,
+  },
+  {
+    issue: 'Main CTA intent is unclear',
+    fix: 'Change CTA to action + outcome and add supporting microcopy.',
+    category: 'ux',
+    priority: 'high',
+    comment: 'Current CTA feels generic instead of outcome-driven.',
+    completed: true,
+  },
+  {
+    issue: 'Missing image alt text on partner logos',
+    fix: 'Add descriptive alt text to all logo/image elements.',
+    category: 'accessibility',
+    priority: 'medium',
+    comment: 'Needed for accessibility compliance and crawler clarity.',
+    completed: false,
+  },
+];
 
-function scoreLabel(score: number) {
-  if (score >= 90) return 'Good';
-  if (score >= 50) return 'Needs Work';
-  return 'Poor';
+const FOUNDER_TESTIMONIALS = [
+  {
+    quote: 'The fixes are clear, direct, and immediately useful.',
+    founder: 'Founder',
+    company: 'WLink',
+    href: '/case-studies#case-study-1',
+    card: 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-cyan-50 to-white',
+    badge: 'bg-emerald-500/15 text-emerald-700 border-emerald-300/70',
+    button: 'bg-emerald-500 text-white hover:bg-emerald-600',
+    glow: 'from-emerald-200/80 via-cyan-200/70 to-transparent',
+  },
+  {
+    quote: 'Helpful in understanding what to prioritize first.',
+    founder: 'Founder',
+    company: 'RadonFinder',
+    href: '/case-studies#case-study-2',
+    card: 'border-sky-200 bg-gradient-to-br from-sky-50 via-blue-50 to-white',
+    badge: 'bg-sky-500/15 text-sky-700 border-sky-300/70',
+    button: 'bg-sky-500 text-white hover:bg-sky-600',
+    glow: 'from-sky-200/80 via-blue-200/70 to-transparent',
+  },
+  {
+    quote: 'Useful notes that surfaced issues I nearly missed.',
+    founder: 'Founder',
+    company: 'Bornday',
+    href: '/case-studies#case-study-3',
+    card: 'border-violet-200 bg-gradient-to-br from-violet-50 via-indigo-50 to-white',
+    badge: 'bg-violet-500/15 text-violet-700 border-violet-300/70',
+    button: 'bg-violet-500 text-white hover:bg-violet-600',
+    glow: 'from-violet-200/80 via-indigo-200/70 to-transparent',
+  },
+];
+
+function FounderCaseStudyCard({
+  testimonial,
+}: {
+  testimonial: {
+    quote: string;
+    founder: string;
+    company: string;
+    href: string;
+    card: string;
+    badge: string;
+    button: string;
+    glow: string;
+  };
+}) {
+  return (
+    <article className={`relative overflow-hidden rounded-3xl border p-7 flex flex-col gap-5 shadow-[0_12px_36px_rgba(0,0,0,0.08)] ${testimonial.card}`}>
+      <div className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br blur-xl ${testimonial.glow}`} />
+      <div className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${testimonial.badge}`}>
+        Case Study
+      </div>
+      <p className="text-gray-800 text-base leading-relaxed font-semibold">&ldquo;{testimonial.quote}&rdquo;</p>
+      <div className="mt-auto">
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500">{testimonial.founder}</p>
+        <p className="text-sm font-black text-black mt-1">{testimonial.company}</p>
+        <Link href={testimonial.href} className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-wider transition-colors ${testimonial.button}`}>
+          Read case study
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+    </article>
+  );
 }
 
 export default function Home() {
@@ -57,9 +138,45 @@ export default function Home() {
 
   const [heroUrl, setHeroUrl] = useState('');
   const [heroLoading, setHeroLoading] = useState(false);
-  const [heroResult, setHeroResult] = useState<HeroResult | null>(null);
   const [heroError, setHeroError] = useState('');
-  const [previewView, setPreviewView] = useState<'overview' | 'audit' | 'performance'>('overview');
+  const [heroResult, setHeroResult] = useState<HeroResult | null>(null);
+  const [previewView, setPreviewView] = useState<'dashboard' | 'history' | 'predict'>('dashboard');
+  const [previewShareEnabled, setPreviewShareEnabled] = useState(true);
+  const [previewWeeklyEnabled, setPreviewWeeklyEnabled] = useState(true);
+  const [previewChecklist, setPreviewChecklist] = useState<PreviewChecklistItem[]>(INITIAL_PREVIEW_CHECKLIST);
+  const [previewConfettiActive, setPreviewConfettiActive] = useState(false);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+
+  const previewCompletedCount = previewChecklist.filter((item) => item.completed).length;
+  const previewCompletionPercent = Math.round((previewCompletedCount / previewChecklist.length) * 100);
+
+  useEffect(() => {
+    if (!previewConfettiActive) return;
+
+    const timeout = window.setTimeout(() => {
+      setPreviewConfettiActive(false);
+    }, 1700);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [previewConfettiActive]);
+
+  function togglePreviewChecklistItem(issue: string) {
+    setPreviewChecklist((previousChecklist) => {
+      const wasAllCompleted = previousChecklist.every((item) => item.completed);
+      const nextChecklist = previousChecklist.map((item) =>
+        item.issue === issue ? { ...item, completed: !item.completed } : item
+      );
+      const isAllCompleted = nextChecklist.every((item) => item.completed);
+
+      if (!wasAllCompleted && isAllCompleted) {
+        setPreviewConfettiActive(true);
+      }
+
+      return nextChecklist;
+    });
+  }
 
   async function handleHeroSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -89,385 +206,450 @@ export default function Home() {
     }
   }
 
-  function smoothScrollTo(elId: string) {
-    const el = document.getElementById(elId.replace('#', ''));
-    if (!el) return;
+  function getScoreTone(score: number) {
+    if (score >= 90) {
+      return {
+        card: 'border-green-300/30 bg-green-500/10',
+        value: 'text-green-200',
+      };
+    }
 
-    const rect = el.getBoundingClientRect();
-    const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--announcement-offset') || '0', 10) || 0;
-    const targetY = window.scrollY + rect.top - 24 - offset;
+    if (score >= 50) {
+      return {
+        card: 'border-yellow-300/30 bg-yellow-500/10',
+        value: 'text-yellow-200',
+      };
+    }
 
-    window.scrollTo({ top: targetY, behavior: 'smooth' });
+    return {
+      card: 'border-red-300/30 bg-red-500/10',
+      value: 'text-red-200',
+    };
   }
 
   return (
     <main className="relative min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 font-sans">
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[#0a0a0a]" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_38%_34%,rgba(8,47,73,0.9)_0%,rgba(37,99,235,0.72)_30%,rgba(191,219,254,0.4)_56%,rgba(226,232,240,0.2)_74%,rgba(245,247,250,0.1)_100%),radial-gradient(115%_95%_at_100%_38%,rgba(255,255,255,1)_0%,rgba(252,253,255,0.96)_34%,rgba(248,250,252,0.9)_64%,rgba(241,245,249,0.7)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(78%_34%_at_50%_0%,rgba(255,255,255,0.42)_0%,rgba(191,219,254,0.28)_35%,rgba(37,99,235,0.14)_62%,rgba(10,10,10,0)_100%),radial-gradient(120%_90%_at_38%_34%,rgba(8,47,73,0.9)_0%,rgba(37,99,235,0.72)_30%,rgba(191,219,254,0.4)_56%,rgba(226,232,240,0.2)_74%,rgba(245,247,250,0.1)_100%),radial-gradient(115%_95%_at_100%_38%,rgba(255,255,255,1)_0%,rgba(252,253,255,0.96)_34%,rgba(248,250,252,0.9)_64%,rgba(241,245,249,0.7)_100%)]" />
       </div>
 
       <Nav />
 
       {/* HERO */}
-      <section className="relative isolate pt-5 md:pt-7 pb-20 md:pb-24 px-6 overflow-visible font-sans z-10">
-        <div className="pointer-events-none absolute left-1/2 md:left-[34%] top-28 md:top-24 -translate-x-1/2 h-[300px] md:h-[420px] w-[90vw] md:w-[760px] z-10 bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.5)_0%,rgba(8,47,73,0.38)_36%,rgba(8,47,73,0.16)_58%,rgba(8,47,73,0)_78%)] blur-3xl" />
+      <section className="relative isolate pt-8 md:pt-10 pb-16 md:pb-20 px-6 overflow-visible font-sans z-10">
+        <div className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2 h-[240px] md:h-[300px] w-[90vw] md:w-[760px] z-10 bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.35)_0%,rgba(8,47,73,0.2)_45%,rgba(8,47,73,0)_75%)] blur-3xl" />
 
-        <div className="relative z-20 max-w-6xl mx-auto mt-2 md:mt-3 lg:mt-4 mb-5 md:mb-6 lg:mb-8 flex items-center justify-center">
-          <button
-            type="button"
-            onClick={() => smoothScrollTo('#ai-vs-human')}
-            className="md:hidden inline-flex items-center justify-center gap-2 text-[11px] font-semibold bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-blue-500/20 border border-blue-300/35 rounded-full px-3 py-2 text-white shadow-[0_0_24px_rgba(59,130,246,0.22)] transition-all text-center leading-tight"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-blue-200 flex-shrink-0" />
-            Why AI-only audits miss context
-            <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" />
-          </button>
+        <div className="max-w-4xl mx-auto relative z-10 text-center space-y-5">
+          <div className="space-y-5 text-center">
+            <span className="inline-flex items-center px-3 py-1.5 border border-white/20 rounded-full text-xs font-semibold uppercase tracking-wide text-blue-600 bg-white/50 backdrop-blur-sm">
+              Pre-launch audit workflow
+            </span>
 
-          <button
-            type="button"
-            onClick={() => smoothScrollTo('#ai-vs-human')}
-            className="hidden md:inline-flex items-center gap-2 text-xs md:text-sm font-semibold bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-blue-500/20 border border-blue-300/35 rounded-full px-4 py-2 text-white shadow-[0_0_35px_rgba(59,130,246,0.22)] hover:shadow-[0_0_45px_rgba(59,130,246,0.34)] hover:border-blue-200/60 hover:from-blue-500/30 hover:to-indigo-500/30 transition-all"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-blue-200" />
-            Why founders don&apos;t rely on AI-only audits (Gemini, ChatGPT, Claude)
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
+            <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[0.95]">
+              Fix what&apos;s costing you conversions.
+            </h1>
 
-          <div className="max-w-6xl mx-auto relative z-10 flex flex-col items-center">
-          <div className="w-full grid grid-cols-1 gap-8 items-stretch justify-center">
-            <div className="space-y-6 md:space-y-8 text-center">
+            <p className="hero-subtitle text-gray-200 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+              Run a focused audit, get a prioritized fix list, and ship with confidence.
+            </p>
 
-              {/* Founder's Note badge */}
-              <span
-                className="inline-flex items-center px-3 py-1.5 mb-2 border border-gray-300/40 rounded-full text-xs font-semibold uppercase tracking-wide text-gray-500 bg-white/70 backdrop-blur-sm"
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-              >
-                Built by a developer who got sick of vague Lighthouse warnings.
+            <div className="flex flex-wrap items-center gap-3 justify-center text-xs text-gray-200">
+              <span className="inline-flex items-center gap-2 bg-black/30 border border-white/15 rounded-full px-3 py-1.5 backdrop-blur-sm">
+                <Check className="w-3.5 h-3.5 text-blue-300" />
+                No signup for quick score
               </span>
-
-
-              <h1 className="hero-title relative z-10 text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter text-white text-center leading-[0.95] py-2 drop-shadow-[0_16px_45px_rgba(0,0,0,0.72)]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Fix what’s killing your conversions.<br />
-                <span className="block">Before you ship the next thing.</span>
-              </h1>
-
-
-              <p className="hero-subtitle text-white text-base md:text-lg max-w-xl mx-auto leading-relaxed bg-black/45 border border-white/20 rounded-2xl px-6 py-5 shadow-2xl shadow-black/40 backdrop-blur-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Stop shipping blind. AI might give signals, but audo gives the workflow. Get a prioritized checklist with ready-to-paste code snippets for every SEO, performance, and accessibility gap.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-200 mx-auto">
-                <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
-                  <Clock3 className="w-3.5 h-3.5 text-blue-400" />
-                  Run anytime
-                </span>
-                <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                  Dashboard history
-                </span>
-                <span className="inline-flex items-center gap-2 bg-black/35 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm">
-                  <Zap className="w-3.5 h-3.5 text-blue-400" />
-                  $29/month
-                </span>
-              </div>
+              <span className="inline-flex items-center gap-2 bg-black/30 border border-white/15 rounded-full px-3 py-1.5 backdrop-blur-sm">
+                <Check className="w-3.5 h-3.5 text-blue-300" />
+                Results in ~10 seconds
+              </span>
             </div>
 
-            {/* Free Quick Score Widget (compact, centered) */}
-            <div className="relative h-full hero-float mx-auto w-full max-w-md box-border overflow-hidden">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/40 via-white/10 to-transparent rounded-3xl blur opacity-80" />
-              <div className="relative bg-black/45 border border-white/20 rounded-3xl px-4 pb-5 pt-6 md:px-6 md:pb-6 md:pt-7 backdrop-blur-sm h-full min-h-[300px] md:min-h-[360px] flex flex-col overflow-hidden">
-                <div className="flex flex-col items-center text-center gap-3 mb-7 md:mb-9">
-                  <div className="space-y-1">
-                    <p className="text-white font-black text-xl md:text-2xl leading-none">Free Quick Score</p>
-                    <p className="text-gray-300 text-xs">Instant benchmark + sample issues in under 10 seconds</p>
-                  </div>
-                  <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full whitespace-nowrap">
-                    no signup
-                  </span>
-                </div>
-
-                <div className="space-y-5 flex-1 flex flex-col justify-between">
-                  {!heroResult ? (
-                    <>
-                      {heroLoading ? (
-                        <AnalysisLoader />
-                      ) : (
-                        <div className="flex-1 flex flex-col justify-between gap-6">
-                          <div className="space-y-2 text-center sm:text-left">
-                            <p className="text-white font-bold text-lg leading-tight">See what&apos;s hurting trust and conversions.</p>
-                            <p className="text-gray-300 text-sm leading-relaxed">Paste your URL to get instant scores and first issues to fix. Upgrade to unlock full dashboard audits and tracked improvements.</p>
-                          </div>
-
-                          <form onSubmit={handleHeroSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
-                            <input
-                              type="url"
-                              value={heroUrl}
-                              onChange={(e) => setHeroUrl(e.target.value)}
-                              placeholder="https://yourstartup.com"
-                              required
-                              className="flex-1 min-w-0 bg-black/35 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-white placeholder:text-gray-400"
-                            />
-                            <button
-                              type="submit"
-                              className="hero-cta bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white border border-blue-300/70 font-black px-6 py-3 rounded-2xl hover:from-blue-500 hover:via-blue-400 hover:to-indigo-400 hover:border-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap shadow-[0_10px_24px_rgba(37,99,235,0.45)] text-sm w-full sm:w-auto flex-shrink-0"
-                            >
-                              Get Free Score
-                              <ArrowRight className="w-5 h-5" />
-                            </button>
-                          </form>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-300">
-                            <p className="inline-flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2">
-                              <Check className="w-3.5 h-3.5 text-green-400" />
-                              Results in ~10 seconds
-                            </p>
-                            <p className="inline-flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2">
-                              <Check className="w-3.5 h-3.5 text-green-400" />
-                              No email or signup required
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {heroError && (
-                        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-5 py-4 text-red-400 text-sm">
-                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                          {heroError}
-                        </div>
-                      )}
-
-                      <p className="hero-hint text-gray-300 text-xs leading-relaxed">
-                        If the free score reveals issues, unlock dashboard audits with your top fixes ranked by impact.{" "}
-                        <Link
-                          href="/pricing"
-                          className="text-blue-300 hover:text-white underline underline-offset-2 transition-colors"
-                        >
-                          See what&apos;s included in beta access →
-                        </Link>
-                      </p>
-                    </>
-                  ) : (
-                    <div className="space-y-4 text-left h-full flex flex-col justify-between">
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { label: 'Performance', score: heroResult.performance },
-                          { label: 'Accessibility', score: heroResult.accessibility },
-                          { label: 'SEO', score: heroResult.seo },
-                        ].map((item) => (
-                          <div
-                            key={item.label}
-                            className={`border rounded-2xl p-4 text-center space-y-1 ${scoreBg(item.score)}`}
-                          >
-                            <div className={`text-3xl font-black ${scoreColor(item.score)}`}>{item.score}</div>
-                            <div className="text-white text-xs font-bold">{item.label}</div>
-                            <div className={`text-[10px] font-black uppercase tracking-widest ${scoreColor(item.score)}`}>
-                              {scoreLabel(item.score)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="space-y-2">
-                        <p className="text-white font-bold text-sm">Issues found:</p>
-                        {(heroResult.issues ?? []).map((issue, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-300"
-                          >
-                            <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                            {issue}
-                          </div>
-                        ))}
-
-                        {heroResult.totalIssues > 3 && (
-                          <div className="relative">
-                            <div className="space-y-2 blur-sm pointer-events-none select-none">
-                              {Array.from({ length: Math.min(heroResult.totalIssues - 3, 2) }).map((_, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-300"
-                                >
-                                  <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                                  {'█'.repeat(30)}
-                                </div>
-                              ))}
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2 text-sm font-bold text-white">
-                                <Lock className="w-4 h-4 text-blue-400" />
-                                {heroResult.totalIssues - 3} more issues locked
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-6 space-y-4">
-                        <div className="space-y-1">
-                          <p className="text-white font-bold">Want to know exactly how to fix all of this?</p>
-                          <p className="text-gray-400 text-sm">
-                            Dashboard audits give you a prioritized fix list in plain English, with history you can revisit and re-run as your site evolves.
-                          </p>
-                        </div>
-                        <Link
-                          href="/pricing"
-                          className="w-full bg-white text-black font-black py-3 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
-                        >
-                          Unlock Dashboard Access — $29
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setHeroResult(null);
-                          setHeroUrl('');
-                        }}
-                        className="text-gray-600 text-xs hover:text-gray-400 transition-colors underline underline-offset-2 w-full text-center"
-                      >
-                        Try a different URL
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="flex items-center justify-center">
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 rounded-full border border-blue-300/50 bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] hover:bg-blue-500 transition-colors"
+              >
+                See Full Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>
 
         <TrustedByCarousel />
 
+        <div className="max-w-6xl mx-auto mt-4 relative z-20">
+          <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/15 bg-black/35 backdrop-blur-sm px-4 py-4 md:px-5 md:py-5">
+            <style>{`
+              @keyframes fc-progress {
+                0% { transform: translateX(-140%); }
+                100% { transform: translateX(320%); }
+              }
+            `}</style>
+
+            <p className="text-center text-sm md:text-base font-semibold text-blue-100 mb-3">Get a Free Audit Score</p>
+
+            <form onSubmit={handleHeroSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
+              <input
+                type="url"
+                value={heroUrl}
+                onChange={(e) => setHeroUrl(e.target.value)}
+                placeholder="https://yourstartup.com"
+                required
+                className="flex-1 min-w-0 w-full bg-black/35 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-white placeholder:text-gray-400"
+              />
+              <button
+                type="submit"
+                disabled={heroLoading}
+                className="w-full sm:w-auto hero-cta bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white border border-blue-300/70 font-black px-6 py-3 rounded-xl hover:from-blue-500 hover:via-blue-400 hover:to-indigo-400 hover:border-blue-200 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap text-sm"
+              >
+                {heroLoading ? 'Running...' : 'Get Free Score'}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+
+            {heroLoading && (
+              <div className="mt-3">
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full w-1/3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400"
+                    style={{ animation: 'fc-progress 1.1s ease-in-out infinite' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <p className="mt-3 text-center text-xs text-gray-300">No signup required</p>
+            {heroError && <p className="mt-2 text-center text-xs text-red-300">{heroError}</p>}
+
+            {heroResult && (
+              <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { label: 'Performance', score: heroResult.performance },
+                    { label: 'Accessibility', score: heroResult.accessibility },
+                    { label: 'SEO', score: heroResult.seo },
+                  ].map((item) => {
+                    const tone = getScoreTone(item.score);
+
+                    return (
+                      <div key={item.label} className={`rounded-lg border px-2 py-2 ${tone.card}`}>
+                        <p className="text-[10px] uppercase tracking-wide text-gray-300">{item.label}</p>
+                        <p className={`text-base font-black ${tone.value}`}>{item.score}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {typeof heroResult.totalIssues === 'number' && (
+                  <p className="mt-2 text-center text-xs text-gray-300">
+                    {heroResult.totalIssues} issues detected
+                  </p>
+                )}
+              </div>
+            )}
+
+            {heroResult && (
+              <div className="mt-4 border-t border-white/10 pt-4 text-center">
+                <p className="text-sm font-semibold text-blue-100">Fix these issues for free today.</p>
+                <Link
+                  href="/signup"
+                  className="mt-2 inline-flex items-center gap-2 rounded-full bg-white text-black px-4 py-2 text-xs font-bold hover:bg-blue-500 hover:text-white transition-colors"
+                >
+                  Create Free Account
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="max-w-6xl mx-auto mt-24 md:mt-32 relative z-20 translate-y-24 md:translate-y-60">
-          <div className="reveal rounded-3xl border border-white/20 bg-black/40 backdrop-blur-sm p-4 md:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
-            <div className="space-y-2 mb-5">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-200">Interactive preview</p>
-              <p className="text-white text-sm md:text-base">Click through dashboard views to preview how audits look in-product.</p>
+          <div className="reveal rounded-3xl border border-white/20 bg-[#f8fafc] p-4 md:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-5">
+              <div className="space-y-1">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700">Dashboard Preview</p>
+                <p className="text-gray-600 text-sm">Replica of the real product flow with sample data.</p>
+              </div>
+              <p className="text-[11px] font-mono text-gray-500">/dashboard/audit/sample-001</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 items-stretch">
-              <aside className="lg:col-span-4 rounded-2xl border border-white/20 bg-white/10 p-3 md:p-4 space-y-2">
+            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4 items-start">
+              <aside className="rounded-2xl border border-black/10 bg-white p-2.5 space-y-1.5">
                 <button
                   type="button"
-                  onClick={() => setPreviewView('overview')}
-                  className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${
-                    previewView === 'overview'
-                      ? 'border-blue-300/70 bg-blue-500/20 text-white'
-                      : 'border-white/20 bg-black/20 text-gray-200 hover:bg-black/30'
+                  onClick={() => setPreviewView('dashboard')}
+                  className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-colors flex items-center gap-2 ${
+                    previewView === 'dashboard' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <p className="text-sm font-bold">Score Overview</p>
-                  <p className="text-xs opacity-80 mt-0.5">Snapshot of performance, accessibility, and SEO.</p>
+                  <LayoutGrid className="w-4 h-4" /> Dashboard
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => setPreviewView('audit')}
-                  className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${
-                    previewView === 'audit'
-                      ? 'border-blue-300/70 bg-blue-500/20 text-white'
-                      : 'border-white/20 bg-black/20 text-gray-200 hover:bg-black/30'
+                  onClick={() => setPreviewView('history')}
+                  className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-colors flex items-center gap-2 ${
+                    previewView === 'history' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <p className="text-sm font-bold">Audit Detail</p>
-                  <p className="text-xs opacity-80 mt-0.5">Prioritized issues and recommended next actions.</p>
+                  <HistoryIcon className="w-4 h-4" /> History
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => setPreviewView('performance')}
-                  className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${
-                    previewView === 'performance'
-                      ? 'border-blue-300/70 bg-blue-500/20 text-white'
-                      : 'border-white/20 bg-black/20 text-gray-200 hover:bg-black/30'
+                  onClick={() => setPreviewView('predict')}
+                  className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-colors flex items-center gap-2 ${
+                    previewView === 'predict' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <p className="text-sm font-bold">Performance Deep Dive</p>
-                  <p className="text-xs opacity-80 mt-0.5">Metric detail, blockers, and improvement direction.</p>
+                  <Sparkles className="w-4 h-4" /> Predict
                 </button>
               </aside>
 
-              <article className="lg:col-span-8 rounded-2xl border border-white/20 bg-white p-3 md:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] hero-float-delayed">
-                <div className="rounded-xl overflow-hidden border border-black/10 bg-[#0b1220] p-4 md:p-6 min-h-[240px] md:min-h-[380px] text-white w-full box-border overflow-hidden">
-                  {previewView === 'overview' && (
-                    <div className="h-full flex flex-col gap-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-blue-200 font-black">Dashboard / Overview</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {[
-                          { label: 'Performance', score: 84, tone: 'text-yellow-300 border-yellow-300/40 bg-yellow-500/10' },
-                          { label: 'Accessibility', score: 96, tone: 'text-green-300 border-green-300/40 bg-green-500/10' },
-                          { label: 'SEO', score: 92, tone: 'text-green-300 border-green-300/40 bg-green-500/10' },
-                        ].map((item) => (
-                          <div key={item.label} className={`rounded-xl border p-3 text-center ${item.tone} min-h-[84px] flex flex-col items-center justify-center`}>
-                            <p className="text-2xl md:text-3xl font-black">{item.score}</p>
-                            <p className="text-[11px] md:text-[12px] font-bold mt-1">{item.label}</p>
+              <article className="rounded-2xl border border-black/10 bg-white p-4 md:p-5 shadow-[0_18px_50px_rgba(0,0,0,0.08)] min-h-[520px]">
+                {previewView === 'dashboard' && (
+                  <div className="space-y-4 text-black">
+                    <style>{`
+                      @keyframes fc-preview-confetti {
+                        0% { opacity: 0; transform: translateY(-10px) rotate(0deg); }
+                        12% { opacity: 1; }
+                        100% { opacity: 0; transform: translateY(170px) rotate(300deg); }
+                      }
+                    `}</style>
+
+                    <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                      <div
+                        className={`transition-[max-height] duration-500 ease-out overflow-hidden ${
+                          previewExpanded ? 'max-h-[2200px]' : 'max-h-[620px]'
+                        }`}
+                      >
+                        <div className="p-4 space-y-5">
+                          <div className="flex items-center justify-between gap-3">
+                            <h3 className="text-lg md:text-xl font-black tracking-tight">audo Dashboard</h3>
                           </div>
-                        ))}
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-                        <p className="text-sm font-bold">Latest runs</p>
-                        <div className="text-xs text-gray-300 space-y-1.5">
-                          <p>• yourstartup.com — 7 issues detected</p>
-                          <p>• docs.yourstartup.com — 3 issues detected</p>
-                          <p>• pricing.yourstartup.com — 5 issues detected</p>
+
+                          <div className="rounded-2xl border border-gray-100 bg-white p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Portfolio Snapshot</p>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+                              <div className="rounded-xl border border-violet-100 bg-violet-50 p-3"><p className="text-[10px] font-black uppercase tracking-wide text-violet-700">SEO Avg</p><p className="text-2xl font-black text-violet-900">89</p></div>
+                              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3"><p className="text-[10px] font-black uppercase tracking-wide text-blue-700">Performance Avg</p><p className="text-2xl font-black text-blue-900">84</p></div>
+                              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3"><p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">Accessibility Avg</p><p className="text-2xl font-black text-emerald-900">95</p></div>
+                              <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
+                                <p className="text-[10px] font-black uppercase tracking-wide text-amber-700">Fixes Remaining</p>
+                                <p className="text-2xl font-black text-amber-900">{previewChecklist.filter((it) => !it.completed).length}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-500">Recent Audits</p>
+                              <span className="text-xs text-gray-500">sample data</span>
+                            </div>
+                            <div className="rounded-xl border border-black/10 px-3 py-3">
+                              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                <p className="font-bold text-sm">https://samplesite.com</p>
+                                <p className="text-xs text-gray-500">Completed · 2h ago · id: sample-001</p>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 mt-3">
+                                <div className="rounded-lg bg-gray-50 border border-gray-200 p-2 text-center"><p className="text-[10px] text-gray-500 font-black uppercase">Perf</p><p className="font-black">88</p></div>
+                                <div className="rounded-lg bg-gray-50 border border-gray-200 p-2 text-center"><p className="text-[10px] text-gray-500 font-black uppercase">UX</p><p className="font-black">100</p></div>
+                                <div className="rounded-lg bg-gray-50 border border-gray-200 p-2 text-center"><p className="text-[10px] text-gray-500 font-black uppercase">SEO</p><p className="font-black">100</p></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <h4 className="text-base font-black tracking-tight">Audit Detail · samplesite.com</h4>
+                              <p className="text-[11px] font-mono text-gray-500">/dashboard/audit/sample-001</p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 justify-end">
+                              <button className="rounded-xl border border-black px-3 py-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-black hover:text-white transition-colors"><Repeat2 className="w-3.5 h-3.5" /> Run Re-Audit</button>
+                              <button className="rounded-xl border border-green-300 bg-green-300 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-green-950 flex items-center gap-1.5"><FileDown className="w-3.5 h-3.5" /> Download PDF</button>
+                              <button className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5"><Share2 className="w-3.5 h-3.5" /> Social Image</button>
+                            </div>
+
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Share Audit</p>
+                                  <p className="text-xs text-gray-600 mt-1">Anyone with the link can view this audit.</p>
+                                  <p className="text-xs text-gray-400 mt-1 break-all">https://useaudo.com/sample-001/view</p>
+                                </div>
+                                <div className="flex flex-wrap gap-2 items-center">
+                                  <button type="button" className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">Manage Access</button>
+                                  <button type="button" className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">Invite Developer</button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewShareEnabled((previousValue) => !previousValue)}
+                                    className={`inline-flex h-7 w-12 items-center rounded-full p-1 transition-colors ${previewShareEnabled ? 'bg-black' : 'bg-gray-300'}`}
+                                    aria-pressed={previewShareEnabled}
+                                    aria-label="Toggle sample share setting"
+                                  >
+                                    <span className={`h-5 w-5 rounded-full bg-white transition-transform ${previewShareEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                  </button>
+                                  <span className="text-[10px] uppercase tracking-wider text-gray-400">preview only</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="rounded-xl border border-gray-200 bg-white p-3 flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Weekly Monitoring</p>
+                                <p className="text-xs text-gray-600 mt-1">Run this audit every week and track changes.</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewWeeklyEnabled((previousValue) => !previousValue)}
+                                  className={`inline-flex h-7 w-12 items-center rounded-full p-1 transition-colors ${previewWeeklyEnabled ? 'bg-black' : 'bg-gray-300'}`}
+                                  aria-pressed={previewWeeklyEnabled}
+                                  aria-label="Toggle sample weekly monitoring setting"
+                                >
+                                  <span className={`h-5 w-5 rounded-full bg-white transition-transform ${previewWeeklyEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </button>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400">preview only</span>
+                              </div>
+                            </div>
+
+                            <section className="relative space-y-3">
+                              {previewConfettiActive && (
+                                <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+                                  {Array.from({ length: 24 }).map((_, index) => {
+                                    const left = `${(index * 17) % 100}%`;
+                                    const delay = `${(index % 8) * 60}ms`;
+                                    const duration = `${1000 + (index % 5) * 120}ms`;
+                                    const sizeClass = index % 2 === 0 ? 'w-1.5 h-1.5' : 'w-2 h-2';
+                                    const toneClass = index % 3 === 0 ? 'bg-blue-500' : index % 3 === 1 ? 'bg-indigo-500' : 'bg-emerald-500';
+
+                                    return (
+                                      <span
+                                        key={`preview-confetti-${index}`}
+                                        className={`absolute top-0 rounded-sm ${sizeClass} ${toneClass}`}
+                                        style={{
+                                          left,
+                                          animationName: 'fc-preview-confetti',
+                                          animationTimingFunction: 'ease-out',
+                                          animationFillMode: 'forwards',
+                                          animationDelay: delay,
+                                          animationDuration: duration,
+                                        }}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Checklist Progress</p>
+                                <p className="text-lg font-black">{previewCompletionPercent}%</p>
+                              </div>
+                              <div className="h-2.5 rounded-full bg-gray-200 overflow-hidden">
+                                <div className="h-full bg-black transition-[width] duration-300 ease-out" style={{ width: `${previewCompletionPercent}%` }} />
+                              </div>
+                              <p className="text-xs text-gray-500">{previewCompletedCount} of {previewChecklist.length} completed</p>
+
+                              {previewChecklist.map((item) => (
+                                <div
+                                  key={item.issue}
+                                  onClick={() => togglePreviewChecklistItem(item.issue)}
+                                  className={`rounded-2xl border p-4 space-y-2 cursor-pointer transition-colors ${
+                                    item.completed ? 'border-gray-200 bg-gray-50/70' : 'border-gray-200 bg-white hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <span className={`mt-0.5 inline-flex w-5 h-5 rounded-full border-2 items-center justify-center transition-colors ${item.completed ? 'border-black bg-black' : 'border-gray-300 bg-white'}`}>
+                                      <Check className={`w-3 h-3 ${item.completed ? 'text-white' : 'text-gray-300'}`} />
+                                    </span>
+                                    <div>
+                                      <p className={`font-bold text-sm ${item.completed ? 'text-gray-500 line-through' : 'text-black'}`}>{item.issue}</p>
+                                      <p className="text-xs text-gray-600 mt-1">{item.fix}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 pl-8">
+                                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-500">{item.category}</span>
+                                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${item.priority === 'high' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
+                                      {item.priority}
+                                    </span>
+                                  </div>
+                                  <div className="pl-8 rounded-xl border border-gray-200 bg-gray-50 p-2.5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Comments</p>
+                                    <p className="mt-1 text-xs text-gray-700">{item.comment}</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">founder@sample.com</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </section>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
 
-                  {previewView === 'audit' && (
-                    <div className="h-full flex flex-col gap-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-blue-200 font-black">Dashboard / Audit Detail</p>
-                      <div className="rounded-xl border border-blue-300/30 bg-blue-500/10 px-4 py-3">
-                        <p className="text-sm font-bold">Top Priority: Improve hero message clarity</p>
-                        <p className="text-xs text-blue-100 mt-1">Expected impact: Higher trust and clearer CTA intent.</p>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          'Reduce first section copy length by ~30%',
-                          'Move social proof above the fold',
-                          'Clarify CTA label to action + outcome',
-                        ].map((item) => (
-                          <div key={item} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-200">
-                            {item}
-                          </div>
-                        ))}
-                      </div>
+                      {!previewExpanded && (
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-white" />
+                      )}
                     </div>
-                  )}
 
-                  {previewView === 'performance' && (
-                    <div className="h-full flex flex-col gap-5">
-                      <p className="text-xs uppercase tracking-[0.2em] text-blue-200 font-black">Dashboard / Performance</p>
-                      <div className="space-y-3">
-                        {[
-                          { label: 'Largest Contentful Paint', value: '4.1s', width: 'w-[72%]' },
-                          { label: 'Total Blocking Time', value: '320ms', width: 'w-[58%]' },
-                          { label: 'Speed Index', value: '3.6s', width: 'w-[64%]' },
-                        ].map((metric) => (
-                          <div key={metric.label} className="space-y-1">
-                            <div className="flex items-center justify-between text-xs text-gray-200">
-                              <p>{metric.label}</p>
-                              <p className="font-bold">{metric.value}</p>
-                            </div>
-                            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                              <div className={`h-full ${metric.width} bg-gradient-to-r from-blue-400 to-indigo-400`} />
-                            </div>
-                          </div>
-                        ))}
+                    <div className="pt-1 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewExpanded((previousValue) => !previousValue)}
+                        className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-black hover:bg-black hover:text-white transition-colors"
+                      >
+                        {previewExpanded ? 'Minimize' : 'Expand'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {previewView === 'history' && (
+                  <div className="space-y-4 text-black">
+                    <div>
+                      <h3 className="text-xl font-black tracking-tight">Audit History</h3>
+                      <p className="text-sm text-gray-500 mt-1">Search, filter, and scan all completed audits in one place.</p>
+                    </div>
+                    <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
+                      <div className="grid grid-cols-5 gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                        <p>Site</p><p>Date</p><p>Performance</p><p>Accessibility</p><p>SEO</p>
                       </div>
-                      <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-xs text-gray-300">
-                        Main blocker detected: render-blocking script chain on first paint.
+                      {[
+                        { site: 'samplesite.com', date: 'Apr 8', p: 88, a: 100, s: 100 },
+                        { site: 'docs.samplesite.com', date: 'Apr 6', p: 81, a: 94, s: 96 },
+                        { site: 'pricing.samplesite.com', date: 'Apr 3', p: 76, a: 91, s: 92 },
+                      ].map((row) => (
+                        <div key={row.site} className="grid grid-cols-5 gap-2 px-4 py-3 border-b border-gray-100 text-sm">
+                          <p className="font-semibold">{row.site}</p>
+                          <p className="text-gray-600">{row.date}</p>
+                          <p className="font-bold">{row.p}</p>
+                          <p className="font-bold">{row.a}</p>
+                          <p className="font-bold">{row.s}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {previewView === 'predict' && (
+                  <div className="space-y-4 text-black">
+                    <div>
+                      <h3 className="text-xl font-black tracking-tight">Predict Content Performance</h3>
+                      <p className="text-sm text-gray-500 mt-1">Paste copy to forecast score shifts before shipping.</p>
+                    </div>
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                      <p className="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Draft Input</p>
+                      <div className="min-h-[120px] rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+                        Our AI audit helps founders ship conversion-ready pages by prioritizing fixes based on revenue impact.
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <button className="rounded-xl bg-black text-white px-4 py-2 text-xs font-black uppercase tracking-widest">Run Prediction</button>
                       </div>
                     </div>
-                  )}
-                </div>
-                <p className="mt-3 text-sm font-semibold text-black">
-                  {previewView === 'overview' && 'Score overview'}
-                  {previewView === 'audit' && 'Audit detail with prioritized recommendations'}
-                  {previewView === 'performance' && 'Performance deep dive and blockers'}
-                </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="rounded-2xl border border-gray-100 bg-white p-4"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Predicted Score</p><p className="text-3xl font-black mt-1">91</p><div className="mt-2 h-2 rounded-full bg-gray-200"><div className="h-full w-[91%] rounded-full bg-black" /></div></div>
+                      <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-700">Current Score</p><p className="text-3xl font-black mt-1 text-violet-900">83</p><div className="mt-2 h-2 rounded-full bg-violet-200"><div className="h-full w-[83%] rounded-full bg-violet-700" /></div></div>
+                    </div>
+                  </div>
+                )}
               </article>
             </div>
           </div>
@@ -576,6 +758,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* TESTIMONIAL */}
+        <section className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
+          <div className="reveal max-w-2xl mx-auto">
+            <FounderCaseStudyCard testimonial={FOUNDER_TESTIMONIALS[0]} />
+          </div>
+        </section>
+
         {/* COMPARISON */}
         <section id="comparison" className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
           <div className="reveal space-y-3 max-w-3xl">
@@ -604,6 +793,10 @@ export default function Home() {
                 <div className="col-span-8 p-5 text-sm text-gray-600">{comp.note}</div>
               </div>
             ))}
+          </div>
+
+          <div className="reveal mt-12 max-w-2xl mx-auto">
+            <FounderCaseStudyCard testimonial={FOUNDER_TESTIMONIALS[1]} />
           </div>
         </section>
 
@@ -637,39 +830,9 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </section>
 
-        {/* TESTIMONIALS */}
-        <section className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
-          <div className="reveal grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                quote: "The fixes are clear, direct, and immediately useful.",
-                author: "WLink Founder",
-                href: "/case-studies#case-study-1",
-              },
-              {
-                quote: "Helpful in understanding what to prioritize first.",
-                author: "RadonFinder Founder",
-                href: "/case-studies#case-study-2",
-              },
-              {
-                quote: "Useful notes that surfaced issues I nearly missed.",
-                author: "Bornday Founder",
-                href: "/case-studies#case-study-3",
-              },
-            ].map((t) => (
-              <article key={t.author} className="rounded-3xl border border-black/10 bg-white p-7 flex flex-col gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
-                <Quote className="w-5 h-5 text-gray-400" />
-                <p className="text-gray-700 text-sm leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-auto">
-                  <p className="text-sm font-bold text-black">{t.author}</p>
-                  <Link href={t.href} className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-black">
-                    Read case study <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </article>
-            ))}
+          <div className="reveal mt-12 max-w-2xl mx-auto">
+            <FounderCaseStudyCard testimonial={FOUNDER_TESTIMONIALS[2]} />
           </div>
         </section>
 
@@ -679,7 +842,7 @@ export default function Home() {
             <h2 className="text-4xl md:text-6xl font-black tracking-tight">Ready to run your first audit?</h2>
             <p className="text-gray-300 max-w-2xl mx-auto">Get instant scoring, prioritized fixes, and a repeatable audit workflow your team can use every week.</p>
             <Link href="/pricing" className="inline-flex items-center gap-2 bg-white text-black px-8 py-4 rounded-2xl font-black hover:bg-blue-600 hover:text-white transition-colors">
-              Get dashboard access — $29 <ArrowRight className="w-4 h-4" />
+              Start for Free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </section>
