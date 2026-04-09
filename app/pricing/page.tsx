@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import Nav from '@/components/Nav';
 import { createClient } from '@/utils/supabase/client';
 // Removed submitLead and client-side lead logic — checkout handled server-side
@@ -243,8 +242,7 @@ function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 export default function Pricing() {
-  const searchParams = useSearchParams();
-  const shouldAutoCheckout = searchParams.get('checkout') === '1';
+  const [shouldAutoCheckout, setShouldAutoCheckout] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [hasAutoCheckoutStarted, setHasAutoCheckoutStarted] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -341,6 +339,11 @@ export default function Pricing() {
     } finally {
       setIsRedirecting(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setShouldAutoCheckout(params.get('checkout') === '1');
   }, []);
 
   useEffect(() => {
