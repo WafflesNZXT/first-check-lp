@@ -463,7 +463,7 @@ export default function CaseStudies() {
               href="/pricing"
               className="inline-flex items-center gap-2 bg-white text-black font-black px-8 py-4 rounded-2xl hover:bg-blue-100 transition-all shadow-xl"
             >
-              Start Dashboard Access — $29
+              Start Free
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
