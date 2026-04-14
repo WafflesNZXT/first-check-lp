@@ -665,7 +665,7 @@ export default function Home() {
         <section id="ai-vs-human" className="max-w-7xl mx-auto px-6 pt-40 md:pt-48 pb-20">
           <div className="reveal space-y-4 max-w-3xl">
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700">Why audo wins</p>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">AI gives signals. audo gives workflow.</h2>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">SEO tools find traffic problems. audo fixes conversion problems.</h2>
             <p className="text-gray-700 text-base leading-relaxed">You get speed, prioritization, and a repeatable dashboard loop your team can act on.</p>
           </div>
 
@@ -680,9 +680,9 @@ export default function Home() {
                   </div>
                 </div>
                 <ul className="space-y-3 text-sm text-gray-700">
-                  <li className="flex gap-3"><Check className="w-4 h-4 mt-0.5 text-blue-700" /> Prioritized fixes by business impact, not random categories</li>
-                  <li className="flex gap-3"><Check className="w-4 h-4 mt-0.5 text-blue-700" /> Shared dashboard history for every run and URL</li>
-                  <li className="flex gap-3"><Check className="w-4 h-4 mt-0.5 text-blue-700" /> Re-run audits as you ship and verify progress</li>
+                  <li className="flex gap-3"><Check className="w-4 h-4 mt-0.5 text-blue-700" /> Fixes ordered by conversion impact, not technical category</li>
+                  <li className="flex gap-3"><Check className="w-4 h-4 mt-0.5 text-blue-700" /> Designed for landing pages and pre-launch sites</li>
+                  <li className="flex gap-3"><Check className="w-4 h-4 mt-0.5 text-blue-700" /> Re-run as you ship to verify progress</li>
                 </ul>
               </div>
 
@@ -692,9 +692,9 @@ export default function Home() {
                   <p className="font-semibold">AI-only output</p>
                 </div>
                 <ul className="space-y-2.5 text-sm text-gray-600">
-                  <li className="flex gap-3"><X className="w-4 h-4 mt-0.5 text-gray-500" /> Generic tips with no launch context</li>
-                  <li className="flex gap-3"><X className="w-4 h-4 mt-0.5 text-gray-500" /> No opinionated priority order</li>
-                  <li className="flex gap-3"><X className="w-4 h-4 mt-0.5 text-gray-500" /> Easy to spot as cookie-cutter advice</li>
+                  <li className="flex gap-3"><X className="w-4 h-4 mt-0.5 text-gray-500" /> No landing page context — just generic site-wide tips</li>
+                  <li className="flex gap-3"><X className="w-4 h-4 mt-0.5 text-gray-500" /> Can&apos;t tell you why visitors aren&apos;t converting</li>
+                  <li className="flex gap-3"><X className="w-4 h-4 mt-0.5 text-gray-500" /> Not built around your specific launch goals</li>
                 </ul>
               </div>
             </div>
@@ -770,8 +770,8 @@ export default function Home() {
         {/* COMPARISON */}
         <section id="comparison" className="max-w-7xl mx-auto px-6 py-20 border-t border-black/10">
           <div className="reveal space-y-3 max-w-3xl">
-            <h3 className="text-3xl md:text-5xl font-black tracking-tight">Built for founders who ship.</h3>
-            <p className="text-gray-600">Simple comparison on what actually matters for ongoing site improvements.</p>
+            <h3 className="text-3xl md:text-5xl font-black tracking-tight">Different problem. Different tool.</h3>
+            <p className="text-gray-600">Ahrefs and SEMrush help you rank. audo helps you convert. They&apos;re not the same problem.</p>
           </div>
 
           <div className="reveal mt-10 space-y-4">
@@ -780,7 +780,7 @@ export default function Home() {
                 <p className="font-black text-sm">audo</p>
                 <p className="text-xs text-blue-700 font-bold mt-1">$29/month</p>
               </div>
-              <div className="col-span-8 p-5 text-sm text-gray-700">Dashboard workflow, prioritized issues, and re-runs as your site evolves.</div>
+              <div className="col-span-8 p-5 text-sm text-gray-700">Conversion-focused audits with prioritized fixes. Built for landing pages, not agency dashboards.</div>
             </div>
             {[
               { name: 'Ahrefs', icon: DollarSign, price: '$129/mo+', note: 'Powerful SEO data, but expensive and not conversion-priority oriented.' },

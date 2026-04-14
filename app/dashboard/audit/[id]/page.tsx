@@ -7,7 +7,7 @@ import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
 import AuditShareControls from '../../../../components/AuditShareControls'
 import AuditDetailActions from '../../../../components/AuditDetailActions'
-import BenchmarkCompare from '../../../../components/BenchmarkCompare'
+import AuditDetailModals from '../../../../components/AuditDetailModals'
 import WeeklyMonitoringToggle from '../../../../components/WeeklyMonitoringToggle'
 import { Logo } from '../../../../components/Logo'
 import AccessibilityFixAll from '../../../../components/AccessibilityFixAll'
@@ -174,6 +174,23 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
   const canEditChecklist = isOwner || collaboratorAccess === 'edit'
   const canComment = isOwner || (!!typedAudit.allow_collaborator_comments && !!collaboratorAccess)
 
+  const { data: shareRows } = await supabase
+    .from('audit_shares')
+    .select('shared_with_email')
+    .eq('audit_id', typedAudit.id)
+
+  const invitedDeveloperEmails = Array.from(
+    new Set(
+      [
+        ...(Array.isArray(shareRows)
+          ? shareRows
+              .map((row) => String((row as { shared_with_email?: string }).shared_with_email || '').trim().toLowerCase())
+              .filter(Boolean)
+          : []),
+      ].filter(Boolean)
+    )
+  )
+
   let profile: ProfileRecord = null
   if (isOwner && userId) {
     const { data } = await supabase
@@ -309,6 +326,8 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
           canEditChecklist={canEditChecklist}
           canComment={canComment}
           viewerEmail={currentUser.email || undefined}
+          viewerUserId={currentUser.id}
+          invitedDeveloperEmails={invitedDeveloperEmails}
         />
         
       </div>
@@ -324,7 +343,9 @@ function AuditDetail({
   auditSequenceNumber,
   canEditChecklist,
   canComment,
+  viewerUserId,
   viewerEmail,
+  invitedDeveloperEmails,
 }: {
   audit: AuditRecord,
   profile: ProfileRecord,
@@ -333,7 +354,9 @@ function AuditDetail({
   auditSequenceNumber: number,
   canEditChecklist: boolean,
   canComment: boolean,
+  viewerUserId: string,
   viewerEmail?: string,
+  invitedDeveloperEmails: string[],
 }) {
   const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
   const isLocked = viewerIsOwner && !isPro && auditSequenceNumber === 3
@@ -348,6 +371,22 @@ function AuditDetail({
           initialIsPublic={!!audit.is_public}
           canManage={viewerIsOwner}
           allowCollaboratorComments={!!audit.allow_collaborator_comments}
+        />
+      </div>
+
+      <div className="print-hide">
+        <AuditDetailModals
+          auditId={audit.id}
+          canManageWorkflow={canEditChecklist}
+          viewerUserId={viewerUserId}
+          viewerEmail={viewerEmail}
+          invitedDeveloperEmails={invitedDeveloperEmails}
+          currentSiteUrl={audit.website_url}
+          currentScores={{
+            performance: audit.performance_score ?? 0,
+            ux: audit.ux_score ?? 0,
+            seo: audit.seo_score ?? 0,
+          }}
         />
       </div>
 
@@ -480,18 +519,6 @@ function AuditDetail({
           </div>
         </section>
       )}
-
-      <div className="print-hide">
-        <BenchmarkCompare
-          auditId={audit.id}
-          currentSiteUrl={audit.website_url}
-          currentScores={{
-            performance: audit.performance_score ?? 0,
-            ux: audit.ux_score ?? 0,
-            seo: audit.seo_score ?? 0,
-          }}
-        />
-      </div>
 
       <div className={`relative print-break-before ${isLocked ? 'max-h-[28rem] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]' : ''}`}>
         {isLocked && (

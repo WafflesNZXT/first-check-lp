@@ -78,6 +78,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subject: 'Your audo PRO access is confirmed!',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="font-size: 32px; font-weight: 800; letter-spacing: -1px;">audo</h1>
             <h2>Welcome to audo Pro!</h2>
             <p>Hey! Your payment was successful and your dashboard is now unlocked.</p>
             <p>You now have <strong>Unlimited Audits</strong> and access to the Predictor page.</p>

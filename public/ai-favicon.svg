@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="audo favicon">
-  <rect width="64" height="64" rx="14" fill="#ffffff"/>
-  <text x="32" y="36" text-anchor="middle" dominant-baseline="middle" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="900" font-size="60" fill="#111111">a</text>
+  <path d="M4 20L32 4L60 20V30L32 14L4 30V20Z" fill="#3B82F6" />
+  <path d="M4 34L32 18L60 34V44L32 28L4 44V34Z" fill="#3B82F6" />
+  <path d="M4 48L32 32L60 48L44 58L32 50L20 58L4 48Z" fill="#3B82F6" />
 </svg>

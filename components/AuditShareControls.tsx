@@ -40,6 +40,53 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
     setOrigin(window.location.origin)
   }, [])
 
+  useEffect(() => {
+    if (!canManage) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const tagName = target?.tagName?.toLowerCase()
+      const isTypingContext =
+        tagName === 'input' ||
+        tagName === 'textarea' ||
+        tagName === 'select' ||
+        !!target?.isContentEditable
+
+      if (event.key === 'Escape') {
+        if (isInviteOpen) {
+          event.preventDefault()
+          setIsInviteOpen(false)
+          return
+        }
+        if (isManageOpen) {
+          event.preventDefault()
+          setIsManageOpen(false)
+        }
+        return
+      }
+
+      if (isTypingContext || event.ctrlKey || event.metaKey || event.altKey) return
+
+      if (!isInviteOpen && !isManageOpen && event.key.toLowerCase() === 'i') {
+        event.preventDefault()
+        setInviteStatus('idle')
+        setInviteMessage('')
+        void loadShares()
+        setIsInviteOpen(true)
+        return
+      }
+
+      if (!isInviteOpen && !isManageOpen && event.key.toLowerCase() === 'm') {
+        event.preventDefault()
+        void loadShares()
+        setIsManageOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [canManage, isInviteOpen, isManageOpen])
+
   const handleToggleShare = async () => {
     if (!canManage || isSaving) return
 
@@ -207,6 +254,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
         <div>
           <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Share Audit</p>
           <p className="text-sm text-gray-500 dark:text-gray-300">{isPublic ? 'Anyone with the link can view this audit.' : 'Only you can view this audit.'}</p>
+          {canManage && <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Shortcuts: <span className="font-black text-black dark:text-white">I</span> Invite · <span className="font-black text-black dark:text-white">M</span> Manage · <span className="font-black text-black dark:text-white">Esc</span> Close modal</p>}
           {isPublic && origin && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 break-all">{`${origin}${auditPath}`}</p>}
         </div>
 
@@ -278,6 +326,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-2">Invite Access</p>
             <h3 id="invite-developer-title" className="text-xl font-black text-black dark:text-white tracking-tight">Invite Developer</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Add an email to give this person access to this audit.</p>
+            <p className="mt-1 text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">Press Esc to close</p>
 
             <form onSubmit={handleInviteDeveloper} className="mt-5 space-y-3">
               <input
@@ -332,6 +381,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
           <div className="relative w-full max-w-2xl rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-2">Collaborator Access</p>
             <h3 id="manage-access-title" className="text-xl font-black text-black dark:text-white tracking-tight">Manage Access</h3>
+            <p className="mt-1 text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">Press Esc to close</p>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-gray-200 dark:border-slate-700 px-4 py-3">
               <div>

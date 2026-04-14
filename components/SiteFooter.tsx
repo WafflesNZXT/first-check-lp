@@ -72,6 +72,7 @@ export default function SiteFooter() {
                   { label: 'Contact', href: 'mailto:wafi.syed5@gmail.com' },
                   { label: 'Privacy Policy', href: '/privacy' },
                   { label: 'Terms of Service', href: '/terms' },
+                  { label: 'Refund Policy', href: '/refund-policy' },
                 ].map((link) => (
                   <li key={link.label}>
                     <a href={link.href} className="text-gray-600 dark:text-gray-300 text-sm hover:text-black dark:hover:text-white transition-colors">

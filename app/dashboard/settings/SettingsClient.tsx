@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import DashboardHeaderActions from '@/components/DashboardHeaderActions'
 
@@ -21,6 +21,14 @@ const CANCEL_REASONS = [
   'Other',
 ] as const
 
+// const SETTINGS_DICTIONARY: Array<{ term: string; definition: string }> = [
+//   { term: 'Audit', definition: 'A single website analysis run with scores and checklist output.' },
+//   { term: 'Checklist Progress', definition: 'Percent of checklist items marked complete for an audit.' },
+//   { term: 'Team Workflow', definition: 'Task board where creators assign fixes and assignees update stage.' },
+//   { term: 'Benchmark', definition: 'Side-by-side score comparison between your site and a competitor.' },
+//   { term: 'Pro Plan', definition: 'Paid plan with Predict access and higher audit limits.' },
+// ]
+
 export default function SettingsClient({ email, initialBilling }: { email: string; initialBilling: BillingSnapshot }) {
   const [showChangePw, setShowChangePw] = useState(false)
   const [pw1, setPw1] = useState('')
@@ -39,6 +47,24 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
   const [loading, setLoading] = useState(false)
 
   const isPro = billing.planType === 'pro' || billing.planType === 'admin'
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (showCancelModal) {
+        event.preventDefault()
+        setShowCancelModal(false)
+        return
+      }
+      if (dangerAction) {
+        event.preventDefault()
+        setDangerAction(null)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showCancelModal, dangerAction])
 
   async function openBillingPortal() {
     try {
@@ -233,6 +259,20 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
           </div>
         </div>
         <div className="mt-12">
+          {/* <h2 className="text-lg font-semibold text-black dark:text-white mb-2">Dictionary</h2>
+          <div className="rounded-2xl border border-black/10 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 mb-8">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Quick definitions for dashboard terms.</p>
+            {/* <div className="space-y-2">
+              {SETTINGS_DICTIONARY.map((entry) => (
+                <div key={entry.term} className="rounded-xl border border-black/10 dark:border-slate-700 px-3 py-2">
+                  <p className="text-xs font-black uppercase tracking-widest text-black dark:text-white">{entry.term}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{entry.definition}</p>
+                </div>
+              ))}
+            </div> 
+            <p className="mt-3 text-[11px] text-gray-500 dark:text-gray-400">Shortcut hint: <span className="font-black text-black dark:text-white">Esc</span> closes open confirmation modals.</p>
+          </div> */}
+
           <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-4">

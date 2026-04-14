@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       subject: `You were invited to review an audit for ${hostname}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
-          <h1 style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">audo</h1>
+          <h1 style="font-size: 32px; font-weight: 800; letter-spacing: -1px;">audo</h1>
           <p style="font-size: 16px; line-height: 1.6; color: #333; margin-top: 20px;">
             ${currentUser.email || 'A teammate'} invited you to review a website audit for <strong>${hostname}</strong>.
           </p>
