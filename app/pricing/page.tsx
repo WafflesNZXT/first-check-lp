@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown } from 'lucide-react';
+import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown, Users } from 'lucide-react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import { createClient } from '@/utils/supabase/client';
@@ -370,7 +370,7 @@ export default function Pricing() {
               🌸 Spring Sale
             </span>
             <p className="text-black font-bold text-sm">
-              Beta pricing is live — save 40% before it ends
+              Save 40% before it ends
             </p>
           </div>
       
@@ -380,7 +380,7 @@ export default function Pricing() {
                 <span className="text-gray-500 line-through text-sm font-bold">$49</span>
                 <span className="text-black font-black text-2xl">$29/month</span>
               </div>
-              <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">beta access</p>
+              {/* <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">beta access</p> */}
             </div>
           </div>
         </div>
@@ -390,14 +390,14 @@ export default function Pricing() {
 
         {/* Header */}
         <div className="text-center space-y-4 mb-20">
-          <span className="px-4 py-1.5 text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-700 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
+          {/* <span className="px-4 py-1.5 text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-700 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
             Simple Pricing
-          </span>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">Simple beta access. No surprises.</h1>
+          </span> */}
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">Simple pricing. No surprises.</h1>
           {/* <p className="text-gray-700 text-lg max-w-xl mx-auto">Get access to the audo dashboard to run audits, prioritize fixes, and track progress in one place.</p> */}
           <p className="text-blue-700 text-lg max-w-xl mx-auto">
             Every week you wait, you keep paying for the same drop-offs. Fix the bottleneck once, then compound.
@@ -434,8 +434,9 @@ export default function Pricing() {
                 {[
                   { icon: CheckCircle, text: '2 free audits with full dashboard functionality', muted: false },
                   { icon: FileText, text: 'Full audit detail pages with issue breakdowns', muted: false },
-                  { icon: Layout, text: 'Audit history and re-run workflow', muted: false },
-                  { icon: X, text: 'Predict tab locked on free plan (upgrade to Pro)', muted: true },
+                  { icon: Layout, text: 'Audit History and re-run Workflow', muted: false },
+                  { icon: Users, text: 'Developer and Team Collaboration', muted: false },
+                  { icon: X, text: 'Site Copy Predict Tool', muted: true },
                 ].map((item, i) => (
                   <li key={i} className={`flex items-center gap-4 text-sm ${item.muted ? 'text-gray-500' : 'text-gray-700'}`}>
                     <div className={`w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0 ${item.muted ? 'bg-gray-100 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
@@ -513,10 +514,11 @@ export default function Pricing() {
               {[
                 { icon: FileText, text: "Full audit detail pages with issue breakdowns" },
                 { icon: Sparkles, text: "Prioritized quick wins for conversion and UX" },
-                { icon: BarChart3, text: "Predict tab access for before/after content forecasting" },
+                { icon: BarChart3, text: "Site Copy Predict Tool access for before/after content forecasting" },
                 { icon: Zap, text: "Performance, SEO, and accessibility insights" },
                 { icon: Layout, text: "Dashboard workflow to manage what to fix next" },
-                { icon: CheckCircle, text: "Clear 'Top 3 fixes' priority list per run" },
+                { icon: CheckCircle, text: "Clear interactive checklist per run" },
+                { icon: Users, text: "Developer and Team Collaboration" },
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-4 text-sm text-gray-700">
                   <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
@@ -619,8 +621,8 @@ export default function Pricing() {
         </div> 
 
         {/* Auditor Trust Strip */}
-        <div className="mt-16 bg-[#fafafa] border border-black/10 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
+        {/* <div className="mt-16 bg-[#fafafa] border border-black/10 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">
+          {/* <div className="flex items-center gap-6">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-blue-500/50 overflow-hidden flex-shrink-0">
               <img src="/1770612376028.jfif" alt="Wafi Syed" className="w-full h-full object-cover" />
             </div>
@@ -635,7 +637,7 @@ export default function Pricing() {
                 </a>
               </div>
             </div>
-          </div>
+          </div> */}
           {/* <div className="flex gap-6 flex-shrink-0">
             <div className="text-center">
               <div className="text-2xl font-bold">8+</div>
@@ -649,15 +651,15 @@ export default function Pricing() {
               <div className="text-2xl font-bold">24hr</div>
               <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Dashboard-First</div>
             </div>
-          </div> */}
-        </div>
+          </div> 
+        </div> */}
 
         {/* FAQ Strip */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { q: "What do I actually get?", a: "Dashboard access plus full audit detail views with prioritized fixes for SEO, performance, accessibility, and UX." },
             { q: "How does it work?", a: "Add your URL in the dashboard, run an audit, then track and re-run as you ship improvements." },
-            { q: "Is this built for teams?", a: "Yes. The dashboard keeps audit history and priorities in one place so everyone can align on what to fix next." },
+            { q: "Is this built for teams?", a: "Yes, both teams and solo users can benefit. The dashboard keeps audit history and priorities in one place so everyone can align on what to fix next." },
           ].map((item, i) => (
             <div key={i} className="bg-white border border-black/10 rounded-2xl p-6 space-y-2">
               <p className="text-black font-bold text-sm">{item.q}</p>
