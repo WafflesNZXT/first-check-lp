@@ -261,7 +261,7 @@ export default function AuditChecklist({
               completedTasks.includes(item.issue)
                 ? 'bg-gray-50 dark:bg-slate-900 border-gray-100 dark:border-slate-800 opacity-60'
                 : 'bg-white dark:bg-slate-900 border-white dark:border-slate-800 shadow-sm'
-            } ${readOnly ? '' : 'cursor-pointer hover:border-black dark:hover:border-slate-500'}`}
+            } ${readOnly ? '' : 'cursor-pointer hover:border-black dark:hover:border-slate-500'} overflow-hidden`}
           >
             <div className="flex gap-4 items-start">
               <div
@@ -273,10 +273,10 @@ export default function AuditChecklist({
               </div>
 
               <div className="space-y-1">
-                <h4 className={`font-bold text-lg ${completedTasks.includes(item.issue) ? 'line-through text-gray-400 dark:text-gray-500' : 'text-black dark:text-white'}`}>
+                <h4 className={`font-bold text-lg break-words ${completedTasks.includes(item.issue) ? 'line-through text-gray-400 dark:text-gray-500' : 'text-black dark:text-white'}`}>
                   {item.issue}
                 </h4>
-                <p className="text-gray-500 dark:text-gray-300 text-sm">{item.fix}</p>
+                <p className="text-gray-500 dark:text-gray-300 text-sm break-words">{item.fix}</p>
 
                 {item.selector && (
                   <code className="inline-block mt-1 rounded-md border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-2 py-1 text-[11px] text-gray-700 dark:text-gray-200 break-all">
@@ -305,7 +305,7 @@ export default function AuditChecklist({
                   </div>
                 )}
 
-                <div className="flex gap-2 mt-3">
+                <div className="flex flex-wrap gap-2 mt-3">
                   <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-300">
                     {item.category}
                   </span>

@@ -39,8 +39,28 @@ export default function AccessibilityFixAll({ fixes }: { fixes: AccessibilityFix
       </div>
 
       {open && (
-        <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-slate-800">
-          <table className="min-w-full text-left">
+        <>
+          <div className="space-y-2 sm:hidden">
+            {normalized.map((item) => (
+              <article key={`fix-mobile-${item.selector}-${item.aria_label}-${item.alt_text}`} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Selector</p>
+                  <p className="mt-1 text-xs text-black dark:text-white break-all">{item.selector}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">ARIA Label</p>
+                  <p className="mt-1 text-xs text-gray-700 dark:text-gray-200 break-words">{item.aria_label || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Alt Text</p>
+                  <p className="mt-1 text-xs text-gray-700 dark:text-gray-200 break-words">{item.alt_text || '—'}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-100 dark:border-slate-800">
+            <table className="min-w-full text-left">
             <thead>
               <tr className="border-b border-gray-200 dark:border-slate-700">
                 <th className="py-2 px-3 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Selector</th>
@@ -57,8 +77,9 @@ export default function AccessibilityFixAll({ fixes }: { fixes: AccessibilityFix
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )

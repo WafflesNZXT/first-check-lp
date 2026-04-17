@@ -44,7 +44,7 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className="print-hide group/dashboard fixed left-0 z-[65] border-r border-black/10 dark:border-slate-700 bg-white/90 dark:bg-slate-900/92 backdrop-blur-xl shadow-sm w-14 sm:w-16 hover:w-44 transition-[width] duration-200 ease-out overflow-hidden"
+      className="print-hide group/dashboard sticky xl:fixed left-0 self-start z-[65] border-r border-black/10 dark:border-slate-700 bg-white/90 dark:bg-slate-900/92 backdrop-blur-xl shadow-sm w-14 sm:w-16 xl:hover:w-44 transition-[width] duration-200 ease-out overflow-hidden"
       style={{ top: 'var(--announcement-offset, 0px)', height: 'calc(100vh - var(--announcement-offset, 0px))' }}
       aria-label="Dashboard navigation"
     >

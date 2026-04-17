@@ -44,17 +44,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('welcome_sent')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
+
+    if (profileError) {
+      return NextResponse.json({ error: 'Could not read profile state' }, { status: 500 });
+    }
 
     if (profile?.welcome_sent) {
       return NextResponse.json({ success: true, skipped: true });
     }
 
-    const email = currentUser?.email || emailFromBody;
+    const email = (currentUser?.email || emailFromBody || '').trim();
     if (!email) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
     }
@@ -88,10 +92,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: String(error.message || 'Welcome email failed') }, { status: 500 });
     }
 
-    await supabase
+    if (!data?.id) {
+      return NextResponse.json({ error: 'Welcome email was not accepted by provider' }, { status: 502 });
+    }
+
+    const { data: updatedProfile, error: updateError } = await supabase
       .from('profiles')
       .update({ welcome_sent: true })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select('id')
+      .maybeSingle();
+
+    if (updateError || !updatedProfile) {
+      return NextResponse.json({ error: 'Welcome email sent but profile flag was not updated' }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, data });
   } catch {

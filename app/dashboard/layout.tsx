@@ -10,8 +10,10 @@ const roboto = Roboto({
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <DashboardThemeShell fontClassName={roboto.className}>
-      <DashboardSidebar />
-      <div className="pl-[56px] sm:pl-[64px]">{children}</div>
+      <div className="flex xl:block">
+        <DashboardSidebar />
+        <div className="min-w-0 flex-1 xl:pl-[64px]">{children}</div>
+      </div>
     </DashboardThemeShell>
   )
 }

@@ -15,9 +15,10 @@ type Props = {
   initialIsPublic: boolean
   canManage: boolean
   allowCollaboratorComments?: boolean
+  collaborationLocked?: boolean
 }
 
-export default function AuditShareControls({ auditId, initialIsPublic, canManage, allowCollaboratorComments = false }: Props) {
+export default function AuditShareControls({ auditId, initialIsPublic, canManage, allowCollaboratorComments = false, collaborationLocked = false }: Props) {
   const [isPublic, setIsPublic] = useState(initialIsPublic)
   const [isSaving, setIsSaving] = useState(false)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -33,6 +34,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
   const [rowBusyEmail, setRowBusyEmail] = useState<string | null>(null)
   const [commentsEnabled, setCommentsEnabled] = useState(allowCollaboratorComments)
   const [isCommentsSaving, setIsCommentsSaving] = useState(false)
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
 
   const auditPath = useMemo(() => `/${auditId}/view`, [auditId])
 
@@ -69,6 +71,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
       if (!isInviteOpen && !isManageOpen && event.key.toLowerCase() === 'i') {
         event.preventDefault()
+        if (collaborationLocked) {
+          setShowUpgradePrompt(true)
+          return
+        }
         setInviteStatus('idle')
         setInviteMessage('')
         void loadShares()
@@ -78,6 +84,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
       if (!isInviteOpen && !isManageOpen && event.key.toLowerCase() === 'm') {
         event.preventDefault()
+        if (collaborationLocked) {
+          setShowUpgradePrompt(true)
+          return
+        }
         void loadShares()
         setIsManageOpen(true)
       }
@@ -85,10 +95,14 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [canManage, isInviteOpen, isManageOpen])
+  }, [canManage, isInviteOpen, isManageOpen, collaborationLocked])
 
   const handleToggleShare = async () => {
     if (!canManage || isSaving) return
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
 
     const nextValue = !isPublic
     setIsPublic(nextValue)
@@ -106,6 +120,11 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
   }
 
   const handleCopyLink = async () => {
+    if (collaborationLocked && canManage) {
+      setShowUpgradePrompt(true)
+      return
+    }
+
     if (!isPublic) return
 
     try {
@@ -121,6 +140,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
   const loadShares = async () => {
     if (!canManage) return
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
     setIsSharesLoading(true)
 
     const { data } = await supabase
@@ -144,6 +167,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
   const handleUpdateAccessLevel = async (email: string, nextAccess: AccessLevel) => {
     if (!canManage) return
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
     setRowBusyEmail(email)
 
     const { error } = await supabase
@@ -161,6 +188,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
   const handleRemoveAccess = async (email: string) => {
     if (!canManage) return
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
     setRowBusyEmail(email)
 
     const { error } = await supabase
@@ -178,6 +209,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
   const handleToggleCollaboratorComments = async () => {
     if (!canManage || isCommentsSaving) return
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
     const nextValue = !commentsEnabled
     setCommentsEnabled(nextValue)
     setIsCommentsSaving(true)
@@ -197,6 +232,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
   const handleInviteDeveloper = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!canManage || inviteStatus === 'saving') return
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
 
     const normalizedEmail = inviteEmail.trim().toLowerCase()
     if (!normalizedEmail) return
@@ -263,6 +302,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
             <button
               type="button"
               onClick={() => {
+                if (collaborationLocked) {
+                  setShowUpgradePrompt(true)
+                  return
+                }
                 void loadShares()
                 setIsManageOpen(true)
               }}
@@ -276,6 +319,10 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
             <button
               type="button"
               onClick={() => {
+                if (collaborationLocked) {
+                  setShowUpgradePrompt(true)
+                  return
+                }
                 setInviteStatus('idle')
                 setInviteMessage('')
                 void loadShares()
@@ -454,6 +501,33 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
                 className="inline-flex items-center rounded-2xl border border-gray-200 dark:border-slate-700 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUpgradePrompt && (
+        <div className="fixed inset-0 z-[95] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="upgrade-collab-title">
+          <button type="button" className="absolute inset-0 bg-black/55" onClick={() => setShowUpgradePrompt(false)} aria-label="Close upgrade prompt" />
+          <div className="relative w-full max-w-md rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">Pro Feature</p>
+            <h3 id="upgrade-collab-title" className="mt-2 text-2xl font-black tracking-tight text-black dark:text-white">Unlock Team Collaboration</h3>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Keep sharing audits, inviting developers, and assigning tasks. Upgrade now — or miss out.</p>
+
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a
+                href="/pricing"
+                className="inline-flex items-center justify-center rounded-2xl bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 text-xs font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              >
+                Upgrade
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowUpgradePrompt(false)}
+                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 dark:border-slate-700 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Miss Out
               </button>
             </div>
           </div>

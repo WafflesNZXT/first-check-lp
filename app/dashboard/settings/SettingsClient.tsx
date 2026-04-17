@@ -142,18 +142,37 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
   async function handleDanger(action: 'delete' | 'erase') {
     setLoading(true)
     setDangerMsg('')
-    if (action === 'delete') {
-      // Delete account
-      const { error } = await supabase.rpc('delete_user_and_data')
-      setDangerMsg(error ? error.message : 'Account deleted. Logging out...')
-      if (!error) setTimeout(() => { window.location.href = '/signout' }, 1500)
-    } else if (action === 'erase') {
-      // Delete all audits
-      const { error } = await supabase.from('audits').delete().neq('id', 0)
-      setDangerMsg(error ? error.message : 'All audits erased!')
+    try {
+      if (action === 'delete') {
+        const response = await fetch('/api/account/delete', { method: 'POST' })
+        const payload = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(String(payload?.error || 'Failed to delete account'))
+        }
+
+        setDangerMsg('Account deleted. Logging out...')
+        await supabase.auth.signOut().catch(() => null)
+        window.setTimeout(() => {
+          window.location.href = '/signin'
+        }, 800)
+      } else if (action === 'erase') {
+        const response = await fetch('/api/audits/erase', { method: 'POST' })
+        const payload = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(String(payload?.error || 'Failed to erase audits'))
+        }
+
+        setDangerMsg('All audits erased!')
+        setBilling((previous) => ({ ...previous, auditCount: 0 }))
+      }
+    } catch (error: unknown) {
+      setDangerMsg(error instanceof Error ? error.message : 'Action failed. Please try again.')
+    } finally {
+      setLoading(false)
+      setDangerAction(null)
     }
-    setLoading(false)
-    setDangerAction(null)
   }
 
   return (

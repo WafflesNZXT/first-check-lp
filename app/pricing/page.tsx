@@ -435,7 +435,7 @@ export default function Pricing() {
                   { icon: CheckCircle, text: '2 free audits with full dashboard functionality', muted: false },
                   { icon: FileText, text: 'Full audit detail pages with issue breakdowns', muted: false },
                   { icon: Layout, text: 'Audit History and re-run Workflow', muted: false },
-                  { icon: Users, text: 'Developer and Team Collaboration', muted: false },
+                  { icon: Users, text: 'Sharing + collaboration tools (first 2 audits only)', muted: false },
                   { icon: X, text: 'Site Copy Predict Tool', muted: true },
                 ].map((item, i) => (
                   <li key={i} className={`flex items-center gap-4 text-sm ${item.muted ? 'text-gray-500' : 'text-gray-700'}`}>
@@ -447,13 +447,17 @@ export default function Pricing() {
                 ))}
               </ul>
 
+              <p className="-mt-3 text-xs text-gray-500">
+                After your first 2 audits, collaboration features require Pro.
+              </p>
+
               <button
                 type="button"
                 onClick={openPreviewModal}
                 className="w-full inline-flex items-center justify-center gap-2 border border-blue-200 bg-blue-50 text-blue-700 font-black py-3 rounded-2xl hover:bg-blue-100 transition-colors"
                 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
               >
-                Preview Tool
+                Try Demo
                 <ChevronRight className="w-4 h-4" />
               </button>
 
@@ -518,7 +522,7 @@ export default function Pricing() {
                 { icon: Zap, text: "Performance, SEO, and accessibility insights" },
                 { icon: Layout, text: "Dashboard workflow to manage what to fix next" },
                 { icon: CheckCircle, text: "Clear interactive checklist per run" },
-                { icon: Users, text: "Developer and Team Collaboration" },
+                { icon: Users, text: "Unlimited sharing, developer invites, and task assigning" },
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-4 text-sm text-gray-700">
                   <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">

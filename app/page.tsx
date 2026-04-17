@@ -150,6 +150,12 @@ export default function Home() {
   const previewCompletedCount = previewChecklist.filter((item) => item.completed).length;
   const previewCompletionPercent = Math.round((previewCompletedCount / previewChecklist.length) * 100);
 
+  function normalizeWebsiteUrl(rawUrl: string) {
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return '';
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  }
+
   useEffect(() => {
     if (!previewConfettiActive) return;
 
@@ -184,11 +190,19 @@ export default function Home() {
     setHeroResult(null);
     setHeroLoading(true);
 
+    const normalizedUrl = normalizeWebsiteUrl(heroUrl);
+
+    if (!normalizedUrl) {
+      setHeroError('Please enter a website URL.');
+      setHeroLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: heroUrl.trim() }),
+        body: JSON.stringify({ url: normalizedUrl }),
       });
 
       const data = await res.json();
@@ -265,22 +279,24 @@ export default function Home() {
               </span>
             </div>
 
+            <div className="mx-auto max-w-xl rounded-2xl border border-blue-300/40 bg-blue-500/15 px-4 py-3">
+              <p className="text-sm md:text-base font-black tracking-tight text-blue-100">Instant audit score. No signup. No paywall.</p>
+            </div>
+
             <div className="flex items-center justify-center">
               <Link
                 href="/pricing"
                 className="inline-flex items-center gap-2 rounded-full border border-blue-300/50 bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] hover:bg-blue-500 transition-colors"
               >
-                See Full Dashboard
+                Try Demo
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
         </div>
 
-        <TrustedByCarousel />
-
-        <div className="max-w-6xl mx-auto mt-4 relative z-20">
-          <div className="mx-auto w-full max-w-2xl rounded-2xl border border-white/15 bg-black/35 backdrop-blur-sm px-4 py-4 md:px-5 md:py-5">
+        <div className="max-w-6xl mx-auto mt-4 relative z-20 flex flex-col">
+          <div className="order-1 xl:order-2 mx-auto w-full max-w-2xl rounded-2xl border border-white/15 bg-black/35 backdrop-blur-sm px-4 py-4 md:px-5 md:py-5">
             <style>{`
               @keyframes fc-progress {
                 0% { transform: translateX(-140%); }
@@ -292,10 +308,10 @@ export default function Home() {
 
             <form onSubmit={handleHeroSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
               <input
-                type="url"
+                type="text"
                 value={heroUrl}
                 onChange={(e) => setHeroUrl(e.target.value)}
-                placeholder="https://yourstartup.com"
+                placeholder="yourstartup.com or https://yourstartup.com"
                 required
                 className="flex-1 min-w-0 w-full bg-black/35 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-white placeholder:text-gray-400"
               />
@@ -308,6 +324,25 @@ export default function Home() {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
+
+            <p className="mt-3 text-center text-xs text-gray-300">Tip: you can type just a domain like useaudo.com — we auto-add https://</p>
+
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setHeroUrl('youtube.com')}
+                className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-gray-100 hover:bg-white/15 transition-colors"
+              >
+                Try demo: youtube.com
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeroUrl('google.com')}
+                className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-gray-100 hover:bg-white/15 transition-colors"
+              >
+                Try demo: google.com
+              </button>
+            </div>
 
             {heroLoading && (
               <div className="mt-3">
@@ -361,6 +396,10 @@ export default function Home() {
                 </Link>
               </div>
             )}
+          </div>
+
+          <div className="order-2 xl:order-1 mt-4">
+            <TrustedByCarousel />
           </div>
         </div>
 

@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+function normalizeWebsiteUrl(rawUrl: unknown) {
+  const trimmed = String(rawUrl || '').trim();
+  if (!trimmed) return null;
+
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(candidate);
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json();
+    const normalizedUrl = normalizeWebsiteUrl(url);
 
-    if (!url) {
+    if (!normalizedUrl) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
-    }
-
-    try {
-      new URL(url);
-    } catch {
-      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }
 
     const apiKey = process.env.PAGESPEED_API_KEY;
@@ -19,15 +28,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=accessibility&category=seo&key=${apiKey}`;
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=mobile&category=performance&category=accessibility&category=seo&key=${apiKey}`;
 
     const response = await fetch(apiUrl);
     const data = await response.json();
 
-    console.log(`[Score Request] ${new Date().toISOString()} — ${url}`);
+    console.log(`[Score Request] ${new Date().toISOString()} — ${normalizedUrl}`);
 
     if (!response.ok || data.error) {
-    console.error(`[Score Error] ${new Date().toISOString()} — ${url} — ${data.error?.message}`);
+    console.error(`[Score Error] ${new Date().toISOString()} — ${normalizedUrl} — ${data.error?.message}`);
     return NextResponse.json(
       { error: data.error?.message || 'Failed to analyze URL' },
       { status: 400 }

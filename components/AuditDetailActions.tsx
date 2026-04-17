@@ -109,13 +109,13 @@ export default function AuditDetailActions({ auditId, websiteUrl, canManage = tr
   }
 
   return (
-    <div className="print-hide flex flex-wrap items-center gap-3 justify-end">
+    <div className="print-hide flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 justify-end">
       {canManage && (
         <button
           type="button"
           onClick={handleReaudit}
           disabled={isRunning}
-          className="rounded-xl border border-black dark:border-slate-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-black dark:hover:bg-slate-200 hover:text-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
+          className="w-full sm:w-auto rounded-xl border border-black dark:border-slate-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-black dark:hover:bg-slate-200 hover:text-white dark:hover:text-slate-900 transition-colors disabled:opacity-50"
         >
           {isRunning ? 'Running Re-Audit...' : 'Run Re-Audit'}
         </button>
@@ -124,7 +124,7 @@ export default function AuditDetailActions({ auditId, websiteUrl, canManage = tr
       <button
         type="button"
         onClick={handleDownloadPdf}
-        className="rounded-xl border border-green-300 dark:border-green-700 bg-green-300 dark:bg-green-900/45 px-4 py-2 text-xs font-black uppercase tracking-widest text-green-950 dark:text-green-200 hover:bg-green-400 dark:hover:bg-green-900/65 transition-colors"
+        className="w-full sm:w-auto rounded-xl border border-green-300 dark:border-green-700 bg-green-300 dark:bg-green-900/45 px-4 py-2 text-xs font-black uppercase tracking-widest text-green-950 dark:text-green-200 hover:bg-green-400 dark:hover:bg-green-900/65 transition-colors"
       >
         Download PDF
       </button>
@@ -133,9 +133,14 @@ export default function AuditDetailActions({ auditId, websiteUrl, canManage = tr
         type="button"
         onClick={handleDownloadSocialImage}
         disabled={isDownloadingSocial}
-        className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60"
+        className="w-full sm:w-auto rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60"
       >
-        {isDownloadingSocial ? 'Preparing...' : 'Download Social Share Image'}
+        {isDownloadingSocial ? 'Preparing...' : (
+          <>
+            <span className="sm:hidden">Download Social Image</span>
+            <span className="hidden sm:inline">Download Social Share Image</span>
+          </>
+        )}
       </button>
     </div>
   )

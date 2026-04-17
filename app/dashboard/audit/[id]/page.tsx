@@ -360,6 +360,7 @@ function AuditDetail({
 }) {
   const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
   const isLocked = viewerIsOwner && !isPro && auditSequenceNumber === 3
+  const collaborationLocked = viewerIsOwner && !isPro && auditSequenceNumber > 2
 
   return (
     <div className="space-y-6 sm:space-y-12">
@@ -371,6 +372,7 @@ function AuditDetail({
           initialIsPublic={!!audit.is_public}
           canManage={viewerIsOwner}
           allowCollaboratorComments={!!audit.allow_collaborator_comments}
+          collaborationLocked={collaborationLocked}
         />
       </div>
 
@@ -378,6 +380,7 @@ function AuditDetail({
         <AuditDetailModals
           auditId={audit.id}
           canManageWorkflow={canEditChecklist}
+          collaborationLocked={collaborationLocked}
           viewerUserId={viewerUserId}
           viewerEmail={viewerEmail}
           invitedDeveloperEmails={invitedDeveloperEmails}
@@ -418,7 +421,38 @@ function AuditDetail({
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="space-y-2 sm:hidden">
+            {audit.report_content.third_party_tax.map((item, index) => (
+              <article key={`tp-mobile-${item.asset}-${index}`} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Asset</p>
+                  <p className="mt-1 text-sm text-black dark:text-white break-all">{item.asset}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Category</p>
+                    <p className="mt-1 text-xs text-gray-700 dark:text-gray-200 uppercase break-words">{item.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">FCP Impact</p>
+                    <p className="mt-1 text-xs text-gray-700 dark:text-gray-200">~{Math.max(0, Math.round(Number(item.estimated_fcp_impact_ms || 0)))}ms</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Recommendation</p>
+                  <span className={`mt-1 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                    item.recommendation === 'remove'
+                      ? 'bg-red-50 dark:bg-red-900/35 text-red-600 dark:text-red-300'
+                      : 'bg-emerald-50 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-300'
+                  }`}>
+                    {item.recommendation}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full text-left">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-slate-700">
@@ -432,7 +466,7 @@ function AuditDetail({
                 {audit.report_content.third_party_tax.map((item, index) => (
                   <tr key={`${item.asset}-${index}`} className="border-b border-gray-100 dark:border-slate-800 last:border-b-0 align-top">
                     <td className="py-3 pr-4 text-xs sm:text-sm text-black dark:text-white break-all">{item.asset}</td>
-                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 uppercase">{item.category}</td>
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 uppercase break-words">{item.category}</td>
                     <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">~{Math.max(0, Math.round(Number(item.estimated_fcp_impact_ms || 0)))}ms</td>
                     <td className="py-3 text-xs sm:text-sm">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
@@ -458,7 +492,32 @@ function AuditDetail({
             <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">Weight Watchers</h3>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="space-y-2 sm:hidden">
+            {audit.report_content.top_heaviest_assets.map((asset, index) => (
+              <article key={`asset-mobile-${asset.asset}-${index}`} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Asset</p>
+                  <p className="mt-1 text-sm text-black dark:text-white break-all">{asset.asset}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Type</p>
+                    <p className="mt-1 text-xs text-gray-700 dark:text-gray-200 uppercase break-words">{asset.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Impact</p>
+                    <p className="mt-1 text-xs text-gray-700 dark:text-gray-200">~{Math.max(0, Math.round(Number(asset.estimated_impact_ms || 0)))}ms</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Recommendation</p>
+                  <p className="mt-1 text-xs text-gray-700 dark:text-gray-200 break-words">{asset.recommendation}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full text-left">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-slate-700">
@@ -472,9 +531,9 @@ function AuditDetail({
                 {audit.report_content.top_heaviest_assets.map((asset, index) => (
                   <tr key={`${asset.asset}-${index}`} className="border-b border-gray-100 dark:border-slate-800 last:border-b-0 align-top">
                     <td className="py-3 pr-4 text-xs sm:text-sm text-black dark:text-white break-all">{asset.asset}</td>
-                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 uppercase">{asset.type}</td>
+                    <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300 uppercase break-words">{asset.type}</td>
                     <td className="py-3 pr-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">~{Math.max(0, Math.round(Number(asset.estimated_impact_ms || 0)))}ms</td>
-                    <td className="py-3 text-xs sm:text-sm text-gray-700 dark:text-gray-200">{asset.recommendation}</td>
+                    <td className="py-3 text-xs sm:text-sm text-gray-700 dark:text-gray-200 break-words">{asset.recommendation}</td>
                   </tr>
                 ))}
               </tbody>

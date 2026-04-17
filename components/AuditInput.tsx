@@ -23,6 +23,12 @@ export default function AuditInput() {
     ? Math.min(100, Math.round((bulkProgress.completed / bulkProgress.total) * 100))
     : 0
 
+  const normalizeWebsiteUrl = (rawUrl: string) => {
+    const trimmed = String(rawUrl || '').trim()
+    if (!trimmed) return ''
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  }
+
   const showAuditError = (message: string) => {
     setActiveAuditId(null)
     setActiveStatus(null)
@@ -116,11 +122,18 @@ export default function AuditInput() {
     e.preventDefault()
     setLoading(true)
 
+    const normalizedUrl = normalizeWebsiteUrl(url)
+    if (!normalizedUrl) {
+      setLoading(false)
+      showAuditError('Please enter a valid website URL.')
+      return
+    }
+
     try {
       // 1. Ask the server to create the pending audit row (authenticated via cookies)
       const initRes = await fetch('/api/audit/init', {
         method: 'POST',
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: normalizedUrl }),
         headers: { 'Content-Type': 'application/json' },
       })
 
@@ -142,7 +155,7 @@ export default function AuditInput() {
         try {
           const res = await fetch('/api/audit', {
             method: 'POST',
-            body: JSON.stringify({ url, auditId }),
+            body: JSON.stringify({ url: normalizedUrl, auditId }),
             headers: { 'Content-Type': 'application/json' },
           })
 
@@ -182,7 +195,7 @@ export default function AuditInput() {
   }
 
   const handleScanEntireSite = async () => {
-    const baseUrl = url.trim()
+    const baseUrl = normalizeWebsiteUrl(url)
     if (!baseUrl) {
       setSitemapError('Enter a URL first to scan its sitemap.')
       return
@@ -276,9 +289,9 @@ export default function AuditInput() {
       <form onSubmit={startAudit}>
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
           <input
-            type="url"
+            type="text"
             required
-            placeholder="https://yourstartup.com"
+            placeholder="yourstartup.com or https://yourstartup.com"
             className="w-full p-4 sm:p-6 sm:pr-40 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all text-base sm:text-lg text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -291,6 +304,8 @@ export default function AuditInput() {
           </button>
         </div>
       </form>
+
+      <p className="text-center text-xs text-gray-500 dark:text-gray-400">Tip: enter just a domain like useaudo.com — we auto-add https://</p>
 
       <div className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

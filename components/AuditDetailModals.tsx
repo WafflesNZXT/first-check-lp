@@ -7,6 +7,7 @@ import BenchmarkCompare from '@/components/BenchmarkCompare'
 type Props = {
   auditId: string
   canManageWorkflow: boolean
+  collaborationLocked?: boolean
   viewerUserId: string
   viewerEmail?: string
   invitedDeveloperEmails: string[]
@@ -21,6 +22,7 @@ type Props = {
 export default function AuditDetailModals({
   auditId,
   canManageWorkflow,
+  collaborationLocked = false,
   viewerUserId,
   viewerEmail,
   invitedDeveloperEmails,
@@ -29,6 +31,15 @@ export default function AuditDetailModals({
 }: Props) {
   const [workflowOpen, setWorkflowOpen] = useState(false)
   const [benchmarkOpen, setBenchmarkOpen] = useState(false)
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+
+  const openWorkflow = () => {
+    if (collaborationLocked) {
+      setShowUpgradePrompt(true)
+      return
+    }
+    setWorkflowOpen(true)
+  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -57,7 +68,7 @@ export default function AuditDetailModals({
 
       if (!workflowOpen && !benchmarkOpen && event.key.toLowerCase() === 'w') {
         event.preventDefault()
-        setWorkflowOpen(true)
+        openWorkflow()
         return
       }
 
@@ -91,7 +102,7 @@ export default function AuditDetailModals({
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setWorkflowOpen(true)}
+            onClick={openWorkflow}
             className="rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
           >
             Open Team Workflow
@@ -171,6 +182,32 @@ export default function AuditDetailModals({
               currentSiteUrl={currentSiteUrl}
               currentScores={currentScores}
             />
+          </div>
+        </div>
+      )}
+
+      {showUpgradePrompt && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <button type="button" className="absolute inset-0 bg-black/55" onClick={() => setShowUpgradePrompt(false)} aria-label="Close upgrade prompt" />
+          <div className="relative z-10 w-full max-w-md rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">Pro Feature</p>
+            <h3 className="mt-2 text-2xl font-black tracking-tight text-black dark:text-white">Unlock Team Workflow</h3>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Assign tasks, collaborate with developers, and keep execution moving. Upgrade now — or miss out.</p>
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a
+                href="/pricing"
+                className="inline-flex items-center justify-center rounded-2xl bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 text-xs font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              >
+                Upgrade
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowUpgradePrompt(false)}
+                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 dark:border-slate-700 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Miss Out
+              </button>
+            </div>
           </div>
         </div>
       )}
