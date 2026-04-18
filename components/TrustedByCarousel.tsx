@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Image from 'next/image'
 
 export default function TrustedByCarousel() {
@@ -10,6 +10,57 @@ export default function TrustedByCarousel() {
     { key: 'inobex', label: 'Inobex' },
   ]
   const marqueeLogos = [...logos, ...logos, ...logos]
+  const trackRef = useRef<HTMLDivElement | null>(null)
+  const groupRef = useRef<HTMLDivElement | null>(null)
+  const offsetRef = useRef(0)
+  const groupWidthRef = useRef(0)
+  const lastTimestampRef = useRef<number | null>(null)
+  const speedRef = useRef(42)
+  const targetSpeedRef = useRef(42)
+
+  useEffect(() => {
+    const measureGroup = () => {
+      groupWidthRef.current = groupRef.current?.getBoundingClientRect().width ?? 0
+    }
+
+    measureGroup()
+
+    const resizeObserver = new ResizeObserver(() => {
+      measureGroup()
+    })
+
+    if (groupRef.current) {
+      resizeObserver.observe(groupRef.current)
+    }
+
+    let rafId = 0
+
+    const tick = (timestamp: number) => {
+      if (lastTimestampRef.current === null) {
+        lastTimestampRef.current = timestamp
+      }
+
+      const deltaSeconds = (timestamp - lastTimestampRef.current) / 1000
+      lastTimestampRef.current = timestamp
+
+      speedRef.current += (targetSpeedRef.current - speedRef.current) * Math.min(1, deltaSeconds * 8)
+
+      const width = groupWidthRef.current
+      if (width > 0 && trackRef.current) {
+        offsetRef.current = (offsetRef.current + speedRef.current * deltaSeconds) % width
+        trackRef.current.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`
+      }
+
+      rafId = window.requestAnimationFrame(tick)
+    }
+
+    rafId = window.requestAnimationFrame(tick)
+
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      resizeObserver.disconnect()
+    }
+  }, [])
 
   const renderLogo = (logo: { key: string; label: string }) => {
     if (logo.key === 'dobda') {
@@ -53,15 +104,9 @@ export default function TrustedByCarousel() {
   return (
     <div className="max-w-6xl mx-auto mt-10 md:mt-12 mb-12 md:mb-16 z-20 relative">
       <style>{`
-        @keyframes fc-marquee {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-
         .fc-marquee-track {
           display: flex;
           width: max-content;
-          animation: fc-marquee 36s linear infinite;
           will-change: transform;
         }
 
@@ -74,15 +119,9 @@ export default function TrustedByCarousel() {
           padding-right: 2rem;
         }
 
-        .fc-marquee-wrap:hover .fc-marquee-track { animation-play-state: paused; }
-
-        .fc-marquee-track .logo > * { filter: none; transition: filter 220ms ease, transform 220ms ease; }
-        .fc-marquee-wrap:hover .logo:not(:hover) > * { filter: grayscale(100%) brightness(0.6); }
-
         .fc-marquee-track .logo img, .fc-marquee-track .logo svg { height: 34px; width: auto; }
 
-        .fc-marquee-track .logo { cursor: pointer; transition: transform 220ms ease; }
-        .fc-marquee-track .logo:hover { transform: translateY(-3px) scale(1.02); z-index: 10; }
+        .fc-marquee-track .logo { transition: none; }
 
         .fc-marquee-mask {
           mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
@@ -92,10 +131,18 @@ export default function TrustedByCarousel() {
 
       <p className="text-xs font-black uppercase tracking-widest text-gray-700 mb-3 px-4 md:px-6">Trusted by</p>
 
-      <div className="relative fc-marquee-wrap overflow-hidden bg-transparent">
+      <div
+        className="relative fc-marquee-wrap overflow-hidden bg-transparent"
+        onMouseEnter={() => {
+          targetSpeedRef.current = 18
+        }}
+        onMouseLeave={() => {
+          targetSpeedRef.current = 42
+        }}
+      >
         <div className="w-full overflow-hidden fc-marquee-mask">
-          <div className="fc-marquee-track">
-            <div className="fc-marquee-group">
+          <div ref={trackRef} className="fc-marquee-track">
+            <div ref={groupRef} className="fc-marquee-group">
               {marqueeLogos.map((logo, i) => (
                 <div key={`a-${logo.key}-${i}`} className="flex items-center justify-center w-56 h-14 flex-shrink-0 opacity-95">
                   <div className="logo flex items-center gap-3">{renderLogo(logo)}</div>

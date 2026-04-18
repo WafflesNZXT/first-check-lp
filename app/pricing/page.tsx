@@ -42,6 +42,27 @@ type PreviewChecklistItem = {
   completed: boolean;
 };
 
+type PreviewWorkflowTaskStatus = 'open' | 'in_progress' | 'in_review' | 'done' | 'wont_fix';
+type PreviewWorkflowTaskPriority = 'low' | 'medium' | 'high' | 'critical';
+
+type PreviewWorkflowTaskComment = {
+  author: string;
+  text: string;
+};
+
+type PreviewWorkflowTask = {
+  id: string;
+  title: string;
+  sourceIssue: string;
+  notes: string;
+  status: PreviewWorkflowTaskStatus;
+  priority: PreviewWorkflowTaskPriority;
+  assignedEmail: string;
+  dueDate: string;
+  role: 'Creator' | 'Assigned' | 'Viewer';
+  comments: PreviewWorkflowTaskComment[];
+};
+
 const INITIAL_PREVIEW_CHECKLIST: PreviewChecklistItem[] = [
   {
     issue: 'Hero headline lacks specific user outcome',
@@ -66,6 +87,63 @@ const INITIAL_PREVIEW_CHECKLIST: PreviewChecklistItem[] = [
     priority: 'medium',
     comment: 'Needed for accessibility compliance and crawler clarity.',
     completed: false,
+  },
+];
+
+const PREVIEW_WORKFLOW_STATUS_OPTIONS: Array<{ value: PreviewWorkflowTaskStatus; label: string }> = [
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'in_review', label: 'In Review' },
+  { value: 'done', label: 'Done' },
+  { value: 'wont_fix', label: 'Won’t Fix' },
+];
+
+const PREVIEW_WORKFLOW_PRIORITY_OPTIONS: Array<{ value: PreviewWorkflowTaskPriority; label: string }> = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'critical', label: 'Critical' },
+];
+
+const INITIAL_PREVIEW_WORKFLOW_TASKS: PreviewWorkflowTask[] = [
+  {
+    id: 'preview-task-1',
+    title: 'Rewrite hero headline around buyer outcome',
+    sourceIssue: 'Hero headline lacks specific user outcome',
+    notes: 'Lead with pain + promise and tighten supporting subhead so first paint is clearer.',
+    status: 'in_progress',
+    priority: 'high',
+    assignedEmail: 'dev@sample.com',
+    dueDate: '2026-04-22',
+    role: 'Creator',
+    comments: [
+      { author: 'founder@sample.com', text: 'Please keep this under 12 words and outcome-first.' },
+      { author: 'dev@sample.com', text: 'Drafting 3 options and sharing by EOD.' },
+    ],
+  },
+  {
+    id: 'preview-task-2',
+    title: 'Add alt text to partner logo strip',
+    sourceIssue: 'Missing image alt text on partner logos',
+    notes: 'Include descriptive alt text for accessibility and crawler clarity.',
+    status: 'open',
+    priority: 'medium',
+    assignedEmail: 'qa@sample.com',
+    dueDate: '2026-04-24',
+    role: 'Assigned',
+    comments: [{ author: 'qa@sample.com', text: 'I can validate this once updates are merged.' }],
+  },
+  {
+    id: 'preview-task-3',
+    title: 'Validate revised CTA copy in pricing path',
+    sourceIssue: 'Main CTA intent is unclear',
+    notes: 'Compare current CTA against action + outcome variant before next campaign.',
+    status: 'in_review',
+    priority: 'critical',
+    assignedEmail: 'pm@sample.com',
+    dueDate: '2026-04-25',
+    role: 'Viewer',
+    comments: [{ author: 'pm@sample.com', text: 'Variant is live in staging and awaiting review.' }],
   },
 ];
 
@@ -252,9 +330,21 @@ export default function Pricing() {
   const [previewChecklist, setPreviewChecklist] = useState<PreviewChecklistItem[]>(INITIAL_PREVIEW_CHECKLIST);
   const [previewConfettiActive, setPreviewConfettiActive] = useState(false);
   const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [previewWorkflowTasks, setPreviewWorkflowTasks] = useState<PreviewWorkflowTask[]>(INITIAL_PREVIEW_WORKFLOW_TASKS);
+  const [previewWorkflowCommentDrafts, setPreviewWorkflowCommentDrafts] = useState<Record<string, string>>({});
+  const [previewWorkflowModalOpen, setPreviewWorkflowModalOpen] = useState(false);
+  const [previewBenchmarkModalOpen, setPreviewBenchmarkModalOpen] = useState(false);
+  const [previewCanOpenToolModals, setPreviewCanOpenToolModals] = useState(false);
 
   const previewCompletedCount = previewChecklist.filter((item) => item.completed).length;
   const previewCompletionPercent = Math.round((previewCompletedCount / previewChecklist.length) * 100);
+  const previewWorkflowStatusCounts = previewWorkflowTasks.reduce<Record<PreviewWorkflowTaskStatus, number>>(
+    (acc, task) => {
+      acc[task.status] += 1;
+      return acc;
+    },
+    { open: 0, in_progress: 0, in_review: 0, done: 0, wont_fix: 0 }
+  );
 
   useEffect(() => {
     if (!previewConfettiActive) return;
@@ -269,10 +359,21 @@ export default function Pricing() {
   }, [previewConfettiActive]);
 
   useEffect(() => {
-    if (!isPreviewModalOpen) return;
+    if (!isPreviewModalOpen && !previewWorkflowModalOpen && !previewBenchmarkModalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key !== 'Escape') return;
+      if (previewWorkflowModalOpen) {
+        setPreviewWorkflowModalOpen(false);
+        return;
+      }
+      if (previewBenchmarkModalOpen) {
+        setPreviewBenchmarkModalOpen(false);
+        return;
+      }
+      if (isPreviewModalOpen) {
         setIsPreviewModalOpen(false);
       }
     };
@@ -281,10 +382,36 @@ export default function Pricing() {
     window.addEventListener('keydown', onKeyDown);
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [isPreviewModalOpen]);
+  }, [isPreviewModalOpen, previewWorkflowModalOpen, previewBenchmarkModalOpen]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const applyViewportGate = () => {
+      const canOpen = mediaQuery.matches;
+      setPreviewCanOpenToolModals(canOpen);
+      if (!canOpen) {
+        setPreviewWorkflowModalOpen(false);
+        setPreviewBenchmarkModalOpen(false);
+      }
+    };
+
+    applyViewportGate();
+    mediaQuery.addEventListener('change', applyViewportGate);
+    return () => mediaQuery.removeEventListener('change', applyViewportGate);
+  }, []);
+
+  function openPreviewWorkflowModal() {
+    if (!previewCanOpenToolModals) return;
+    setPreviewWorkflowModalOpen(true);
+  }
+
+  function openPreviewBenchmarkModal() {
+    if (!previewCanOpenToolModals) return;
+    setPreviewBenchmarkModalOpen(true);
+  }
 
   function togglePreviewChecklistItem(issue: string) {
     setPreviewChecklist((previousChecklist) => {
@@ -300,6 +427,29 @@ export default function Pricing() {
 
       return nextChecklist;
     });
+  }
+
+  function updatePreviewWorkflowTask(taskId: string, patch: Partial<Pick<PreviewWorkflowTask, 'status' | 'priority'>>) {
+    setPreviewWorkflowTasks((previousTasks) =>
+      previousTasks.map((task) => (task.id === taskId ? { ...task, ...patch } : task))
+    );
+  }
+
+  function addPreviewWorkflowComment(taskId: string) {
+    const nextComment = String(previewWorkflowCommentDrafts[taskId] || '').trim();
+    if (!nextComment) return;
+
+    setPreviewWorkflowTasks((previousTasks) =>
+      previousTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              comments: [...task.comments, { author: 'founder@sample.com', text: nextComment }],
+            }
+          : task
+      )
+    );
+    setPreviewWorkflowCommentDrafts((previousDrafts) => ({ ...previousDrafts, [taskId]: '' }));
   }
 
   function openPreviewModal() {
@@ -675,15 +825,19 @@ export default function Pricing() {
       </div>
 
       {isPreviewModalOpen && (
-        <div className="fixed inset-0 z-[90] p-4 md:p-6">
+        <div className="fixed inset-0 z-[260] p-3 sm:p-4 md:p-6">
           <button
             type="button"
             aria-label="Close dashboard preview"
-            onClick={() => setIsPreviewModalOpen(false)}
+            onClick={() => {
+              setPreviewWorkflowModalOpen(false);
+              setPreviewBenchmarkModalOpen(false);
+              setIsPreviewModalOpen(false);
+            }}
             className="absolute inset-0 bg-black/60"
           />
 
-          <div className="relative mx-auto flex h-full w-full max-w-6xl items-center justify-center">
+          <div className="relative mx-auto flex h-full w-full max-w-6xl items-start md:items-center justify-center pt-16 md:pt-0">
             <div className="w-full max-h-[90vh] overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
               <div className="flex items-center justify-between border-b border-black/10 px-5 py-4 md:px-6">
                 <div>
@@ -692,7 +846,11 @@ export default function Pricing() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsPreviewModalOpen(false)}
+                  onClick={() => {
+                    setPreviewWorkflowModalOpen(false);
+                    setPreviewBenchmarkModalOpen(false);
+                    setIsPreviewModalOpen(false);
+                  }}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 text-gray-600 hover:bg-gray-100 transition-colors"
                   aria-label="Close"
                 >
@@ -839,6 +997,191 @@ export default function Pricing() {
                                     <span className="text-[10px] uppercase tracking-wider text-gray-400 whitespace-nowrap">preview only</span>
                                   </div>
                                 </div>
+
+                                <section className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3">
+                                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                                    <div>
+                                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Tools</p>
+                                      <h5 className="text-sm sm:text-base font-black tracking-tight text-black">Open Collaboration Modals</h5>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">Open: {previewWorkflowStatusCounts.open}</span>
+                                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">In Progress: {previewWorkflowStatusCounts.in_progress}</span>
+                                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">In Review: {previewWorkflowStatusCounts.in_review}</span>
+                                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">Done: {previewWorkflowStatusCounts.done}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={openPreviewWorkflowModal}
+                                      disabled={!previewCanOpenToolModals}
+                                      className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                    >
+                                      Open Team Workflow
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={openPreviewBenchmarkModal}
+                                      disabled={!previewCanOpenToolModals}
+                                      className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                    >
+                                      Open Benchmark Compare
+                                    </button>
+                                  </div>
+                                  <p className="text-[11px] text-gray-500 break-words">
+                                    {previewCanOpenToolModals
+                                      ? 'Shortcuts: W Team Workflow · B Benchmark · Esc Close modal'
+                                      : 'Tool modals are disabled on smaller screens.'}
+                                  </p>
+
+                                  {previewWorkflowModalOpen && (
+                                    <div className="fixed inset-0 z-[300] overflow-y-auto overscroll-contain flex items-start sm:items-center justify-center px-3 pb-3 pt-24 sm:p-6">
+                                      <button
+                                        type="button"
+                                        onClick={() => setPreviewWorkflowModalOpen(false)}
+                                        className="absolute inset-0 bg-black/45"
+                                        aria-label="Close team workflow"
+                                      />
+                                      <div className="relative z-10 w-full max-w-5xl max-h-[calc(100dvh-5.5rem)] sm:max-h-[88vh] overflow-y-auto rounded-[1.5rem] border border-gray-200 bg-[#fcfcfc] p-3 sm:p-4">
+                                        <div className="sticky top-0 z-20 -mx-3 sm:-mx-4 mb-3 flex justify-end bg-[#fcfcfc] px-3 sm:px-4 pb-2">
+                                          <p className="mr-auto self-center text-[10px] uppercase tracking-widest text-gray-500">Press Esc to close</p>
+                                          <button
+                                            type="button"
+                                            onClick={() => setPreviewWorkflowModalOpen(false)}
+                                            className="rounded-xl border border-gray-200 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-black"
+                                          >
+                                            Close
+                                          </button>
+                                        </div>
+
+                                        <section className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3">
+                                          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                                            <div>
+                                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Team Workflow</p>
+                                              <h5 className="text-sm sm:text-base font-black tracking-tight text-black">Execution Board</h5>
+                                            </div>
+                                          </div>
+
+                                          <div className="space-y-3">
+                                            {previewWorkflowTasks.map((task) => (
+                                              <article key={task.id} className="rounded-xl border border-gray-200 p-3 space-y-3">
+                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                  <div className="space-y-1">
+                                                    <h6 className="text-sm font-black text-black break-words">{task.title}</h6>
+                                                    <p className="text-xs text-gray-500 break-words">Issue: {task.sourceIssue}</p>
+                                                  </div>
+                                                  <div className="flex flex-wrap items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
+                                                    <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">{task.status.replace('_', ' ')}</span>
+                                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">{task.priority}</span>
+                                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">Due {task.dueDate}</span>
+                                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">{task.role}</span>
+                                                  </div>
+                                                </div>
+
+                                                <p className="text-xs text-gray-700 break-words">{task.notes}</p>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                  <select
+                                                    value={task.status}
+                                                    onChange={(event) => updatePreviewWorkflowTask(task.id, { status: event.target.value as PreviewWorkflowTaskStatus })}
+                                                    className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs text-black"
+                                                  >
+                                                    {PREVIEW_WORKFLOW_STATUS_OPTIONS.map((statusOption) => (
+                                                      <option key={statusOption.value} value={statusOption.value}>{statusOption.label}</option>
+                                                    ))}
+                                                  </select>
+
+                                                  <select
+                                                    value={task.priority}
+                                                    onChange={(event) => updatePreviewWorkflowTask(task.id, { priority: event.target.value as PreviewWorkflowTaskPriority })}
+                                                    className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs text-black"
+                                                  >
+                                                    {PREVIEW_WORKFLOW_PRIORITY_OPTIONS.map((priorityOption) => (
+                                                      <option key={priorityOption.value} value={priorityOption.value}>{priorityOption.label}</option>
+                                                    ))}
+                                                  </select>
+
+                                                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 text-xs text-gray-700 break-all">{task.assignedEmail || 'Unassigned'}</div>
+                                                </div>
+
+                                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 space-y-2">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Comments</p>
+                                                  <div className="space-y-1.5">
+                                                    {task.comments.map((comment, commentIndex) => (
+                                                      <p key={`${task.id}-comment-${commentIndex}`} className="text-xs text-gray-700 break-words">
+                                                        <span className="font-black text-gray-500">{comment.author}: </span>
+                                                        {comment.text}
+                                                      </p>
+                                                    ))}
+                                                  </div>
+                                                  <div className="flex flex-col sm:flex-row gap-2">
+                                                    <input
+                                                      value={previewWorkflowCommentDrafts[task.id] || ''}
+                                                      onChange={(event) => setPreviewWorkflowCommentDrafts((previousDrafts) => ({ ...previousDrafts, [task.id]: event.target.value }))}
+                                                      placeholder="Add task comment"
+                                                      className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs text-black"
+                                                      maxLength={240}
+                                                    />
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => addPreviewWorkflowComment(task.id)}
+                                                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider hover:bg-gray-100"
+                                                    >
+                                                      Add
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              </article>
+                                            ))}
+                                          </div>
+                                        </section>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {previewBenchmarkModalOpen && (
+                                    <div className="fixed inset-0 z-[300] overflow-y-auto overscroll-contain flex items-start sm:items-center justify-center px-3 pb-3 pt-24 sm:p-6">
+                                      <button
+                                        type="button"
+                                        onClick={() => setPreviewBenchmarkModalOpen(false)}
+                                        className="absolute inset-0 bg-black/45"
+                                        aria-label="Close benchmark compare"
+                                      />
+                                      <div className="relative z-10 w-full max-w-4xl max-h-[calc(100dvh-5.5rem)] sm:max-h-[88vh] overflow-y-auto rounded-[1.5rem] border border-gray-200 bg-[#fcfcfc] p-3 sm:p-4">
+                                        <div className="sticky top-0 z-20 -mx-3 sm:-mx-4 mb-3 flex justify-end bg-[#fcfcfc] px-3 sm:px-4 pb-2">
+                                          <p className="mr-auto self-center text-[10px] uppercase tracking-widest text-gray-500">Press Esc to close</p>
+                                          <button
+                                            type="button"
+                                            onClick={() => setPreviewBenchmarkModalOpen(false)}
+                                            className="rounded-xl border border-gray-200 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-black"
+                                          >
+                                            Close
+                                          </button>
+                                        </div>
+
+                                        <section className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3">
+                                          <div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Benchmark Compare</p>
+                                            <h5 className="text-base font-black tracking-tight text-black">Sample Competitive Snapshot</h5>
+                                          </div>
+                                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            {[{ label: 'Your Site', score: 88 }, { label: 'Category Avg', score: 79 }, { label: 'Top Competitor', score: 93 }].map((item) => (
+                                              <div key={item.label} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 break-words">{item.label}</p>
+                                                <p className="mt-1 text-2xl font-black text-black">{item.score}</p>
+                                                <div className="mt-2 h-2 rounded-full bg-gray-200">
+                                                  <div className="h-full rounded-full bg-black" style={{ width: `${item.score}%` }} />
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </section>
+                                      </div>
+                                    </div>
+                                  )}
+                                </section>
 
                                 <section className="relative space-y-3">
                                   {previewConfettiActive && (
