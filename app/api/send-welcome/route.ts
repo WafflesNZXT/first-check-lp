@@ -44,17 +44,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: claimRow, error: claimError } = await supabase
       .from('profiles')
-      .select('welcome_sent')
+      .update({ welcome_sent: true })
       .eq('id', userId)
+      .eq('welcome_sent', false)
+      .select('id')
       .maybeSingle();
 
-    if (profileError) {
-      return NextResponse.json({ error: 'Could not read profile state' }, { status: 500 });
+    if (claimError) {
+      return NextResponse.json({ error: 'Could not claim welcome email send state' }, { status: 500 });
     }
 
-    if (profile?.welcome_sent) {
+    let claimedRow = claimRow;
+
+    if (!claimedRow) {
+      const { data: claimNullRow, error: claimNullError } = await supabase
+        .from('profiles')
+        .update({ welcome_sent: true })
+        .eq('id', userId)
+        .is('welcome_sent', null)
+        .select('id')
+        .maybeSingle();
+
+      if (claimNullError) {
+        return NextResponse.json({ error: 'Could not claim welcome email send state' }, { status: 500 });
+      }
+
+      claimedRow = claimNullRow;
+    }
+
+    if (!claimedRow) {
       return NextResponse.json({ success: true, skipped: true });
     }
 
@@ -89,22 +109,25 @@ export async function POST(req: Request) {
     });
 
     if (error) {
+      await supabase
+        .from('profiles')
+        .update({ welcome_sent: false })
+        .eq('id', userId)
+        .eq('welcome_sent', true)
+        .catch(() => null);
+
       return NextResponse.json({ error: String(error.message || 'Welcome email failed') }, { status: 500 });
     }
 
     if (!data?.id) {
+      await supabase
+        .from('profiles')
+        .update({ welcome_sent: false })
+        .eq('id', userId)
+        .eq('welcome_sent', true)
+        .catch(() => null);
+
       return NextResponse.json({ error: 'Welcome email was not accepted by provider' }, { status: 502 });
-    }
-
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from('profiles')
-      .update({ welcome_sent: true })
-      .eq('id', userId)
-      .select('id')
-      .maybeSingle();
-
-    if (updateError || !updatedProfile) {
-      return NextResponse.json({ error: 'Welcome email sent but profile flag was not updated' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });

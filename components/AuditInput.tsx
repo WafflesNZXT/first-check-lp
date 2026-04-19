@@ -4,6 +4,19 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AuditLoading from '@/components/AuditLoading'
 
+type PendingDemoAudit = {
+  url: string
+  result?: {
+    performance?: number
+    accessibility?: number
+    seo?: number
+    totalIssues?: number
+    scoreScaleMax?: number
+    benchmarkLabel?: string | null
+  }
+  createdAt?: number
+}
+
 export default function AuditInput() {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,6 +30,7 @@ export default function AuditInput() {
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [processingNotice, setProcessingNotice] = useState<string | null>(null)
   const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null)
+  const [pendingDemoAudit, setPendingDemoAudit] = useState<PendingDemoAudit | null>(null)
   const router = useRouter()
 
   const bulkPercent = bulkProgress.total > 0
@@ -45,6 +59,38 @@ export default function AuditInput() {
     }
 
     return raw
+  }
+
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem('audo:pending-demo-audit')
+      if (!raw) return
+
+      const parsed = JSON.parse(raw) as PendingDemoAudit
+      if (!parsed?.url) return
+
+      const ageMs = Date.now() - Number(parsed.createdAt || 0)
+      const isFresh = Number.isFinite(ageMs) && ageMs < 1000 * 60 * 60 * 24
+      if (!isFresh) {
+        window.sessionStorage.removeItem('audo:pending-demo-audit')
+        return
+      }
+
+      setPendingDemoAudit(parsed)
+      const shouldAutoResume = new URLSearchParams(window.location.search).get('resumeDemo') === '1'
+      if (shouldAutoResume && !url) {
+        setUrl(parsed.url)
+      }
+    } catch {
+    }
+  }, [])
+
+  const clearPendingDemoAudit = () => {
+    try {
+      window.sessionStorage.removeItem('audo:pending-demo-audit')
+    } catch {
+    }
+    setPendingDemoAudit(null)
   }
 
   useEffect(() => {
@@ -130,6 +176,10 @@ export default function AuditInput() {
     }
 
     try {
+      if (pendingDemoAudit?.url && normalizeWebsiteUrl(pendingDemoAudit.url) === normalizedUrl) {
+        clearPendingDemoAudit()
+      }
+
       // 1. Ask the server to create the pending audit row (authenticated via cookies)
       const initRes = await fetch('/api/audit/init', {
         method: 'POST',
@@ -286,6 +336,42 @@ export default function AuditInput() {
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
+      {pendingDemoAudit?.url && (
+        <div className="rounded-2xl border border-blue-100 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/35 p-4 text-left">
+          <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">Resume Free Demo</p>
+          <p className="mt-1 text-sm text-blue-900 dark:text-blue-100 break-all">{pendingDemoAudit.url}</p>
+
+          {pendingDemoAudit.result && (
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 p-2 text-center"><p className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Perf</p><p className="text-sm font-black text-black dark:text-white">{Number(pendingDemoAudit.result.performance ?? 0)}</p></div>
+              <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 p-2 text-center"><p className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Access</p><p className="text-sm font-black text-black dark:text-white">{Number(pendingDemoAudit.result.accessibility ?? 0)}</p></div>
+              <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-900 p-2 text-center"><p className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">SEO</p><p className="text-sm font-black text-black dark:text-white">{Number(pendingDemoAudit.result.seo ?? 0)}</p></div>
+            </div>
+          )}
+
+          <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
+            {pendingDemoAudit.result?.benchmarkLabel || `Scores are out of ${pendingDemoAudit.result?.scoreScaleMax ?? 100}`}
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setUrl(pendingDemoAudit.url)}
+              className="rounded-xl bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest"
+            >
+              Use This URL
+            </button>
+            <button
+              type="button"
+              onClick={clearPendingDemoAudit}
+              className="rounded-xl border border-blue-200 dark:border-blue-800 px-4 py-2 text-xs font-black uppercase tracking-widest text-blue-800 dark:text-blue-200"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={startAudit}>
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
           <input

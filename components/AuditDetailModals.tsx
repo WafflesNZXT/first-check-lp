@@ -105,18 +105,18 @@ export default function AuditDetailModals({
             onClick={openWorkflow}
             className="rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
           >
-            Open Team Workflow
+            Workflow
           </button>
           <button
             type="button"
             onClick={() => setBenchmarkOpen(true)}
             className="rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
           >
-            Open Benchmark Compare
+            Benchmark
           </button>
         </div>
         <p className="mt-3 text-[11px] text-gray-500 dark:text-gray-400">
-          Shortcuts: <span className="font-black text-black dark:text-white">W</span> Team Workflow · <span className="font-black text-black dark:text-white">B</span> Benchmark · <span className="font-black text-black dark:text-white">Esc</span> Close modal
+          Shortcuts: <span className="font-black text-black dark:text-white">W</span> Workflow · <span className="font-black text-black dark:text-white">B</span> Benchmark · <span className="font-black text-black dark:text-white">Esc</span> Close
         </p>
       </div>
 

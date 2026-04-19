@@ -111,7 +111,7 @@ export default async function DashboardPage({
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <DashboardBoot />
+      <DashboardBoot userId={userId} />
       <div className="max-w-5xl mx-auto">
         <StripeCheckoutConfirm sessionId={sessionId} />
         <header className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-10 sm:mb-16">

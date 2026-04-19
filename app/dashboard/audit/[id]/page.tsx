@@ -5,10 +5,8 @@ import { redirect } from 'next/navigation'
 import AuditChecklist from '../../../../components/AuditChecklist'
 import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
-import AuditShareControls from '../../../../components/AuditShareControls'
 import AuditDetailActions from '../../../../components/AuditDetailActions'
-import AuditDetailModals from '../../../../components/AuditDetailModals'
-import WeeklyMonitoringToggle from '../../../../components/WeeklyMonitoringToggle'
+import AuditCollaboratePanel from '../../../../components/AuditCollaboratePanel'
 import { Logo } from '../../../../components/Logo'
 import AccessibilityFixAll from '../../../../components/AccessibilityFixAll'
 import { getUserFromCookie } from '@/lib/auth'
@@ -361,26 +359,34 @@ function AuditDetail({
   const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
   const isLocked = viewerIsOwner && !isPro && auditSequenceNumber === 3
   const collaborationLocked = viewerIsOwner && !isPro && auditSequenceNumber > 2
+  const criticalIssueCount = Array.isArray(audit.report_content?.wcag_issues)
+    ? audit.report_content.wcag_issues.filter((entry) => entry.severity === 'critical').length
+    : 0
 
   return (
-    <div className="space-y-6 sm:space-y-12">
-      <AuditDetailActions auditId={audit.id} websiteUrl={audit.website_url} canManage={viewerIsOwner} />
+    <div className="grid gap-6 lg:gap-8 lg:grid-cols-[300px_minmax(0,1fr)] items-start">
+      <aside className="space-y-4 lg:sticky lg:top-6 print-hide">
+        <section className="rounded-[1.5rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Scores</p>
+            <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Out of 100</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <ScoreCircle label="perf" score={audit.performance_score} compact />
+            <ScoreCircle label="ux" score={audit.ux_score} compact />
+            <ScoreCircle label="seo" score={audit.seo_score} compact />
+          </div>
+        </section>
 
-      <div className="print-hide">
-        <AuditShareControls
+        <AuditDetailActions auditId={audit.id} websiteUrl={audit.website_url} canManage={viewerIsOwner} />
+
+        <AuditCollaboratePanel
           auditId={audit.id}
           initialIsPublic={!!audit.is_public}
-          canManage={viewerIsOwner}
+          canManageShare={viewerIsOwner}
           allowCollaboratorComments={!!audit.allow_collaborator_comments}
           collaborationLocked={collaborationLocked}
-        />
-      </div>
-
-      <div className="print-hide">
-        <AuditDetailModals
-          auditId={audit.id}
           canManageWorkflow={canEditChecklist}
-          collaborationLocked={collaborationLocked}
           viewerUserId={viewerUserId}
           viewerEmail={viewerEmail}
           invitedDeveloperEmails={invitedDeveloperEmails}
@@ -390,24 +396,52 @@ function AuditDetail({
             ux: audit.ux_score ?? 0,
             seo: audit.seo_score ?? 0,
           }}
+          viewerIsOwner={viewerIsOwner}
+          monitorWeekly={monitorWeekly}
         />
-      </div>
+      </aside>
 
-      {viewerIsOwner && (
-        <div className="print-hide">
-          <WeeklyMonitoringToggle auditId={audit.id} initialEnabled={monitorWeekly} />
-        </div>
-      )}
+      <div className="space-y-6 sm:space-y-8">
+        <div className={`relative print-break-before ${isLocked ? 'max-h-[28rem] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]' : ''}`}>
+          {isLocked && (
+            <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-start bg-white/60 dark:bg-slate-900/65 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 p-6 pt-8 sm:p-12 sm:pt-10 text-center">
+              <LockIcon className="w-12 h-12 mb-4 text-black dark:text-white" />
+              <h3 className="text-2xl text-black dark:text-white font-black tracking-tighter mb-2">Upgrade to Pro</h3>
+              <p className="text-gray-500 dark:text-gray-300 mb-8 max-w-xs">
+                You&apos;ve used your 2 free audits. Subscribe to unlock the full checklist and fix your site.
+              </p>
+              <Link
+                href="/pricing"
+                className="bg-black dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
+              >
+                Unlock All Fixes — $29/mo
+              </Link>
+            </div>
+          )}
 
-      <section className="print-score-grid flex flex-col items-center gap-6 sm:gap-8">
-        <div className="space-y-6 text-center">
-          <div className="flex flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4 justify-center">
-            <ScoreCircle label="perf" score={audit.performance_score} />
-            <ScoreCircle label="ux" score={audit.ux_score} />
-            <ScoreCircle label="seo" score={audit.seo_score} />
+          <div className={isLocked ? 'filter blur-xl pointer-events-none select-none' : ''}>
+            <AuditChecklist
+              audit={{
+                id: audit.id,
+                report_content: audit.report_content ?? undefined,
+                checklist_comments: audit.checklist_comments ?? undefined,
+              }}
+              readOnly={!canEditChecklist}
+              canComment={canComment}
+              viewerEmail={viewerEmail}
+            />
           </div>
         </div>
-      </section>
+
+        <section className="print-score-grid hidden print:flex flex-col items-center gap-6 sm:gap-8">
+          <div className="space-y-6 text-center">
+            <div className="flex flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4 justify-center">
+              <ScoreCircle label="perf" score={audit.performance_score} />
+              <ScoreCircle label="ux" score={audit.ux_score} />
+              <ScoreCircle label="seo" score={audit.seo_score} />
+            </div>
+          </div>
+        </section>
 
       {Array.isArray(audit.report_content?.third_party_tax) && audit.report_content.third_party_tax.length > 0 && (
         <section className="w-full rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-4">
@@ -549,8 +583,14 @@ function AuditDetail({
             <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">WCAG 2.1 Compliance</h3>
           </div>
 
-          <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/25 px-4 py-3 text-sm font-black text-red-700 dark:text-red-300">
-            {audit.report_content.wcag_issues.filter((entry) => entry.severity === 'critical').length} critical issues found that could pose a legal compliance risk.
+          <div
+            className={`rounded-2xl border px-4 py-3 text-sm font-black ${
+              criticalIssueCount > 0
+                ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/25 text-red-700 dark:text-red-300'
+                : 'border-green-200 dark:border-green-900/50 bg-green-50 dark:bg-green-950/25 text-green-700 dark:text-green-300'
+            }`}
+          >
+            {criticalIssueCount} critical issue{criticalIssueCount === 1 ? '' : 's'} found that could pose a legal compliance risk.
           </div>
 
           <AccessibilityFixAll fixes={Array.isArray(audit.report_content.accessibility_fix_all) ? audit.report_content.accessibility_fix_all : []} />
@@ -579,35 +619,6 @@ function AuditDetail({
         </section>
       )}
 
-      <div className={`relative print-break-before ${isLocked ? 'max-h-[28rem] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]' : ''}`}>
-        {isLocked && (
-          <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-start bg-white/60 dark:bg-slate-900/65 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 p-6 pt-8 sm:p-12 sm:pt-10 text-center">
-            <LockIcon className="w-12 h-12 mb-4 text-black dark:text-white" />
-            <h3 className="text-2xl text-black dark:text-white font-black tracking-tighter mb-2">Upgrade to Pro</h3>
-            <p className="text-gray-500 dark:text-gray-300 mb-8 max-w-xs">
-              You&apos;ve used your 2 free audits. Subscribe to unlock the full checklist and fix your site.
-            </p>
-            <Link
-              href="/pricing"
-              className="bg-black dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
-            >
-              Unlock All Fixes — $29/mo
-            </Link>
-          </div>
-        )}
-
-        <div className={isLocked ? 'filter blur-xl pointer-events-none select-none' : ''}>
-          <AuditChecklist
-            audit={{
-              id: audit.id,
-              report_content: audit.report_content ?? undefined,
-              checklist_comments: audit.checklist_comments ?? undefined,
-            }}
-            readOnly={!canEditChecklist}
-            canComment={canComment}
-            viewerEmail={viewerEmail}
-          />
-        </div>
       </div>
     </div>
   )
@@ -633,13 +644,16 @@ function LockIcon({ className = '' }: { className?: string }) {
 
 /** * Score UI Helper 
  */
-function ScoreCircle({ label, score }: { label: string, score: number }) {
+function ScoreCircle({ label, score, compact = false }: { label: string, score: number, compact?: boolean }) {
   const color = score > 80 ? 'text-green-600 dark:text-green-300' : score > 50 ? 'text-amber-600 dark:text-amber-300' : 'text-rose-600 dark:text-rose-300'
   const bgColor = score > 80 ? 'bg-green-50 dark:bg-green-950/35' : score > 50 ? 'bg-amber-50 dark:bg-amber-950/35' : 'bg-rose-50 dark:bg-rose-950/35'
+  const baseCard = compact
+    ? 'w-full min-w-0 p-3 rounded-2xl'
+    : 'p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] min-w-[88px] sm:min-w-[100px]'
 
   return (
-    <div className={`print-card ${bgColor} p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] border border-gray-100 dark:border-slate-800 shadow-sm text-center min-w-[88px] sm:min-w-[100px] transition-transform hover:scale-105`}>
-      <div className={`text-2xl sm:text-3xl font-black ${color}`}>{score || 0}</div>
+    <div className={`print-card ${bgColor} ${baseCard} border border-gray-100 dark:border-slate-800 shadow-sm text-center ${compact ? '' : 'transition-transform hover:scale-105'}`}>
+      <div className={`${compact ? 'text-3xl' : 'text-2xl sm:text-3xl'} font-black ${color}`}>{score || 0}</div>
       <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500 mt-1">{label}</div>
     </div>
   )

@@ -291,7 +291,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
       <div className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Share Audit</p>
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Share</p>
           <p className="text-sm text-gray-500 dark:text-gray-300">{isPublic ? 'Anyone with the link can view this audit.' : 'Only you can view this audit.'}</p>
           {canManage && <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Shortcuts: <span className="font-black text-black dark:text-white">I</span> Invite · <span className="font-black text-black dark:text-white">M</span> Manage · <span className="font-black text-black dark:text-white">Esc</span> Close modal</p>}
           {isPublic && origin && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 break-all">{`${origin}${auditPath}`}</p>}
@@ -311,7 +311,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
               }}
               className="w-full sm:w-auto rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 text-center"
             >
-              Manage Access
+              Members
             </button>
           )}
 
@@ -330,7 +330,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
               }}
               className="w-full sm:w-auto rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 text-center"
             >
-              Invite Developer
+              Invite
             </button>
           )}
 
@@ -359,7 +359,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
             disabled={!isPublic}
             className="w-full sm:w-auto rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-center leading-tight"
           >
-            {copyState === 'copied' ? 'Copied!' : copyState === 'failed' ? 'Retry Copy' : <><span className="sm:hidden">Copy Link</span><span className="hidden sm:inline">Copy Preview Link</span></>}
+            {copyState === 'copied' ? 'Copied!' : copyState === 'failed' ? 'Retry Copy' : 'Copy Link'}
           </button>
         </div>
       </div>
@@ -371,7 +371,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
           <div className="relative w-full max-w-md rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-2">Invite Access</p>
-            <h3 id="invite-developer-title" className="text-xl font-black text-black dark:text-white tracking-tight">Invite Developer</h3>
+            <h3 id="invite-developer-title" className="text-xl font-black text-black dark:text-white tracking-tight">Invite</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Add an email to give this person access to this audit.</p>
             <p className="mt-1 text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">Press Esc to close</p>
 
@@ -413,7 +413,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
                   disabled={inviteStatus === 'saving'}
                   className="inline-flex items-center rounded-2xl bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-60"
                 >
-                  {inviteStatus === 'saving' ? 'Inviting...' : 'Send Invite'}
+                  {inviteStatus === 'saving' ? 'Inviting...' : 'Send'}
                 </button>
               </div>
             </form>
@@ -427,12 +427,12 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
 
           <div className="relative w-full max-w-2xl rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-2">Collaborator Access</p>
-            <h3 id="manage-access-title" className="text-xl font-black text-black dark:text-white tracking-tight">Manage Access</h3>
+            <h3 id="manage-access-title" className="text-xl font-black text-black dark:text-white tracking-tight">Members</h3>
             <p className="mt-1 text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">Press Esc to close</p>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-gray-200 dark:border-slate-700 px-4 py-3">
               <div>
-                <p className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Checklist Comments</p>
+                <p className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Comments</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Allow collaborators to add checklist comments.</p>
               </div>
               <button
@@ -464,7 +464,7 @@ export default function AuditShareControls({ auditId, initialIsPublic, canManage
                 {isSharesLoading ? (
                   <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300">Loading collaborators...</p>
                 ) : shares.length === 0 ? (
-                  <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300">No invited developers yet.</p>
+                  <p className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300">No members yet.</p>
                 ) : (
                   shares.map((row) => (
                     <div key={row.shared_with_email} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 px-4 py-3">

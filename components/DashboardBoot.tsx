@@ -1,9 +1,21 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
-export default function DashboardBoot() {
+export default function DashboardBoot({ userId }: { userId: string }) {
+  const startedRef = useRef(false)
+
   useEffect(() => {
+    if (startedRef.current) return
+    startedRef.current = true
+
+    if (typeof window !== 'undefined') {
+      const storageKey = `welcome-email-attempted:${userId}`
+      const alreadyAttempted = window.sessionStorage.getItem(storageKey)
+      if (alreadyAttempted === '1') return
+      window.sessionStorage.setItem(storageKey, '1')
+    }
+
     const controller = new AbortController()
 
     void (async () => {
@@ -24,7 +36,7 @@ export default function DashboardBoot() {
     })()
 
     return () => controller.abort()
-  }, [])
+  }, [userId])
 
   return null
 }

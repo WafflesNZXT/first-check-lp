@@ -28,7 +28,12 @@ type HeroResult = {
   performance: number;
   accessibility: number;
   seo: number;
+  issues?: Array<{ issue: string; fix?: string }>;
   totalIssues?: number;
+  scoreScaleMax?: number;
+  benchmarkPercentile?: number | null;
+  benchmarkLabel?: string | null;
+  scoreMethod?: string;
 };
 
 type PreviewChecklistItem = {
@@ -405,6 +410,23 @@ export default function Home() {
     };
   }
 
+  function persistPendingDemoAudit() {
+    if (!heroResult) return;
+    const normalizedUrl = normalizeWebsiteUrl(heroUrl);
+    if (!normalizedUrl) return;
+
+    const payload = {
+      url: normalizedUrl,
+      result: heroResult,
+      createdAt: Date.now(),
+    };
+
+    try {
+      window.sessionStorage.setItem('audo:pending-demo-audit', JSON.stringify(payload));
+    } catch {
+    }
+  }
+
   return (
     <main className="relative min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 font-sans">
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -439,7 +461,7 @@ export default function Home() {
               </span>
               <span className="inline-flex items-center gap-2 bg-black/30 border border-white/15 rounded-full px-3 py-1.5 backdrop-blur-sm">
                 <Check className="w-3.5 h-3.5 text-blue-300" />
-                Results in ~10 seconds
+                Results in ~20 seconds
               </span>
             </div>
 
@@ -494,10 +516,10 @@ export default function Home() {
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={() => setHeroUrl('youtube.com')}
+                onClick={() => setHeroUrl('useaudo.com')}
                 className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-gray-100 hover:bg-white/15 transition-colors"
               >
-                Try demo: youtube.com
+                Try demo: useaudo.com
               </button>
               <button
                 type="button"
@@ -540,10 +562,37 @@ export default function Home() {
                     );
                   })}
                 </div>
+                <p className="mt-2 text-center text-[11px] text-gray-300">
+                  Scores are out of {heroResult.scoreScaleMax ?? 100}
+                </p>
+                {heroResult.benchmarkLabel && (
+                  <p className="mt-1 text-center text-[11px] text-blue-100 font-semibold">
+                    {heroResult.benchmarkLabel}
+                  </p>
+                )}
                 {typeof heroResult.totalIssues === 'number' && (
                   <p className="mt-2 text-center text-xs text-gray-300">
                     {heroResult.totalIssues} issues detected
                   </p>
+                )}
+                {heroResult.scoreMethod && (
+                  <p className="mt-1 text-center text-[11px] text-gray-400">
+                    {heroResult.scoreMethod}
+                  </p>
+                )}
+
+                {Array.isArray(heroResult.issues) && heroResult.issues.length > 0 && (
+                  <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3 text-left">
+                    <p className="text-[10px] uppercase tracking-wide text-red-300 font-bold">Issues Found</p>
+                    <ul className="mt-2 space-y-2">
+                      {heroResult.issues.slice(0, 3).map((item, index) => (
+                        <li key={`${item.issue}-${index}`} className="text-xs text-gray-200">
+                          <span className="font-semibold">{item.issue}</span>
+                          {item.fix ? <span className="text-gray-300">: {item.fix}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             )}
@@ -552,7 +601,8 @@ export default function Home() {
               <div className="mt-4 border-t border-white/10 pt-4 text-center">
                 <p className="text-sm font-semibold text-blue-100">Fix these issues for free today.</p>
                 <Link
-                  href="/signup"
+                  href="/signup?next=%2Fdashboard%3FresumeDemo%3D1"
+                  onClick={persistPendingDemoAudit}
                   className="mt-2 inline-flex items-center gap-2 rounded-full bg-white text-black px-4 py-2 text-xs font-bold hover:bg-blue-500 hover:text-white transition-colors"
                 >
                   Create Free Account

@@ -27,14 +27,14 @@ export default function AccessibilityFixAll({ fixes }: { fixes: AccessibilityFix
     <div className="rounded-2xl border border-gray-200 dark:border-slate-700 p-3 sm:p-4 space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-          One-click accessibility metadata suggestions for all failing elements.
+          Accessibility metadata suggestions for all failing elements.
         </p>
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
           className="inline-flex items-center rounded-xl bg-black dark:bg-white text-white dark:text-slate-900 px-3 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
         >
-          {open ? 'Hide Fix All' : 'Fix All'}
+          {open ? 'Hide Suggestions' : 'Show Suggestions'}
         </button>
       </div>
 
