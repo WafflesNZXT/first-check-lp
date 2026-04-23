@@ -109,23 +109,25 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      await supabase
+      const { error: rollbackError } = await supabase
         .from('profiles')
         .update({ welcome_sent: false })
         .eq('id', userId)
-        .eq('welcome_sent', true)
-        .catch(() => null);
+        .eq('welcome_sent', true);
+
+      void rollbackError;
 
       return NextResponse.json({ error: String(error.message || 'Welcome email failed') }, { status: 500 });
     }
 
     if (!data?.id) {
-      await supabase
+      const { error: rollbackError } = await supabase
         .from('profiles')
         .update({ welcome_sent: false })
         .eq('id', userId)
-        .eq('welcome_sent', true)
-        .catch(() => null);
+        .eq('welcome_sent', true);
+
+      void rollbackError;
 
       return NextResponse.json({ error: 'Welcome email was not accepted by provider' }, { status: 502 });
     }

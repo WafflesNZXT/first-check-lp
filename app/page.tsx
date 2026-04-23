@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import {
@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   MessageSquareText,
   Quote,
+  Play,
   Repeat2,
   Share2,
   FileDown,
@@ -183,6 +184,10 @@ const FOUNDER_TESTIMONIALS = [
   },
 ];
 
+const INTRO_VIDEO_FILE_ID = '1gRn8t9ur7N4csfdjeaW_s0QuoCe88dz4';
+const INTRO_VIDEO_SOURCE_URL = '/intro-ad.mp4';
+const INTRO_VIDEO_FALLBACK_URL = `https://drive.google.com/file/d/${INTRO_VIDEO_FILE_ID}/view`;
+
 function FounderCaseStudyCard({
   testimonial,
 }: {
@@ -213,6 +218,86 @@ function FounderCaseStudyCard({
         </Link>
       </div>
     </article>
+  );
+}
+
+function IntroVideoShowcase({
+  title,
+  subtitle,
+  className = '',
+  compact = false,
+}: {
+  title: string;
+  subtitle: string;
+  className?: string;
+  compact?: boolean;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [showPlayOverlay, setShowPlayOverlay] = useState(true);
+
+  function startIntroVideo() {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    videoElement.muted = false;
+    const playPromise = videoElement.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {
+        videoElement.muted = true;
+        void videoElement.play();
+      });
+    }
+    setShowPlayOverlay(false);
+  }
+
+  return (
+    <div className={`reveal relative overflow-hidden rounded-[28px] border border-black/10 bg-[#f8fafc] shadow-[0_24px_70px_rgba(15,23,42,0.12)] ${className}`}>
+      <div className="pointer-events-none absolute -top-20 left-1/2 h-56 w-[82%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.24)_0%,rgba(99,102,241,0.16)_32%,rgba(248,250,252,0)_72%)] blur-2xl" />
+
+      <div className={`relative ${compact ? 'p-4 md:p-5' : 'p-5 md:p-7'} space-y-4`}>
+        <div className="space-y-1.5">
+          <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
+            Product intro video
+          </p>
+          <h3 className={`${compact ? 'text-2xl md:text-3xl' : 'text-2xl md:text-4xl'} font-black tracking-tight text-black`}>{title}</h3>
+          <p className="text-sm md:text-base text-gray-600">{subtitle}</p>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+          <div className="aspect-video w-full">
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              preload="metadata"
+              onPlay={() => setShowPlayOverlay(false)}
+              onPause={() => setShowPlayOverlay(true)}
+            >
+              <source src={INTRO_VIDEO_SOURCE_URL} type="video/mp4" />
+              <a href={INTRO_VIDEO_FALLBACK_URL} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+                Watch the intro video
+              </a>
+            </video>
+          </div>
+          {showPlayOverlay && (
+            <button
+              type="button"
+              onClick={startIntroVideo}
+              aria-label="Play intro video"
+              className="absolute inset-0 z-20 flex items-center justify-center"
+            >
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border border-white/70 bg-black/55 text-white shadow-[0_14px_40px_rgba(15,23,42,0.45)] backdrop-blur-sm transition-transform hover:scale-105">
+                <Play className="h-8 w-8 translate-x-[2px]" fill="currentColor" />
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -615,6 +700,13 @@ export default function Home() {
           <div className="order-2 xl:order-1 mt-4">
             <TrustedByCarousel />
           </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto mt-8 md:mt-12 relative z-20">
+          <IntroVideoShowcase
+            title="See what Audo really is"
+            subtitle="A fast-paced product intro."
+          />
         </div>
 
         <div className="max-w-6xl mx-auto mt-24 md:mt-32 relative z-20 translate-y-24 md:translate-y-60">
@@ -1190,6 +1282,12 @@ export default function Home() {
                   <p className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">Proof section lacks specific outcomes</p>
                 </div>
               </div>
+              <IntroVideoShowcase
+                className="mt-5"
+                compact
+                title="Watch the workflow in under a minute"
+                subtitle="The same intro clip embedded directly in your onboarding flow so visitors understand the product quickly."
+              />
               {/* <div className="hidden md:block absolute -bottom-6 -left-8 rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-xl">
                 <p className="text-xs uppercase tracking-widest text-gray-500 font-bold">delivery</p>
                 <p className="text-lg font-black text-black inline-flex items-center gap-2">Live in dashboard <Clock3 className="w-4 h-4" /></p>
