@@ -226,11 +226,13 @@ function IntroVideoShowcase({
   subtitle,
   className = '',
   compact = false,
+  autoPlay = true,
 }: {
   title: string;
   subtitle: string;
   className?: string;
   compact?: boolean;
+  autoPlay?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [showPlayOverlay, setShowPlayOverlay] = useState(true);
@@ -268,12 +270,15 @@ function IntroVideoShowcase({
             <video
               ref={videoRef}
               className="h-full w-full object-cover"
-              autoPlay
-              muted
+              autoPlay={autoPlay}
               loop
               playsInline
               controls
               preload="metadata"
+              onLoadedMetadata={(event) => {
+                event.currentTarget.muted = false;
+                event.currentTarget.volume = 1;
+              }}
               onPlay={() => setShowPlayOverlay(false)}
               onPause={() => setShowPlayOverlay(true)}
             >
@@ -1285,6 +1290,7 @@ export default function Home() {
               <IntroVideoShowcase
                 className="mt-5"
                 compact
+                autoPlay={false}
                 title="Watch the workflow in under a minute"
                 subtitle="The same intro clip embedded directly in your onboarding flow so visitors understand the product quickly."
               />
