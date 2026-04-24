@@ -12,7 +12,6 @@ import {
   LayoutGrid,
   MessageSquareText,
   Quote,
-  Play,
   Repeat2,
   Share2,
   FileDown,
@@ -235,9 +234,10 @@ function IntroVideoShowcase({
   autoPlay?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [showPlayOverlay, setShowPlayOverlay] = useState(true);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hasAttemptedAutoplayRef = useRef(false);
 
-  function startIntroVideo() {
+  function attemptIntroVideoPlayback() {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
@@ -249,8 +249,29 @@ function IntroVideoShowcase({
         void videoElement.play();
       });
     }
-    setShowPlayOverlay(false);
   }
+
+  useEffect(() => {
+    if (!autoPlay) return;
+    const target = containerRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting || hasAttemptedAutoplayRef.current) return;
+
+        hasAttemptedAutoplayRef.current = true;
+        attemptIntroVideoPlayback();
+      },
+      {
+        threshold: 0.4,
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [autoPlay]);
 
   return (
     <div className={`reveal relative overflow-hidden rounded-[28px] border border-black/10 bg-[#f8fafc] shadow-[0_24px_70px_rgba(15,23,42,0.12)] ${className}`}>
@@ -265,12 +286,12 @@ function IntroVideoShowcase({
           <p className="text-sm md:text-base text-gray-600">{subtitle}</p>
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+        <div ref={containerRef} className="relative overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
           <div className="aspect-video w-full">
             <video
               ref={videoRef}
               className="h-full w-full object-cover"
-              autoPlay={autoPlay}
+              autoPlay={false}
               loop
               playsInline
               controls
@@ -279,8 +300,6 @@ function IntroVideoShowcase({
                 event.currentTarget.muted = false;
                 event.currentTarget.volume = 1;
               }}
-              onPlay={() => setShowPlayOverlay(false)}
-              onPause={() => setShowPlayOverlay(true)}
             >
               <source src={INTRO_VIDEO_SOURCE_URL} type="video/mp4" />
               <a href={INTRO_VIDEO_FALLBACK_URL} target="_blank" rel="noreferrer" className="text-blue-700 underline">
@@ -288,18 +307,6 @@ function IntroVideoShowcase({
               </a>
             </video>
           </div>
-          {showPlayOverlay && (
-            <button
-              type="button"
-              onClick={startIntroVideo}
-              aria-label="Play intro video"
-              className="absolute inset-0 z-20 flex items-center justify-center"
-            >
-              <span className="flex h-20 w-20 items-center justify-center rounded-full border border-white/70 bg-black/55 text-white shadow-[0_14px_40px_rgba(15,23,42,0.45)] backdrop-blur-sm transition-transform hover:scale-105">
-                <Play className="h-8 w-8 translate-x-[2px]" fill="currentColor" />
-              </span>
-            </button>
-          )}
         </div>
       </div>
     </div>
@@ -710,7 +717,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto mt-8 md:mt-12 relative z-20">
           <IntroVideoShowcase
             title="See what Audo really is"
-            subtitle="A fast-paced product intro."
+            subtitle="An essential for founders."
           />
         </div>
 
@@ -1291,8 +1298,8 @@ export default function Home() {
                 className="mt-5"
                 compact
                 autoPlay={false}
-                title="Watch the workflow in under a minute"
-                subtitle="The same intro clip embedded directly in your onboarding flow so visitors understand the product quickly."
+                title="Audo"
+                subtitle="An essential for founders."
               />
               {/* <div className="hidden md:block absolute -bottom-6 -left-8 rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-xl">
                 <p className="text-xs uppercase tracking-widest text-gray-500 font-bold">delivery</p>
