@@ -9,6 +9,9 @@ import DashboardBoot from '../../components/DashboardBoot'
 import RecentAuditsRefreshButton from '@/components/RecentAuditsRefreshButton'
 import DashboardHeaderActions from '@/components/DashboardHeaderActions'
 import StripeCheckoutConfirm from '@/components/StripeCheckoutConfirm'
+import DashboardGuidedFlow from '@/components/DashboardGuidedFlow'
+import DashboardFeatureAnnouncement from '@/components/DashboardFeatureAnnouncement'
+import DashboardFeatureVoteCard from '@/components/DashboardFeatureVoteCard'
 
 type ChecklistItem = {
   completed?: boolean
@@ -73,7 +76,16 @@ export default async function DashboardPage({
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('welcome_sent')
+    .eq('id', userId)
+    .maybeSingle()
+
   const typedAudits = (audits || []) as AuditRow[]
+  const hasNoAudits = typedAudits.length === 0
+  const hasWelcomeEmailSignalPending = profile?.welcome_sent !== true
+  const shouldShowGuidedFlow = hasNoAudits || hasWelcomeEmailSignalPending
   const completedAudits = typedAudits.filter((audit) => audit.status === 'completed')
   const recentCompletedAudits = completedAudits.slice(0, 3)
 
@@ -112,6 +124,7 @@ export default async function DashboardPage({
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
       <DashboardBoot userId={userId} />
+      <DashboardFeatureAnnouncement userId={userId} />
       <div className="max-w-5xl mx-auto">
         <StripeCheckoutConfirm sessionId={sessionId} />
         <header className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-10 sm:mb-16">
@@ -132,6 +145,8 @@ export default async function DashboardPage({
           </section>
         )}
 
+        <DashboardGuidedFlow userId={userId} shouldShow={shouldShowGuidedFlow} />
+
         <section className="mb-10 sm:mb-14">
           <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-7 shadow-sm">
             <div className="flex flex-col gap-2 mb-5 sm:mb-6">
@@ -147,6 +162,8 @@ export default async function DashboardPage({
             </div>
           </div>
         </section>
+
+        <DashboardFeatureVoteCard />
 
         <section className="mb-12 sm:mb-20 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 sm:mb-4 text-black dark:text-white">New Audit</h2>

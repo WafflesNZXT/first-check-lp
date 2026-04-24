@@ -335,7 +335,7 @@ export default function AuditInput() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-4">
+    <div id="audit-input" className="w-full max-w-2xl mx-auto space-y-4 rounded-t-[2rem] rounded-b-[1.30rem] transition-shadow">
       {pendingDemoAudit?.url && (
         <div className="rounded-2xl border border-blue-100 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/35 p-4 text-left">
           <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">Resume Free Demo</p>

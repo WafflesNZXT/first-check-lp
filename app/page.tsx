@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useScrollReveal } from './useScrollReveal';
 import TrustedByCarousel from '@/components/TrustedByCarousel';
+import HomeIdeaValidationBar from '@/components/HomeIdeaValidationBar';
 
 type HeroResult = {
   performance: number;
@@ -544,7 +545,7 @@ export default function Home() {
             </span>
 
             <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[0.95]">
-              Fix what&apos;s costing you conversions.
+              SEO tools find traffic problems. <span className="text-blue-600">Audo fixes conversion problems.</span>
             </h1>
 
             <p className="hero-subtitle text-gray-200 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
@@ -710,6 +711,7 @@ export default function Home() {
           </div>
 
           <div className="order-2 xl:order-1 mt-4">
+            <HomeIdeaValidationBar />
             <TrustedByCarousel />
           </div>
         </div>

@@ -43,7 +43,7 @@ export default async function DashboardHistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <div className="max-w-7xl mx-auto">
+      <div id="tutorial-history-root" className="max-w-7xl mx-auto">
         <header className="mb-8 sm:mb-10">
           <h1 className="font-sans text-xl sm:text-2xl font-bold text-black dark:text-white tracking-tighter">Audit History</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Search, filter, and scan all completed audits in one place.</p>

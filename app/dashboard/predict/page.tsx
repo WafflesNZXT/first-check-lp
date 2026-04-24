@@ -363,7 +363,7 @@ export default function PredictPage() {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 relative">
+      <div id="tutorial-predict-root" className="max-w-5xl mx-auto space-y-6 sm:space-y-8 relative">
         {locked && (
           <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-auto">
             <div className="bg-white/90 dark:bg-slate-900/85 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-center shadow-lg max-w-sm w-full">
