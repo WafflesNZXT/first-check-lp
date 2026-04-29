@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import RetryAuditButton from '@/components/RetryAuditButton'
 
 type ChecklistItem = {
   issue?: string
@@ -67,9 +68,19 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
     return () => { supabase.removeChannel(channel) }
   }, [userId])
 
-  const completedAudits = useMemo(() => {
-    return audits.filter((audit) => audit.status === 'completed')
+  const recentAudits = useMemo(() => {
+    return [...audits]
+      .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+      .slice(0, 3)
   }, [audits])
+
+  const getStatusTone = (status: string) => {
+    if (status === 'completed') return 'bg-green-50 text-green-600'
+    if (status === 'failed') return 'bg-rose-50 text-rose-600'
+    if (status === 'processing') return 'bg-amber-50 text-amber-700'
+    if (status === 'cancelled') return 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-300'
+    return 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-300'
+  }
 
   const handleCopyPreviewLink = async (auditId: string) => {
     try {
@@ -84,11 +95,13 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
 
   return (
     <div className="grid gap-3 sm:gap-4">
-      {completedAudits.map((audit) => (
+      {recentAudits.map((audit) => (
         (() => {
           const href = `/dashboard/audit/${audit.id}`
           const { completed, total } = getChecklistStats(audit)
           const isChecklistComplete = total > 0 && completed >= total
+          const status = String(audit.status || '').toLowerCase()
+          const isCompleted = status === 'completed'
 
           return (
             <div
@@ -115,16 +128,20 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
                 <p className="text-xs text-gray-400 dark:text-gray-500">{audit.created_at ? new Date(audit.created_at).toLocaleDateString() : ''}</p>
               </div>
 
-              <span className="px-4 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest self-start">
-                completed
+              <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest self-start ${getStatusTone(status)}`}>
+                {status || 'unknown'}
               </span>
             </div>
 
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
               <span className={`inline-flex items-center h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
-                isChecklistComplete ? 'bg-black text-white dark:bg-white dark:text-slate-900' : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
+                !isCompleted
+                  ? 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
+                  : isChecklistComplete
+                  ? 'bg-black text-white dark:bg-white dark:text-slate-900'
+                  : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
               }`}>
-                {isChecklistComplete ? 'Checklist Complete' : `${completed}/${total || 0} Fixed`}
+                {!isCompleted ? 'Checklist Pending' : isChecklistComplete ? 'Checklist Complete' : `${completed}/${total || 0} Fixed`}
               </span>
 
               <span className={`inline-flex items-center h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
@@ -135,7 +152,9 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
             </div>
 
             <div className="flex justify-end min-h-[34px]">
-              {audit.is_public ? (
+              {status === 'failed' ? (
+                <RetryAuditButton websiteUrl={audit.website_url} />
+              ) : isCompleted && audit.is_public ? (
                 <button
                   type="button"
                   onClick={(e) => {

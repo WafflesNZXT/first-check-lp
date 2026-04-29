@@ -7,16 +7,19 @@ type Props = {
   auditId: string
   websiteUrl: string
   canManage?: boolean
+  summary?: string
+  checklist?: Array<{ issue?: string; fix?: string; recommendation?: string; task?: string; title?: string }>
 }
 
 async function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export default function AuditDetailActions({ auditId, websiteUrl, canManage = true }: Props) {
+export default function AuditDetailActions({ auditId, websiteUrl, canManage = true, summary, checklist = [] }: Props) {
   const router = useRouter()
   const [isRunning, setIsRunning] = useState(false)
   const [isDownloadingSocial, setIsDownloadingSocial] = useState(false)
+  const [copiedFixSummary, setCopiedFixSummary] = useState(false)
 
   const handleReaudit = async () => {
     if (isRunning) return
@@ -108,6 +111,29 @@ export default function AuditDetailActions({ auditId, websiteUrl, canManage = tr
     }
   }
 
+  const handleCopyFixSummary = async () => {
+    const host = String(websiteUrl || '').trim()
+    const topFixes = (Array.isArray(checklist) ? checklist : []).slice(0, 3)
+    const lines = [
+      `Audo Audit Summary: ${host}`,
+      summary ? `Summary: ${summary}` : '',
+      topFixes.length > 0 ? 'Top Fixes:' : 'Top Fixes: none available',
+      ...topFixes.map((entry, index) => {
+        const issue = String(entry?.issue || entry?.title || entry?.task || '').trim() || 'Issue'
+        const fix = String(entry?.fix || entry?.recommendation || '').trim() || 'No recommended fix provided.'
+        return `${index + 1}. ${issue} — ${fix}`
+      }),
+    ].filter(Boolean)
+
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'))
+      setCopiedFixSummary(true)
+      window.setTimeout(() => setCopiedFixSummary(false), 1500)
+    } catch {
+      setCopiedFixSummary(false)
+    }
+  }
+
   return (
     <div className="print-hide flex flex-col gap-2">
       {canManage && (
@@ -122,6 +148,14 @@ export default function AuditDetailActions({ auditId, websiteUrl, canManage = tr
       )}
 
       <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={handleCopyFixSummary}
+          className="w-full rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/30 px-4 py-2 text-xs font-black uppercase tracking-widest text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/45 transition-colors"
+        >
+          {copiedFixSummary ? 'Copied Summary' : 'Copy Summary'}
+        </button>
+
         <button
           type="button"
           onClick={handleDownloadPdf}

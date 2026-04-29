@@ -246,7 +246,13 @@ export default function DashboardTutorialReportPage() {
               </div>
             </section>
 
-            <AuditDetailActions auditId={tutorialAudit.id} websiteUrl={tutorialAudit.website_url} canManage={false} />
+            <AuditDetailActions
+              auditId={tutorialAudit.id}
+              websiteUrl={tutorialAudit.website_url}
+              canManage={false}
+              summary={tutorialAudit.report_content.summary}
+              checklist={tutorialAudit.report_content.checklist}
+            />
 
             <div id="tutorial-report-collab">
               <AuditCollaboratePanel

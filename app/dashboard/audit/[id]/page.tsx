@@ -378,7 +378,13 @@ function AuditDetail({
           </div>
         </section>
 
-        <AuditDetailActions auditId={audit.id} websiteUrl={audit.website_url} canManage={viewerIsOwner} />
+        <AuditDetailActions
+          auditId={audit.id}
+          websiteUrl={audit.website_url}
+          canManage={viewerIsOwner}
+          summary={audit.report_content?.summary}
+          checklist={Array.isArray(audit.report_content?.checklist) ? audit.report_content.checklist : []}
+        />
 
         <AuditCollaboratePanel
           auditId={audit.id}

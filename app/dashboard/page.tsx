@@ -87,7 +87,7 @@ export default async function DashboardPage({
   const hasWelcomeEmailSignalPending = profile?.welcome_sent !== true
   const shouldShowGuidedFlow = hasNoAudits || hasWelcomeEmailSignalPending
   const completedAudits = typedAudits.filter((audit) => audit.status === 'completed')
-  const recentCompletedAudits = completedAudits.slice(0, 3)
+  const recentAudits = typedAudits.slice(0, 3)
 
   const averagePerformance = getAverage(
     completedAudits
@@ -176,8 +176,8 @@ export default async function DashboardPage({
             <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Recent Audits</h3>
             <RecentAuditsRefreshButton />
           </div>
-          {recentCompletedAudits.length > 0 ? (
-            <AuditList initialAudits={recentCompletedAudits} userId={userId} />
+          {recentAudits.length > 0 ? (
+            <AuditList initialAudits={recentAudits} userId={userId} />
           ) : (
             <p className="text-gray-400 text-center py-10">No audits run yet.</p>
           )}

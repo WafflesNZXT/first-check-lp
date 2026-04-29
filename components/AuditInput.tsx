@@ -334,6 +334,25 @@ export default function AuditInput() {
     router.refresh()
   }
 
+  const selectTopTenUrls = () => {
+    setSelectedUrls(scannedUrls.slice(0, 10))
+  }
+
+  const selectKeyPages = () => {
+    const keyMatches = scannedUrls.filter((pageUrl) => {
+      try {
+        const parsed = new URL(pageUrl)
+        const path = parsed.pathname.toLowerCase().replace(/\/+$/, '') || '/'
+        return path === '/' || path === '/pricing' || path === '/signup' || path === '/contact'
+      } catch {
+        return false
+      }
+    })
+
+    const deduped = Array.from(new Set(keyMatches))
+    setSelectedUrls(deduped.length > 0 ? deduped : scannedUrls.slice(0, 4))
+  }
+
   return (
     <div id="audit-input" className="w-full max-w-2xl mx-auto space-y-4 rounded-t-[2rem] rounded-b-[1.30rem] transition-shadow">
       {pendingDemoAudit?.url && (
@@ -418,6 +437,20 @@ export default function AuditInput() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-gray-500 dark:text-gray-300">{selectedUrls.length} of {scannedUrls.length} pages selected</p>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={selectTopTenUrls}
+                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200"
+                >
+                  Top 10
+                </button>
+                <button
+                  type="button"
+                  onClick={selectKeyPages}
+                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200"
+                >
+                  Key Pages
+                </button>
                 <button
                   type="button"
                   onClick={() => setSelectedUrls(scannedUrls)}

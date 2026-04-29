@@ -36,7 +36,6 @@ export default async function DashboardHistoryPage() {
     .from('audits')
     .select('id, website_url, created_at, status, is_public, performance_score, ux_score, seo_score')
     .eq('user_id', userId)
-    .eq('status', 'completed')
     .order('created_at', { ascending: false })
 
   const audits = (data || []) as HistoryAuditRow[]

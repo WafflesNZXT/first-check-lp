@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import RetryAuditButton from '@/components/RetryAuditButton'
 
 type HistoryAuditRow = {
   id: string
@@ -31,6 +32,14 @@ function getScoreTone(score: number) {
   if (score >= 80) return 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60'
   if (score >= 50) return 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60'
   return 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60'
+}
+
+function getStatusTone(status: string) {
+  if (status === 'completed') return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+  if (status === 'failed') return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300'
+  if (status === 'processing') return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+  if (status === 'cancelled') return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-300'
+  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-300'
 }
 
 export default function DashboardHistoryTable({ audits }: { audits: HistoryAuditRow[] }) {
@@ -90,6 +99,30 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
 
     return next
   }, [audits, searchQuery, selectedFilters])
+
+  const deltaByAuditId = useMemo(() => {
+    const byDomain = new Map<string, HistoryAuditRow[]>()
+
+    for (const audit of audits) {
+      if (audit.status !== 'completed') continue
+      const domain = normalizeUrl(audit.website_url).toLowerCase()
+      const existing = byDomain.get(domain) || []
+      existing.push(audit)
+      byDomain.set(domain, existing)
+    }
+
+    const deltas = new Map<string, number>()
+    for (const [, domainAudits] of byDomain.entries()) {
+      const sorted = [...domainAudits].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+      for (let index = 0; index < sorted.length - 1; index += 1) {
+        const current = sorted[index]
+        const previous = sorted[index + 1]
+        deltas.set(current.id, getOverallScore(current) - getOverallScore(previous))
+      }
+    }
+
+    return deltas
+  }, [audits])
 
   const toggleFilter = (filter: FilterKey) => {
     setSelectedFilters((prev) => {
@@ -171,35 +204,50 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
             {filteredAudits.map((audit) => {
               const domain = normalizeUrl(audit.website_url)
               const score = getOverallScore(audit)
+              const status = String(audit.status || '').toLowerCase()
+              const delta = deltaByAuditId.get(audit.id)
+              const isCompleted = status === 'completed'
 
               return (
                 <tr key={audit.id} className="border-t border-gray-100 dark:border-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50/70 dark:hover:bg-slate-800/50">
                   <td className="px-4 py-3 font-semibold text-black dark:text-white">{domain}</td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{new Date(audit.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center h-7 px-2.5 rounded-full border font-bold ${getScoreTone(score)}`}>
-                      {score}
+                    {isCompleted ? (
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center h-7 px-2.5 rounded-full border font-bold ${getScoreTone(score)}`}>
+                          {score}
+                        </span>
+                        {typeof delta === 'number' && (
+                          <span className={`inline-flex items-center h-6 px-2 rounded-full text-[10px] font-black uppercase tracking-widest ${delta > 0 ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : delta < 0 ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300'}`}>
+                            {delta > 0 ? `+${delta}` : `${delta}`}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="inline-flex items-center h-7 px-2.5 rounded-full border font-bold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700">
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">{isCompleted ? (audit.performance_score ?? 0) : '—'}</td>
+                  <td className="px-4 py-3">{isCompleted ? (audit.ux_score ?? 0) : '—'}</td>
+                  <td className="px-4 py-3">{isCompleted ? (audit.seo_score ?? 0) : '—'}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center h-7 px-2.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusTone(status)}`}>
+                      {status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{audit.performance_score ?? 0}</td>
-                  <td className="px-4 py-3">{audit.ux_score ?? 0}</td>
-                  <td className="px-4 py-3">{audit.seo_score ?? 0}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center h-7 px-2.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      audit.status === 'completed'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-300'
-                    }`}>
-                      {audit.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/dashboard/audit/${audit.id}`}
-                      className="inline-flex items-center h-7 px-3 rounded-full border border-gray-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
-                    >
-                      Open
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/dashboard/audit/${audit.id}`}
+                        className="inline-flex items-center h-7 px-3 rounded-full border border-gray-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
+                      >
+                        Open
+                      </Link>
+                      {status === 'failed' && <RetryAuditButton websiteUrl={audit.website_url} compact />}
+                    </div>
                   </td>
                 </tr>
               )
