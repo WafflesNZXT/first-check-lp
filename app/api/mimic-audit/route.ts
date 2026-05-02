@@ -51,8 +51,8 @@ type AuditRunResult = {
 type ProgressHandler = (message: string) => void | Promise<void>
 
 function getAuditTimeoutMs() {
-  const raw = Number(process.env.MIMIC_AUDIT_TIMEOUT_MS || '180000')
-  if (!Number.isFinite(raw) || raw <= 0) return 180000
+  const raw = Number(process.env.MIMIC_AUDIT_TIMEOUT_MS || '480000')
+  if (!Number.isFinite(raw) || raw <= 0) return 480000
   return Math.floor(raw)
 }
 
@@ -163,7 +163,7 @@ async function runAudit(url: string, onProgress?: ProgressHandler): Promise<Audi
   await onProgress?.('Saving audit result to Butterbase')
   const payload = {
     url,
-    status: String(bridgeData.status || 'Yellow'),
+    status: String(bridgeData.status || 'In Progress'),
     result: String(bridgeData.log || ''),
     errors: {
       messages: toErrorMessages(bridgeData.errors),

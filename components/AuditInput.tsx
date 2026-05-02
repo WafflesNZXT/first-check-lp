@@ -17,6 +17,24 @@ type PendingDemoAudit = {
   createdAt?: number
 }
 
+const AGENT_RUNNING_RE = /^Agent running\.\.\. \d+s$/i
+
+function appendOrReplaceAgentRunningLine(prev: string[], line: string): string[] {
+  const cleaned = String(line || '').trim()
+  if (!cleaned) return prev
+
+  if (!AGENT_RUNNING_RE.test(cleaned)) {
+    return [...prev, cleaned]
+  }
+
+  const idx = prev.findIndex((entry) => AGENT_RUNNING_RE.test(entry))
+  if (idx < 0) return [...prev, cleaned]
+
+  const next = [...prev]
+  next[idx] = cleaned
+  return next
+}
+
 export default function AuditInput() {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,6 +47,8 @@ export default function AuditInput() {
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null)
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [processingNotice, setProcessingNotice] = useState<string | null>(null)
+  const [liveCaptions, setLiveCaptions] = useState<string[]>([])
+  const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null)
   const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null)
   const [pendingDemoAudit, setPendingDemoAudit] = useState<PendingDemoAudit | null>(null)
   const router = useRouter()
@@ -47,6 +67,8 @@ export default function AuditInput() {
     setActiveAuditId(null)
     setActiveStatus(null)
     setProcessingNotice(null)
+    setLiveCaptions([])
+    setProcessingStartedAt(null)
     setErrorModalMessage(message)
   }
 
@@ -83,7 +105,7 @@ export default function AuditInput() {
       }
     } catch {
     }
-  }, [])
+  }, [url])
 
   const clearPendingDemoAudit = () => {
     try {
@@ -126,12 +148,40 @@ export default function AuditInput() {
         const nextStatus = statusJson?.status
         if (!nextStatus || typeof nextStatus !== 'string') return
 
+        if (typeof statusJson?.progress_message === 'string' && statusJson.progress_message.trim()) {
+          const message = statusJson.progress_message.trim()
+          setLiveCaptions((prev) => {
+            if (prev[prev.length - 1] === message) return prev
+            return [...prev, message]
+          })
+        }
+
+        if (processingStartedAt) {
+          const elapsedSeconds = Math.max(1, Math.floor((Date.now() - processingStartedAt) / 1000))
+          setLiveCaptions((prev) => appendOrReplaceAgentRunningLine(prev, `Agent running... ${elapsedSeconds}s`))
+        }
+
         if (nextStatus === 'completed') {
           setActiveStatus(nextStatus)
           clearInterval(timer)
           setActiveAuditId(null)
           setActiveStatus(null)
           setProcessingNotice(null)
+          setProcessingStartedAt(null)
+          setLiveCaptions((prev) => {
+            const agent = statusJson?.agent
+            const completionLine = agent && typeof agent === 'object'
+              ? `Agent supplement: ${Boolean((agent as { ok?: unknown }).ok) ? 'completed' : 'not available'}${(agent as { model?: unknown }).model ? ` (${String((agent as { model?: unknown }).model)})` : ''}.`
+              : 'Audit completed.'
+            const dbLine = agent && typeof agent === 'object'
+              ? `Butterbase log: ${Boolean((agent as { db_saved?: unknown }).db_saved) ? 'saved' : 'not saved'}${(agent as { db_reason?: unknown }).db_reason ? ` (${String((agent as { db_reason?: unknown }).db_reason)})` : ''}.`
+              : ''
+
+            const next = [...prev]
+            if (next[next.length - 1] !== completionLine) next.push(completionLine)
+            if (dbLine && next[next.length - 1] !== dbLine) next.push(dbLine)
+            return next
+          })
           router.refresh()
           window.setTimeout(() => {
             router.refresh()
@@ -162,7 +212,21 @@ export default function AuditInput() {
     }, 1500)
 
     return () => clearInterval(timer)
-  }, [activeAuditId, activeStatus, router])
+  }, [activeAuditId, activeStatus, processingStartedAt, router])
+
+  useEffect(() => {
+    if (activeStatus !== 'processing' || !processingStartedAt) return
+
+    const refreshAfterMs = 200_000
+    const elapsed = Date.now() - processingStartedAt
+    const remainingMs = Math.max(0, refreshAfterMs - elapsed)
+
+    const timer = window.setTimeout(() => {
+      window.location.reload()
+    }, remainingMs)
+
+    return () => window.clearTimeout(timer)
+  }, [activeStatus, processingStartedAt])
 
   const startAudit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -198,6 +262,12 @@ export default function AuditInput() {
       setActiveAuditId(auditId)
       setActiveStatus('processing')
       setProcessingNotice(null)
+      setProcessingStartedAt(Date.now())
+      setLiveCaptions([
+        'Audit initialized.',
+        'Crawler starting: fetching pages and metadata...',
+        'Agent queued: will inspect hero, CTA flow, info boxes, and footer.',
+      ])
       setUrl('')
 
       // 2. Trigger the audit processor in the background; UI progress is driven by realtime status updates.
@@ -523,7 +593,7 @@ export default function AuditInput() {
       </div>
 
       {activeStatus === 'processing' && (
-        <AuditLoading processingNotice={processingNotice} />
+        <AuditLoading processingNotice={processingNotice} captions={liveCaptions} />
       )}
 
       {errorModalMessage && (

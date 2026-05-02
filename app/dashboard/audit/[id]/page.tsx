@@ -30,6 +30,20 @@ type AuditReport = {
   total_third_party_weight_ms?: number
   wcag_issues?: WcagIssue[]
   accessibility_fix_all?: AccessibilityFix[]
+  agent_supplement?: {
+    ok?: boolean
+    status_label?: string
+    model?: string
+    log?: string
+    errors?: unknown
+    endpoint?: string
+    db_log?: {
+      saved?: boolean
+      reason?: string
+      status_code?: number
+      error?: string
+    } | null
+  } | null
 }
 
 type HeaviestAsset = {
@@ -448,6 +462,33 @@ function AuditDetail({
             </div>
           </div>
         </section>
+
+      {audit.report_content?.agent_supplement?.log && (
+        <section className="w-full rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-3">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Agent Supplement</p>
+              <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">Ruthless Agent Findings</h3>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Status: {String(audit.report_content.agent_supplement.status_label || 'unknown')} | Model: {String(audit.report_content.agent_supplement.model || 'n/a')}
+            </p>
+          </div>
+
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Butterbase Log: {audit.report_content.agent_supplement.db_log?.saved ? 'saved' : 'not saved'}
+            {audit.report_content.agent_supplement.db_log?.reason
+              ? ` (${String(audit.report_content.agent_supplement.db_log.reason)})`
+              : audit.report_content.agent_supplement.db_log?.error
+                ? ` (${String(audit.report_content.agent_supplement.db_log.error)})`
+                : ''}
+          </p>
+
+          <pre className="max-h-96 overflow-auto rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-3 text-xs whitespace-pre-wrap text-gray-700 dark:text-gray-200">
+            {String(audit.report_content.agent_supplement.log || '')}
+          </pre>
+        </section>
+      )}
 
       {Array.isArray(audit.report_content?.third_party_tax) && audit.report_content.third_party_tax.length > 0 && (
         <section className="w-full rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-4">

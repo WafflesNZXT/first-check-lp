@@ -156,6 +156,87 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+async function runAgentSupplement(url: string) {
+  const enabledRaw = String(process.env.AUDIT_AGENT_SUPPLEMENT_ENABLED || 'true').toLowerCase()
+  const enabled = enabledRaw === '1' || enabledRaw === 'true' || enabledRaw === 'yes'
+  if (!enabled) return null
+
+  const configuredBridge = String(process.env.AGENT_BRIDGE_URL || '').trim()
+  const bridgeBases = Array.from(new Set([
+    configuredBridge,
+    'http://127.0.0.1:8000',
+    'http://[::1]:8000',
+    'http://localhost:8000',
+  ].map((base) => base.replace(/\/$/, '')).filter(Boolean)))
+
+  const timeoutMs = Number(process.env.AUDIT_AGENT_SUPPLEMENT_TIMEOUT_MS || '120000')
+  const timeoutPerAttempt = Number.isFinite(timeoutMs) ? Math.max(10_000, Math.floor(timeoutMs / Math.max(1, bridgeBases.length))) : 120000
+  const attemptErrors: string[] = []
+
+  try {
+    for (const bridgeBase of bridgeBases) {
+      const endpoint = `${bridgeBase}/run-audit?url=${encodeURIComponent(url)}`
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), timeoutPerAttempt)
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          signal: controller.signal,
+        })
+
+        const raw = await response.text()
+        let payload: Record<string, unknown> | null = null
+        try {
+          payload = raw ? JSON.parse(raw) : null
+        } catch {
+          payload = { log: raw }
+        }
+
+        if (!response.ok) {
+          return {
+            ok: false,
+            endpoint,
+            status: response.status,
+            error: payload,
+          }
+        }
+
+        return {
+          ok: true,
+          endpoint,
+          status: response.status,
+          status_label: String(payload?.status || ''),
+          model: String(payload?.model || ''),
+          log: String(payload?.log || ''),
+          errors: payload?.errors ?? [],
+          db_log: payload?.db_log ?? null,
+        }
+      } catch (error) {
+        attemptErrors.push(`${endpoint}: ${String(error)}`)
+      } finally {
+        clearTimeout(timer)
+      }
+    }
+
+    return {
+      ok: false,
+      attempted_endpoints: bridgeBases,
+      error: attemptErrors.length > 0
+        ? `Unable to reach agent bridge. Attempts: ${attemptErrors.join(' | ')}`
+        : 'Unable to reach agent bridge.',
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      attempted_endpoints: bridgeBases,
+      error: String(error),
+    }
+  }
+}
+
 function extractErrorStatus(error: unknown) {
   const candidate = error as { statusCode?: unknown; status?: unknown; cause?: { statusCode?: unknown; status?: unknown } }
   const values = [candidate?.statusCode, candidate?.status, candidate?.cause?.statusCode, candidate?.cause?.status]
@@ -352,19 +433,61 @@ export async function POST(request: Request) {
 
     console.log(`🚀 Starting audit for: ${url} (ID: ${auditId})`);
 
+    if (auditId) {
+      await updateAuditById(auditId, { status: 'processing', error_message: 'Initializing audit pipeline and preparing crawl...' })
+    }
+
     // 1. SCRAPE THE CONTENT (Crucial: This is how the AI "sees" the site)
     const jinaResponse = await fetch(`https://r.jina.ai/${url}`);
     const siteContent = await jinaResponse.text();
+
+    if (auditId) {
+      await updateAuditById(auditId, { status: 'processing', error_message: 'Crawler complete. Analyzing SEO, UX hierarchy, and conversion signals...' })
+    }
 
     // 2. Generate the Screenshot URL
     const screenshotUrl = `https://image.thum.io/get/width/1200/crop/800/noScroll/https://${url.replace('https://', '')}`;
 
     // 3. Run the AI with Structured Output + retries/fallback
-    const fallbackNotice = 'High demand in primary model, falling back to lighter version.'
+    const fallbackNotice = 'High demand in primary model, switching to lighter analysis model.'
     const auditData = await runAuditGenerationWithRetry(url, siteContent, async () => {
       if (!auditId) return
       await updateAuditById(auditId, { error_message: fallbackNotice, status: 'processing' })
     })
+
+    if (auditId) {
+      await updateAuditById(auditId, { status: 'processing', error_message: 'Primary audit complete. Agent opening homepage and mapping sections...' })
+    }
+
+    const agentProgressSteps = [
+      'Agent: analyzing hero section...',
+      'Agent: found primary CTA(s), checking destination and clarity...',
+      'Agent: reading info boxes, trust blocks, and value props...',
+      'Agent: testing key button interactions and page flow...',
+      'Agent: found footer and finalizing findings...',
+    ]
+
+    let agentProgressTimer: ReturnType<typeof setInterval> | null = null
+    if (auditId) {
+      let stepIndex = 0
+      agentProgressTimer = setInterval(() => {
+        const message = agentProgressSteps[Math.min(stepIndex, agentProgressSteps.length - 1)]
+        stepIndex += 1
+        void updateAuditById(auditId as string, { status: 'processing', error_message: message }).catch(() => undefined)
+      }, 3200)
+    }
+
+    const agentSupplement = await runAgentSupplement(url)
+    if (agentProgressTimer) {
+      clearInterval(agentProgressTimer)
+    }
+
+    if (auditId) {
+      const supplementMessage = agentSupplement?.ok
+        ? `Agent supplement completed (${String(agentSupplement.model || 'agent')}). Finalizing report...`
+        : 'Agent supplement unavailable for this run. Finalizing core report...'
+      await updateAuditById(auditId, { status: 'processing', error_message: supplementMessage })
+    }
 
     const performanceScore = toIntegerScore(auditData.performance_score)
     const seoScore = toIntegerScore(auditData.seo_score)
@@ -420,6 +543,7 @@ export async function POST(request: Request) {
         total_third_party_weight_ms: auditData.total_third_party_weight_ms,
         wcag_issues: auditData.wcag_issues,
         accessibility_fix_all: auditData.accessibility_fix_all,
+        agent_supplement: agentSupplement,
       },
       performance_score: performanceScore,
       seo_score: seoScore,

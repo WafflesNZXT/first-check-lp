@@ -28,17 +28,12 @@ export async function GET(req: Request) {
           get(name: string) {
             return cookieStore.get(name)?.value
           },
-          set(name: string, value: string) {
-            try {
-              (cookieStore as any).set?.({ name, value })
-            } catch {
-            }
+          set(_name: string, _value: string) {
+            void _name
+            void _value
           },
-          remove(name: string) {
-            try {
-              (cookieStore as any).delete?.({ name })
-            } catch {
-            }
+          remove(_name: string) {
+            void _name
           },
         },
       }
@@ -52,12 +47,28 @@ export async function GET(req: Request) {
 
     const statusOnly = await supabase
       .from('audits')
-      .select('status')
+      .select('status,error_message,report_content')
       .eq('id', auditId)
       .eq('user_id', user.id)
       .maybeSingle()
 
-    const data = statusOnly.data as { status: string } | null
+    const data = statusOnly.data as {
+      status: string
+      error_message?: string | null
+      report_content?: {
+        agent_supplement?: {
+          ok?: boolean
+          status_label?: string
+          model?: string
+          db_log?: {
+            saved?: boolean
+            reason?: string
+            status_code?: number
+            error?: string
+          } | null
+        } | null
+      } | null
+    } | null
     const error = statusOnly.error
 
     if (error) {
@@ -74,6 +85,7 @@ export async function GET(req: Request) {
       )
     }
 
+    const progressMessage = typeof data?.error_message === 'string' ? data.error_message : null
     let errorMessage: string | null = null
     if (data.status === 'failed' || data.status === 'cancelled') {
       const withErrorMessage = await supabase
@@ -91,8 +103,27 @@ export async function GET(req: Request) {
       }
     }
 
-    return new Response(JSON.stringify({ status: data.status, error: errorMessage }), { status: 200 })
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: String(err?.message || err) }), { status: 500 })
+    return new Response(
+      JSON.stringify({
+        status: data.status,
+        error: errorMessage,
+        progress_message: progressMessage,
+        agent: data?.report_content?.agent_supplement
+          ? {
+              ok: Boolean(data.report_content.agent_supplement.ok),
+              status: String(data.report_content.agent_supplement.status_label || ''),
+              model: String(data.report_content.agent_supplement.model || ''),
+              db_saved: Boolean(data.report_content.agent_supplement.db_log?.saved),
+              db_reason: String(data.report_content.agent_supplement.db_log?.reason || data.report_content.agent_supplement.db_log?.error || ''),
+            }
+          : null,
+      }),
+      { status: 200 }
+    )
+  } catch (err: unknown) {
+    const message = typeof err === 'object' && err && 'message' in err
+      ? String((err as { message?: unknown }).message || err)
+      : String(err)
+    return new Response(JSON.stringify({ error: message }), { status: 500 })
   }
 }

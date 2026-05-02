@@ -10,7 +10,7 @@ const STAGES = [
   'Finalizing roadmap',
 ] as const
 
-export default function AuditLoading({ processingNotice }: { processingNotice?: string | null }) {
+export default function AuditLoading({ processingNotice, captions = [] }: { processingNotice?: string | null; captions?: string[] }) {
   const [activeStage, setActiveStage] = useState(0)
 
   const completedStages = useMemo(() => {
@@ -69,6 +69,18 @@ export default function AuditLoading({ processingNotice }: { processingNotice?: 
           )
         })}
       </div>
+
+      {captions.length > 0 && (
+        <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Live Agent Captions</p>
+          <pre className="mt-2 max-h-40 overflow-auto text-xs whitespace-pre-wrap text-gray-700">
+            {captions.join('\n')}
+          </pre>
+          <p className="mt-2 text-[11px] text-gray-500">
+            Typical runtime is around 120-200 seconds depending on site size and model load.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

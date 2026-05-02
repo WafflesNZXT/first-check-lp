@@ -567,6 +567,16 @@ export default function Home() {
               <p className="text-sm md:text-base font-black tracking-tight text-blue-100">Instant audit score. No signup. No paywall.</p>
             </div>
 
+            <div className="mx-auto max-w-2xl rounded-2xl border border-white/20 bg-black/35 px-4 py-4 text-left backdrop-blur-sm">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-200">Agent System</p>
+              <p className="mt-1 text-sm text-gray-100">
+                Audo runs two layers during a full dashboard audit: the standard crawler for fast scoring, plus a ruthless browsing agent for deeper homepage and conversion insights.
+              </p>
+              <p className="mt-2 text-xs text-gray-300">
+                You can follow live agent captions while it runs, then review agent findings directly inside your audit detail page.
+              </p>
+            </div>
+
             <div className="flex items-center justify-center">
               <Link
                 href="/pricing"

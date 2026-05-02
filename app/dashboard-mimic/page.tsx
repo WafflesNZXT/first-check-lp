@@ -27,12 +27,63 @@ async function readApiPayload(response: Response): Promise<unknown> {
   }
 }
 
+const AGENT_RUNNING_RE = /^Agent running\.\.\. \d+s$/i
+
+function toLifecycleStatus(rawStatus: string): 'Completed' | 'In Progress' | 'Error Occurred' {
+  const normalized = String(rawStatus || '').trim().toLowerCase()
+
+  if (!normalized) return 'In Progress'
+
+  if (
+    normalized === 'completed'
+    || normalized === 'green'
+    || normalized === 'success'
+    || normalized === 'ok'
+  ) {
+    return 'Completed'
+  }
+
+  if (
+    normalized === 'in progress'
+    || normalized === 'in_progress'
+    || normalized === 'processing'
+    || normalized === 'running'
+    || normalized === 'yellow'
+  ) {
+    return 'In Progress'
+  }
+
+  return 'Error Occurred'
+}
+
+function appendOrReplaceProgressLine(prev: string, nextLine: string): string {
+  const line = String(nextLine || '').trim()
+  if (!line) return prev
+
+  if (!AGENT_RUNNING_RE.test(line)) {
+    return `${prev}${prev ? '\n' : ''}${line}`
+  }
+
+  const lines = prev ? prev.split('\n') : []
+  const existingIndex = lines.findIndex((value) => AGENT_RUNNING_RE.test(value.trim()))
+
+  if (existingIndex >= 0) {
+    lines[existingIndex] = line
+    return lines.join('\n')
+  }
+
+  return `${prev}${prev ? '\n' : ''}${line}`
+}
+
 export default function DashboardMimicPage() {
   const [url, setUrl] = useState('https://useaudo.com')
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [latestResult, setLatestResult] = useState<string>('')
   const [audits, setAudits] = useState<AuditRow[]>([])
+  const [selectedAuditId, setSelectedAuditId] = useState<string | null>(null)
+
+  const selectedAudit = selectedAuditId ? audits.find((entry) => entry.id === selectedAuditId) || null : null
 
   async function loadAudits() {
     const response = await fetch('/api/butterbase/audits?limit=15&order=created_at.desc', {
@@ -76,9 +127,9 @@ export default function DashboardMimicPage() {
           try {
             const data = JSON.parse(event.data) as { message?: string }
             if (!data?.message) return
-            setLatestResult((prev) => `${prev}${prev ? '\n' : ''}${data.message}`)
+            setLatestResult((prev) => appendOrReplaceProgressLine(prev, data.message || ''))
           } catch {
-            setLatestResult((prev) => `${prev}${prev ? '\n' : ''}${event.data}`)
+            setLatestResult((prev) => appendOrReplaceProgressLine(prev, event.data))
           }
         })
 
@@ -113,6 +164,7 @@ export default function DashboardMimicPage() {
             }
 
             const status = String(payload?.agent?.status || payload?.audit?.status || '').trim()
+            const lifecycleStatus = toLifecycleStatus(status)
             const rawErrors = payload?.agent?.errors ?? payload?.audit?.errors
 
             let errorCount = 0
@@ -127,10 +179,9 @@ export default function DashboardMimicPage() {
               errorCount = ((rawErrors as { messages?: unknown[] }).messages || []).filter((value) => Boolean(value)).length
             }
 
+            completionMessage = `Audit status: ${lifecycleStatus}.`
             if (errorCount > 0) {
-              completionMessage = `Audit finished with ${errorCount} issue${errorCount === 1 ? '' : 's'}.`
-            } else if (status) {
-              completionMessage = `Audit finished with status ${status}.`
+              completionMessage = `${completionMessage} ${errorCount} issue${errorCount === 1 ? '' : 's'} noted.`
             }
           } catch {
             completionMessage = 'Audit finished.'
@@ -187,7 +238,7 @@ export default function DashboardMimicPage() {
 
         <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">Run AI Agent Audit</p>
-          <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900">No-login demo runner</h2>
+          {/* <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900">No-login demo runner</h2> */}
           <p className="mt-2 text-sm text-slate-600">
             Runs the browser agent audit flow and stores results in the Butterbase audits table.
           </p>
@@ -240,9 +291,21 @@ export default function DashboardMimicPage() {
               </thead>
               <tbody>
                 {audits.map((audit) => (
-                  <tr key={audit.id}>
+                  <tr
+                    key={audit.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedAuditId(audit.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSelectedAuditId(audit.id)
+                      }
+                    }}
+                    className="cursor-pointer hover:bg-slate-50"
+                  >
                     <td className="border-b border-slate-100 px-2 py-2 text-slate-700">{audit.url}</td>
-                    <td className="border-b border-slate-100 px-2 py-2 font-semibold text-slate-900">{audit.status}</td>
+                    <td className="border-b border-slate-100 px-2 py-2 font-semibold text-slate-900">{toLifecycleStatus(audit.status)}</td>
                     <td className="border-b border-slate-100 px-2 py-2 text-slate-600">{audit.model || 'n/a'}</td>
                     <td className="border-b border-slate-100 px-2 py-2 text-slate-500">
                       {new Date(audit.created_at).toLocaleString()}
@@ -252,6 +315,22 @@ export default function DashboardMimicPage() {
               </tbody>
             </table>
           </div>
+
+          {selectedAudit && (
+            <div className="mt-4 rounded-2xl border border-blue-100 bg-slate-50 p-4">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-700">Selected Audit Result</p>
+                <p className="text-xs text-slate-500">{new Date(selectedAudit.created_at).toLocaleString()}</p>
+              </div>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{selectedAudit.url}</p>
+              <p className="mt-1 text-xs text-slate-600">
+                Status: {toLifecycleStatus(selectedAudit.status)} | Model: {selectedAudit.model || 'n/a'}
+              </p>
+              <pre className="mt-3 max-h-80 overflow-auto rounded-xl border border-slate-200 bg-white p-3 text-xs whitespace-pre-wrap text-slate-700">
+                {selectedAudit.result || 'No result text was saved for this run.'}
+              </pre>
+            </div>
+          )}
         </section>
       </div>
     </main>
