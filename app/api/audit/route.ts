@@ -152,14 +152,13 @@ function extractThirdPartyResources(pageUrl: string, siteContent: string) {
   return Array.from(new Set(normalized)).slice(0, 80)
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function isAgentSupplementEnabled() {
+  const enabledRaw = String(process.env.AUDIT_AGENT_SUPPLEMENT_ENABLED || 'false').toLowerCase()
+  return enabledRaw === '1' || enabledRaw === 'true' || enabledRaw === 'yes'
 }
 
 async function runAgentSupplement(url: string) {
-  const enabledRaw = String(process.env.AUDIT_AGENT_SUPPLEMENT_ENABLED || 'true').toLowerCase()
-  const enabled = enabledRaw === '1' || enabledRaw === 'true' || enabledRaw === 'yes'
-  if (!enabled) return null
+  if (!isAgentSupplementEnabled()) return null
 
   const configuredBridge = String(process.env.AGENT_BRIDGE_URL || '').trim()
   const bridgeBases = Array.from(new Set([
@@ -212,7 +211,6 @@ async function runAgentSupplement(url: string) {
           model: String(payload?.model || ''),
           log: String(payload?.log || ''),
           errors: payload?.errors ?? [],
-          db_log: payload?.db_log ?? null,
         }
       } catch (error) {
         attemptErrors.push(`${endpoint}: ${String(error)}`)
@@ -455,7 +453,9 @@ export async function POST(request: Request) {
       await updateAuditById(auditId, { error_message: fallbackNotice, status: 'processing' })
     })
 
-    if (auditId) {
+    const agentSupplementEnabled = isAgentSupplementEnabled()
+
+    if (auditId && agentSupplementEnabled) {
       await updateAuditById(auditId, { status: 'processing', error_message: 'Primary audit complete. Agent opening homepage and mapping sections...' })
     }
 
@@ -468,7 +468,7 @@ export async function POST(request: Request) {
     ]
 
     let agentProgressTimer: ReturnType<typeof setInterval> | null = null
-    if (auditId) {
+    if (auditId && agentSupplementEnabled) {
       let stepIndex = 0
       agentProgressTimer = setInterval(() => {
         const message = agentProgressSteps[Math.min(stepIndex, agentProgressSteps.length - 1)]
@@ -477,16 +477,18 @@ export async function POST(request: Request) {
       }, 3200)
     }
 
-    const agentSupplement = await runAgentSupplement(url)
+    const agentSupplement = agentSupplementEnabled ? await runAgentSupplement(url) : null
     if (agentProgressTimer) {
       clearInterval(agentProgressTimer)
     }
 
-    if (auditId) {
+    if (auditId && agentSupplementEnabled) {
       const supplementMessage = agentSupplement?.ok
         ? `Agent supplement completed (${String(agentSupplement.model || 'agent')}). Finalizing report...`
         : 'Agent supplement unavailable for this run. Finalizing core report...'
       await updateAuditById(auditId, { status: 'processing', error_message: supplementMessage })
+    } else if (auditId) {
+      await updateAuditById(auditId, { status: 'processing', error_message: 'Audit analysis complete. Finalizing report...' })
     }
 
     const performanceScore = toIntegerScore(auditData.performance_score)

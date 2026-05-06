@@ -72,13 +72,10 @@ export default function AuditLoading({ processingNotice, captions = [] }: { proc
 
       {captions.length > 0 && (
         <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Live Agent Captions</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Audit Progress</p>
           <pre className="mt-2 max-h-40 overflow-auto text-xs whitespace-pre-wrap text-gray-700">
             {captions.join('\n')}
           </pre>
-          <p className="mt-2 text-[11px] text-gray-500">
-            Typical runtime is around 120-200 seconds depending on site size and model load.
-          </p>
         </div>
       )}
     </div>

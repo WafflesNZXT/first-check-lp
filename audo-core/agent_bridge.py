@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from browser_use import Agent, Browser, BrowserProfile, ChatOpenAI
+from browser_use import Agent, Browser, BrowserProfile, ChatGoogle, ChatOpenAI
 import os
 from pathlib import Path
 import requests
@@ -59,13 +59,18 @@ def _looks_like_agent_output_schema_error(text: str) -> bool:
     )
 
 
-def _build_llm(api_key: str, model: str) -> ChatOpenAI:
-    base_url = os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/paas/v4")
-    return ChatOpenAI(
-        model=model,
-        api_key=api_key,
-        base_url=base_url,
-    )
+def _build_llm(provider: str, api_key: str, model: str):
+    if provider == "google":
+        return ChatGoogle(model=model, api_key=api_key)
+
+    if provider == "openai":
+        base_url = os.getenv("AGENT_OPENAI_BASE_URL")
+        kwargs = {"model": model, "api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        return ChatOpenAI(**kwargs)
+
+    raise ValueError(f"Unsupported AGENT_LLM_PROVIDER: {provider}")
 
 
 def _normalize_errors(raw_errors: list | None) -> list[str]:
@@ -133,22 +138,6 @@ def _get_bool_env(name: str, default: bool) -> bool:
         return default
     normalized = raw.strip().lower()
     return normalized in {"1", "true", "yes", "on"}
-
-
-def _build_butterbase_insert_url() -> str | None:
-    explicit_url = os.getenv("BUTTERBASE_API_URL")
-    if explicit_url:
-        return explicit_url
-
-    base_url = os.getenv("BUTTERBASE_BASE_URL")
-    app_id = os.getenv("BUTTERBASE_APP_ID")
-    table = os.getenv("BUTTERBASE_AUDITS_TABLE", "audits")
-
-    if not base_url or not app_id:
-        return None
-
-    normalized_base = base_url.rstrip("/")
-    return f"{normalized_base}/v1/{app_id}/{table}"
 
 
 def _format_static_audit_report(summary: str, issues: list[dict], quick_wins: list[str], verdict: str) -> str:
@@ -437,43 +426,6 @@ def _run_static_homepage_audit(url: str) -> dict:
     }
 
 
-def _log_audit_to_butterbase(payload: dict) -> dict:
-    insert_url = _build_butterbase_insert_url()
-    if not insert_url:
-        return {
-            "saved": False,
-            "reason": "Missing Butterbase config. Set BUTTERBASE_API_URL or BUTTERBASE_BASE_URL + BUTTERBASE_APP_ID.",
-        }
-
-    headers = {"Content-Type": "application/json"}
-    service_key = os.getenv("BUTTERBASE_SERVICE_KEY")
-    if service_key:
-        headers["Authorization"] = f"Bearer {service_key}"
-
-    timeout_seconds = int(os.getenv("BUTTERBASE_TIMEOUT_SECONDS", "12"))
-    response = requests.post(
-        insert_url,
-        json=payload,
-        headers=headers,
-        timeout=timeout_seconds,
-    )
-
-    if 200 <= response.status_code < 300:
-        return {
-            "saved": True,
-            "endpoint": insert_url,
-            "status_code": response.status_code,
-        }
-
-    error_body = response.text[:500]
-    return {
-        "saved": False,
-        "endpoint": insert_url,
-        "status_code": response.status_code,
-        "error": error_body,
-    }
-
-
 @app.get("/")
 async def root():
     return {
@@ -509,13 +461,23 @@ async def _close_browser_safely(browser: Browser) -> None:
 @app.post("/run-audit")
 async def run_audit(url: str):
     try:
-        zai_api_key = os.getenv("ZAI_API_KEY")
+        llm_provider = os.getenv("AGENT_LLM_PROVIDER", "google").strip().lower()
+        if llm_provider == "google":
+            agent_api_key = os.getenv("GOOGLE_GENERATIVE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+            missing_key_message = "Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable"
+            primary_model = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
+            fallback_model = os.getenv("AGENT_FALLBACK_MODEL", "gemini-2.5-flash-lite")
+        elif llm_provider == "openai":
+            agent_api_key = os.getenv("OPENAI_API_KEY")
+            missing_key_message = "Missing OPENAI_API_KEY environment variable"
+            primary_model = os.getenv("AGENT_MODEL", "gpt-4.1-mini")
+            fallback_model = os.getenv("AGENT_FALLBACK_MODEL", "")
+        else:
+            raise HTTPException(status_code=500, detail=f"Unsupported AGENT_LLM_PROVIDER: {llm_provider}")
 
-        if not zai_api_key:
-            raise HTTPException(status_code=500, detail="Missing ZAI_API_KEY environment variable")
+        if not agent_api_key:
+            raise HTTPException(status_code=500, detail=missing_key_message)
 
-        primary_model = os.getenv("ZAI_MODEL", "glm-5.1")
-        fallback_model = os.getenv("ZAI_FALLBACK_MODEL", "glm-4.5v")
         llm_timeout_seconds = int(os.getenv("AGENT_LLM_TIMEOUT_SECONDS", "150"))
         llm_screenshot_width = int(os.getenv("AGENT_SCREENSHOT_WIDTH", "896"))
         llm_screenshot_height = int(os.getenv("AGENT_SCREENSHOT_HEIGHT", "504"))
@@ -526,7 +488,7 @@ async def run_audit(url: str):
 
         async def _run_attempt(model: str, task: str, attempt_use_vision: bool | None = None, attempt_max_steps: int | None = None) -> object:
             attempt_browser = _build_browser()
-            llm = _build_llm(api_key=zai_api_key, model=model)
+            llm = _build_llm(provider=llm_provider, api_key=agent_api_key, model=model)
             agent = Agent(
                 task=task,
                 llm=llm,
@@ -594,32 +556,11 @@ async def run_audit(url: str):
             ]
             model_used = str(static_fallback.get("model", model_used))
 
-        butterbase_payload = {
-            "url": url,
-            "status": status,
-            "result": final_result,
-            "errors": {
-                "messages": errors,
-                "count": len(errors),
-            },
-            "model": model_used,
-        }
-
-        db_log = {"saved": False, "reason": "Not attempted"}
-        try:
-            db_log = _log_audit_to_butterbase(butterbase_payload)
-        except (requests.RequestException, ValueError) as log_exc:
-            db_log = {
-                "saved": False,
-                "reason": f"Failed to send audit to Butterbase: {log_exc}",
-            }
-
         return {
             "status": status,
             "log": final_result,
             "errors": errors,
             "model": model_used,
-            "db_log": db_log,
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"run_audit failed: {exc}") from exc

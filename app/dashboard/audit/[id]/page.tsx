@@ -7,6 +7,7 @@ import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
 import AuditDetailActions from '../../../../components/AuditDetailActions'
 import AuditCollaboratePanel from '../../../../components/AuditCollaboratePanel'
+import LiveAgentPanel from '../../../../components/LiveAgentPanel'
 import { Logo } from '../../../../components/Logo'
 import AccessibilityFixAll from '../../../../components/AccessibilityFixAll'
 import { getUserFromCookie } from '@/lib/auth'
@@ -37,12 +38,6 @@ type AuditReport = {
     log?: string
     errors?: unknown
     endpoint?: string
-    db_log?: {
-      saved?: boolean
-      reason?: string
-      status_code?: number
-      error?: string
-    } | null
   } | null
 }
 
@@ -329,6 +324,14 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
         {/* --- Audit status / progress (client) --- */}
         <AuditStatus audit={typedAudit} />
 
+        {isOwner && (
+          <LiveAgentPanel
+            auditId={typedAudit.id}
+            targetUrl={typedAudit.website_url}
+            canManage={isOwner}
+          />
+        )}
+
         <AuditDetail
           audit={typedAudit}
           profile={profile}
@@ -474,15 +477,6 @@ function AuditDetail({
               Status: {String(audit.report_content.agent_supplement.status_label || 'unknown')} | Model: {String(audit.report_content.agent_supplement.model || 'n/a')}
             </p>
           </div>
-
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Butterbase Log: {audit.report_content.agent_supplement.db_log?.saved ? 'saved' : 'not saved'}
-            {audit.report_content.agent_supplement.db_log?.reason
-              ? ` (${String(audit.report_content.agent_supplement.db_log.reason)})`
-              : audit.report_content.agent_supplement.db_log?.error
-                ? ` (${String(audit.report_content.agent_supplement.db_log.error)})`
-                : ''}
-          </p>
 
           <pre className="max-h-96 overflow-auto rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-3 text-xs whitespace-pre-wrap text-gray-700 dark:text-gray-200">
             {String(audit.report_content.agent_supplement.log || '')}

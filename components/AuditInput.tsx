@@ -17,17 +17,17 @@ type PendingDemoAudit = {
   createdAt?: number
 }
 
-const AGENT_RUNNING_RE = /^Agent running\.\.\. \d+s$/i
+const AUDIT_RUNNING_RE = /^(Agent|Audit) running\.\.\. \d+s$/i
 
-function appendOrReplaceAgentRunningLine(prev: string[], line: string): string[] {
+function appendOrReplaceAuditRunningLine(prev: string[], line: string): string[] {
   const cleaned = String(line || '').trim()
   if (!cleaned) return prev
 
-  if (!AGENT_RUNNING_RE.test(cleaned)) {
+  if (!AUDIT_RUNNING_RE.test(cleaned)) {
     return [...prev, cleaned]
   }
 
-  const idx = prev.findIndex((entry) => AGENT_RUNNING_RE.test(entry))
+  const idx = prev.findIndex((entry) => AUDIT_RUNNING_RE.test(entry))
   if (idx < 0) return [...prev, cleaned]
 
   const next = [...prev]
@@ -158,7 +158,7 @@ export default function AuditInput() {
 
         if (processingStartedAt) {
           const elapsedSeconds = Math.max(1, Math.floor((Date.now() - processingStartedAt) / 1000))
-          setLiveCaptions((prev) => appendOrReplaceAgentRunningLine(prev, `Agent running... ${elapsedSeconds}s`))
+          setLiveCaptions((prev) => appendOrReplaceAuditRunningLine(prev, `Audit running... ${elapsedSeconds}s`))
         }
 
         if (nextStatus === 'completed') {
@@ -173,13 +173,9 @@ export default function AuditInput() {
             const completionLine = agent && typeof agent === 'object'
               ? `Agent supplement: ${Boolean((agent as { ok?: unknown }).ok) ? 'completed' : 'not available'}${(agent as { model?: unknown }).model ? ` (${String((agent as { model?: unknown }).model)})` : ''}.`
               : 'Audit completed.'
-            const dbLine = agent && typeof agent === 'object'
-              ? `Butterbase log: ${Boolean((agent as { db_saved?: unknown }).db_saved) ? 'saved' : 'not saved'}${(agent as { db_reason?: unknown }).db_reason ? ` (${String((agent as { db_reason?: unknown }).db_reason)})` : ''}.`
-              : ''
 
             const next = [...prev]
             if (next[next.length - 1] !== completionLine) next.push(completionLine)
-            if (dbLine && next[next.length - 1] !== dbLine) next.push(dbLine)
             return next
           })
           router.refresh()
@@ -266,7 +262,7 @@ export default function AuditInput() {
       setLiveCaptions([
         'Audit initialized.',
         'Crawler starting: fetching pages and metadata...',
-        'Agent queued: will inspect hero, CTA flow, info boxes, and footer.',
+        'Analysis queued: checking messaging, SEO, accessibility, performance, and conversion signals.',
       ])
       setUrl('')
 

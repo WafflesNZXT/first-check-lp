@@ -60,12 +60,6 @@ export async function GET(req: Request) {
           ok?: boolean
           status_label?: string
           model?: string
-          db_log?: {
-            saved?: boolean
-            reason?: string
-            status_code?: number
-            error?: string
-          } | null
         } | null
       } | null
     } | null
@@ -113,8 +107,6 @@ export async function GET(req: Request) {
               ok: Boolean(data.report_content.agent_supplement.ok),
               status: String(data.report_content.agent_supplement.status_label || ''),
               model: String(data.report_content.agent_supplement.model || ''),
-              db_saved: Boolean(data.report_content.agent_supplement.db_log?.saved),
-              db_reason: String(data.report_content.agent_supplement.db_log?.reason || data.report_content.agent_supplement.db_log?.error || ''),
             }
           : null,
       }),
