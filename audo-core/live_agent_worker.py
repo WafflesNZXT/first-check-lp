@@ -11,6 +11,7 @@ from typing import Any
 
 import requests
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+from playwright.async_api import async_playwright
 from pydantic import BaseModel
 
 from browser_use import Agent, Browser, BrowserProfile, ChatGoogle, ChatOpenAI
@@ -165,6 +166,12 @@ def _build_browser() -> Browser:
             headless=_get_bool_env("LIVE_AGENT_HEADLESS", True),
             window_size={"width": 1280, "height": 720},
             viewport={"width": 1280, "height": 720},
+            chromium_sandbox=False,
+            args=[
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-renderer-backgrounding",
+            ],
             enable_default_extensions=False,
             wait_between_actions=0.35,
             wait_for_network_idle_page_load_time=0.7,
@@ -795,6 +802,41 @@ async def root():
         "endpoint": "POST /run-session",
         "polling": _get_bool_env("LIVE_AGENT_POLL_JOBS", False),
         "worker_id": _worker_id(),
+    }
+
+
+@app.get("/browser-health")
+async def browser_health():
+    started_at = datetime.now(timezone.utc)
+    try:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                headless=True,
+                chromium_sandbox=False,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu-sandbox",
+                    "--disable-background-timer-throttling",
+                    "--disable-backgrounding-occluded-windows",
+                    "--disable-renderer-backgrounding",
+                ],
+            )
+            page = await browser.new_page(viewport={"width": 640, "height": 360})
+            await page.goto("data:text/html,<title>Audo browser health</title><main>ok</main>")
+            title = await page.title()
+            await browser.close()
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": str(exc)[:1000],
+            "elapsed_ms": int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000),
+        }
+
+    return {
+        "ok": True,
+        "title": title,
+        "elapsed_ms": int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000),
     }
 
 
