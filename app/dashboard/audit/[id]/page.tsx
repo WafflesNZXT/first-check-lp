@@ -1,4 +1,3 @@
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -11,6 +10,7 @@ import LiveAgentPanel from '../../../../components/LiveAgentPanel'
 import { Logo } from '../../../../components/Logo'
 import AccessibilityFixAll from '../../../../components/AccessibilityFixAll'
 import { getUserFromCookie } from '@/lib/auth'
+import { getServerSupabase } from '@/utils/supabase/server'
 
 type ChecklistItem = {
   issue: string
@@ -108,17 +108,7 @@ type PreviousAuditScores = {
 export default async function AuditPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies()
   const { id } = await params
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value
-        }
-      }
-    }
-  )
+  const supabase = await getServerSupabase()
 
   const { data: audit, error } = await supabase
     .from('audits')

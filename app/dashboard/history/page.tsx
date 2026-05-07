@@ -1,8 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserFromCookie } from '@/lib/auth'
 import DashboardHistoryTable from '@/components/DashboardHistoryTable'
+import { getServerSupabase } from '@/utils/supabase/server'
 
 type HistoryAuditRow = {
   id: string
@@ -17,11 +17,7 @@ type HistoryAuditRow = {
 
 export default async function DashboardHistoryPage() {
   const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get(name) { return cookieStore.get(name)?.value } } }
-  )
+  const supabase = await getServerSupabase()
 
   let currentUser = getUserFromCookie(cookieStore)
   if (!currentUser) {
@@ -41,14 +37,17 @@ export default async function DashboardHistoryPage() {
   const audits = (data || []) as HistoryAuditRow[]
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <div id="tutorial-history-root" className="max-w-7xl mx-auto">
-        <header className="mb-8 sm:mb-10">
-          <h1 className="font-sans text-xl sm:text-2xl font-bold text-black dark:text-white tracking-tighter">Audit History</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Search, filter, and scan all completed audits in one place.</p>
+    <div className="min-h-screen audo-dashboard-surface px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:py-10">
+      <div id="tutorial-history-root" className="mx-auto max-w-[1440px]">
+        <header className="border-b border-black/10 pb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-400">Audits</p>
+          <h1 className="mt-3 text-4xl font-black tracking-tight text-black sm:text-6xl">Audit History</h1>
+          <p className="mt-3 text-sm font-medium text-gray-500 sm:text-base">Search, filter, and scan all completed audits in one place.</p>
         </header>
 
-        <DashboardHistoryTable audits={audits} />
+        <div className="mt-8">
+          <DashboardHistoryTable audits={audits} />
+        </div>
       </div>
     </div>
   )

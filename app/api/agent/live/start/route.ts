@@ -2,6 +2,23 @@ import { NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+const AGENT_SESSION_SELECT = 'id,audit_id,user_id,target_url,status,mode,current_url,live_view_url,replay_url,worker_id,last_heartbeat_at,summary,error_message,started_at,finished_at,created_at,updated_at'
+const SETUP_MESSAGE = 'Live agent database setup is not applied yet. Run supabase/agent_sessions.sql in Supabase SQL editor, then try again.'
+
+function isSchemaSetupError(error: unknown) {
+  const message = String((error as { message?: unknown })?.message || error || '').toLowerCase()
+  return (
+    message.includes('agent_jobs') ||
+    message.includes('live_view_url') ||
+    message.includes('replay_url') ||
+    message.includes('worker_id') ||
+    message.includes('last_heartbeat_at') ||
+    message.includes('schema cache') ||
+    message.includes('could not find') ||
+    message.includes('does not exist')
+  )
+}
+
 async function getSupabase() {
   const cookieStore = await cookies()
   return createServerClient(
@@ -70,36 +87,40 @@ export async function POST(req: Request) {
           started_at: now,
         },
       ])
-      .select('id,audit_id,user_id,target_url,status,mode,current_url,summary,error_message,started_at,finished_at,created_at,updated_at')
+      .select(AGENT_SESSION_SELECT)
       .single()
 
     if (sessionError || !session) {
-      return NextResponse.json({ error: 'Failed to create agent session' }, { status: 500 })
+      console.error('Live agent session create failed', sessionError)
+      return NextResponse.json(
+        {
+          error: isSchemaSetupError(sessionError) ? SETUP_MESSAGE : 'Failed to create agent session',
+          details: sessionError?.message,
+        },
+        { status: 500 }
+      )
     }
 
-    const workerBase = String(process.env.LIVE_AGENT_WORKER_URL || 'http://127.0.0.1:8001').replace(/\/$/, '')
-
-    try {
-      const workerResponse = await fetch(`${workerBase}/run-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    const { error: jobError } = await supabase
+      .from('agent_jobs')
+      .insert([
+        {
           session_id: session.id,
           audit_id: auditId,
           user_id: user.id,
           target_url: targetUrl,
-        }),
-      })
+          status: 'queued',
+          metadata: { source: 'dashboard' },
+        },
+      ])
 
-      if (!workerResponse.ok) {
-        throw new Error(`Worker returned ${workerResponse.status}`)
-      }
-    } catch (error) {
+    if (jobError) {
+      console.error('Live agent job queue failed', jobError)
       await supabase
         .from('agent_sessions')
         .update({
           status: 'failed',
-          error_message: error instanceof Error ? error.message : 'Could not reach live agent worker',
+          error_message: 'Could not queue the live agent run.',
           finished_at: new Date().toISOString(),
         })
         .eq('id', session.id)
@@ -107,15 +128,73 @@ export async function POST(req: Request) {
 
       return NextResponse.json(
         {
-          error: 'Could not reach live agent worker. Start it with .\\.venv\\Scripts\\python.exe .\\audo-core\\live_agent_worker.py',
+          error: isSchemaSetupError(jobError) ? SETUP_MESSAGE : 'Could not queue the live agent run.',
+          details: jobError.message,
           session,
         },
-        { status: 502 }
+        { status: 500 }
       )
     }
 
-    return NextResponse.json({ session })
-  } catch {
+    const { error: eventError } = await supabase
+      .from('agent_events')
+      .insert([
+        {
+          session_id: session.id,
+          audit_id: auditId,
+          user_id: user.id,
+          event_type: 'status',
+          message: 'Live agent queued. A hosted browser worker will pick up this run automatically.',
+          current_url: targetUrl,
+          cursor_x: 12,
+          cursor_y: 14,
+          scroll_y: 0,
+          metadata: { source: 'dashboard', queued: true },
+        },
+      ])
+
+    if (eventError) {
+      console.error('Live agent queued event failed', eventError)
+    }
+
+    const workerBase = String(process.env.LIVE_AGENT_WORKER_URL || '').replace(/\/$/, '')
+
+    if (workerBase) {
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        const workerToken = process.env.LIVE_AGENT_WORKER_TOKEN
+        if (workerToken) headers.Authorization = `Bearer ${workerToken}`
+
+        const workerResponse = await fetch(`${workerBase}/run-session`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            session_id: session.id,
+            audit_id: auditId,
+            user_id: user.id,
+            target_url: targetUrl,
+          }),
+        })
+
+        if (!workerResponse.ok) {
+          throw new Error(`Worker returned ${workerResponse.status}`)
+        }
+      } catch (error) {
+        await supabase
+          .from('agent_sessions')
+          .update({
+            error_message: error instanceof Error ? `Queued, but the worker did not accept the run yet: ${error.message}` : 'Queued, but the worker did not accept the run yet.',
+          })
+          .eq('id', session.id)
+          .eq('user_id', user.id)
+
+        return NextResponse.json({ session, queued: true, workerAccepted: false })
+      }
+    }
+
+    return NextResponse.json({ session, queued: true, workerAccepted: Boolean(workerBase) })
+  } catch (error) {
+    console.error('Live agent start failed', error)
     return NextResponse.json({ error: 'Failed to start live agent' }, { status: 500 })
   }
 }

@@ -323,7 +323,7 @@ export default function PredictPage() {
         const { data } = await supabase.from('profiles').select('plan_type').eq('id', user.id).maybeSingle()
         const plan = data?.plan_type
         if (mounted) setIsPro(plan === 'pro' || plan === 'admin')
-      } catch (err) {
+      } catch {
         if (mounted) setIsPro(false)
       }
     }
@@ -362,8 +362,8 @@ export default function PredictPage() {
   const locked = isPro === false
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <div id="tutorial-predict-root" className="max-w-5xl mx-auto space-y-6 sm:space-y-8 relative">
+    <div className="min-h-screen audo-dashboard-surface px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:py-10">
+      <div id="tutorial-predict-root" className="relative mx-auto max-w-[1180px] space-y-6 sm:space-y-8">
         {locked && (
           <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-auto">
             <div className="bg-white/90 dark:bg-slate-900/85 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-center shadow-lg max-w-sm w-full">
@@ -374,18 +374,18 @@ export default function PredictPage() {
           </div>
         )}
 
-        <header className="space-y-2">
-          <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">SEO Forecast</p>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black dark:text-white">Predict Content Performance</h1>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300">Paste code or copy, run prediction per file tab, and compare model notes without losing previous drafts.</p>
+        <header className="border-b border-black/10 pb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-400">SEO Forecast</p>
+          <h1 className="mt-3 text-4xl font-black tracking-tight text-black sm:text-6xl">Predict Content Performance</h1>
+          <p className="mt-3 max-w-2xl text-sm font-medium text-gray-500 sm:text-base">Paste code or content, run prediction per file tab, and compare model notes without losing previous drafts.</p>
         </header>
 
-        <div className={`rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 sm:p-4 shadow-sm space-y-3 ${locked ? 'pointer-events-none opacity-60' : ''}`}>
+        <div className={`rounded-[1.7rem] audo-panel border p-4 shadow-sm space-y-4 ${locked ? 'pointer-events-none opacity-60' : ''}`}>
           <div className="flex flex-wrap items-center gap-2">
             {tabs.map((tab) => {
               const tabIsActive = tab.id === activeTab?.id
               return (
-                <div key={tab.id} className={`inline-flex items-center rounded-xl border px-2.5 py-1.5 text-xs font-bold ${tabIsActive ? 'border-black dark:border-white bg-black text-white dark:bg-white dark:text-slate-900' : 'border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-950'}`}>
+                <div key={tab.id} className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-black uppercase tracking-wider ${tabIsActive ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-slate-950' : 'border-black/10 bg-white text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'}`}>
                   <button
                     type="button"
                     onClick={() => setActiveTabId(tab.id)}
@@ -398,7 +398,7 @@ export default function PredictPage() {
                     <button
                       type="button"
                       onClick={() => closeTab(tab.id)}
-                      className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${tabIsActive ? 'bg-white/20 dark:bg-slate-900/20' : 'bg-gray-100 dark:bg-slate-800'}`}
+                      className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${tabIsActive ? 'bg-white/20 dark:bg-slate-950/15' : 'bg-gray-100 dark:bg-slate-800'}`}
                       aria-label={`Close ${tab.name}`}
                     >
                       ×
@@ -411,7 +411,7 @@ export default function PredictPage() {
             <button
               type="button"
               onClick={addTab}
-              className="rounded-xl border border-gray-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-black uppercase tracking-wider text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
+              className="rounded-full border border-black/10 px-3 py-2 text-xs font-black uppercase tracking-wider text-black hover:bg-gray-50 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
             >
               + New File
             </button>
@@ -421,17 +421,17 @@ export default function PredictPage() {
             <input
               value={activeTab?.name || ''}
               onChange={(event) => updateActiveTab({ name: event.target.value || 'Untitled' })}
-              className="w-full sm:max-w-xs rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs sm:text-sm text-black dark:text-white"
+              className="w-full rounded-xl border border-black/10 bg-[#fafafa] px-3 py-2 text-xs text-black outline-none focus:border-black focus:ring-4 focus:ring-black/5 sm:max-w-xs sm:text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-slate-400 dark:focus:ring-white/10"
               placeholder="File name"
             />
-            <span className="inline-flex items-center rounded-full border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-1 text-[10px] sm:text-xs font-black uppercase tracking-[0.18em] text-gray-700 dark:text-gray-200">
+            <span className="inline-flex items-center rounded-full border border-black/10 bg-gray-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 sm:text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
               {activeLanguage.label}
             </span>
           </div>
         </div>
 
         <form onSubmit={runPrediction} className="space-y-4">
-          <div className={`relative rounded-2xl border border-gray-200 dark:border-slate-700 bg-[#0b1020] text-white overflow-hidden ${locked ? 'pointer-events-none opacity-60' : ''}`}>
+          <div className={`relative overflow-hidden rounded-[1.7rem] border border-black/10 bg-[#0b1020] text-white shadow-sm ${locked ? 'pointer-events-none opacity-60' : ''}`}>
             <style>{`
               .code-editor,
               .code-overlay {
@@ -614,7 +614,7 @@ export default function PredictPage() {
             <button
               type="submit"
               disabled={loading || !(activeTab?.content || '').trim() || locked}
-              className="rounded-2xl bg-black dark:bg-white text-white dark:text-slate-900 px-5 py-3 text-xs font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-60"
+              className="rounded-full bg-black px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-colors hover:bg-gray-800 disabled:opacity-60"
             >
               {loading ? 'Predicting...' : 'Run Prediction'}
             </button>

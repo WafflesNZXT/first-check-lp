@@ -15,7 +15,16 @@ type AuditReportContent = {
   completed_tasks?: string[]
 }
 
-function getChecklistStats(audit: any) {
+type AuditRow = {
+  id: string
+  website_url: string
+  created_at: string
+  status: string
+  is_public: boolean | null
+  report_content?: AuditReportContent | null
+}
+
+function getChecklistStats(audit: AuditRow) {
   const report = (audit?.report_content || {}) as AuditReportContent
   const checklist = Array.isArray(report.checklist) ? report.checklist : []
   const completedFromFlag = checklist.filter((item) => item?.completed).length
@@ -25,31 +34,32 @@ function getChecklistStats(audit: any) {
   return { completed, total }
 }
 
-export default function AuditList({ initialAudits, userId }: { initialAudits: any[], userId: string }) {
+export default function AuditList({ initialAudits, userId }: { initialAudits: AuditRow[], userId: string }) {
   const [audits, setAudits] = useState(initialAudits || [])
   const [copiedAuditId, setCopiedAuditId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    setAudits(initialAudits || [])
+    const timer = window.setTimeout(() => setAudits(initialAudits || []), 0)
+    return () => window.clearTimeout(timer)
   }, [initialAudits])
 
   useEffect(() => {
     const channel = supabase
       .channel('audit-status')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audits', filter: `user_id=eq.${userId}` }, (payload) => {
-        const inserted = (payload as any)?.new
+        const inserted = payload.new as AuditRow | null
         if (!inserted || inserted.status !== 'completed') return
-        setAudits((prev: any[]) => {
+        setAudits((prev) => {
           const exists = prev.some((a) => a.id === inserted.id)
           if (exists) return prev
           return [inserted, ...prev]
         })
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'audits', filter: `user_id=eq.${userId}` }, (payload) => {
-        const updated = (payload as any)?.new
+        const updated = payload.new as AuditRow | null
         if (!updated) return
-        setAudits((prev: any[]) => {
+        setAudits((prev) => {
           const exists = prev.some((a) => a.id === updated.id)
           if (!exists) {
             if (updated.status !== 'completed') return prev
@@ -75,11 +85,11 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
   }, [audits])
 
   const getStatusTone = (status: string) => {
-    if (status === 'completed') return 'bg-green-50 text-green-600'
-    if (status === 'failed') return 'bg-rose-50 text-rose-600'
-    if (status === 'processing') return 'bg-amber-50 text-amber-700'
-    if (status === 'cancelled') return 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-300'
-    return 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-300'
+    if (status === 'completed') return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-300'
+    if (status === 'failed') return 'bg-rose-50 text-rose-700 dark:bg-rose-950/35 dark:text-rose-300'
+    if (status === 'processing') return 'bg-amber-50 text-amber-700 dark:bg-amber-950/35 dark:text-amber-300'
+    if (status === 'cancelled') return 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-300'
+    return 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-300'
   }
 
   const handleCopyPreviewLink = async (auditId: string) => {
@@ -94,7 +104,18 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
   }
 
   return (
-    <div className="grid gap-3 sm:gap-4">
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead>
+          <tr className="border-y border-black/10 text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
+            <th className="px-3 py-3 text-left">Site</th>
+            <th className="px-3 py-3 text-left">Status</th>
+            <th className="px-3 py-3 text-left">Fixes</th>
+            <th className="px-3 py-3 text-left">Share</th>
+            <th className="px-3 py-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
       {recentAudits.map((audit) => (
         (() => {
           const href = `/dashboard/audit/${audit.id}`
@@ -104,7 +125,7 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
           const isCompleted = status === 'completed'
 
           return (
-            <div
+            <tr
               key={audit.id}
               role="link"
               tabIndex={0}
@@ -118,40 +139,41 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
                   router.push(href)
                 }
               }}
-              className="cursor-pointer bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 sm:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col gap-4 sm:gap-6 shadow-sm hover:border-black dark:hover:border-slate-500 transition-all group"
+              className="group cursor-pointer border-b border-black/5 text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800/70"
             >
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start w-full">
-              <div>
-                <p className="font-sans font-bold text-base sm:text-lg lg:text-xl text-black dark:text-white lowercase tracking-tight group-hover:underline break-all">
+              <td className="px-3 py-4">
+                <p className="font-bold lowercase tracking-tight text-black group-hover:underline dark:text-white">
                   {String(audit.website_url || '').replace('https://', '')}
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{audit.created_at ? new Date(audit.created_at).toLocaleDateString() : ''}</p>
-              </div>
-
-              <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest self-start ${getStatusTone(status)}`}>
+                <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">{audit.created_at ? new Date(audit.created_at).toLocaleDateString() : ''}</p>
+              </td>
+              <td className="px-3 py-4">
+                <span className={`inline-flex h-7 items-center rounded-full px-3 text-[10px] font-black uppercase tracking-widest ${getStatusTone(status)}`}>
                 {status || 'unknown'}
-              </span>
-            </div>
+                </span>
+              </td>
 
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-              <span className={`inline-flex items-center h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
+              <td className="px-3 py-4">
+                <span className={`inline-flex h-7 items-center whitespace-nowrap rounded-full px-3 text-[10px] font-black uppercase tracking-widest ${
                 !isCompleted
-                  ? 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
+                  ? 'bg-gray-100 text-gray-700'
                   : isChecklistComplete
-                  ? 'bg-black text-white dark:bg-white dark:text-slate-900'
-                  : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200'
+                  ? 'bg-black text-white dark:bg-white dark:text-slate-950'
+                  : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300'
               }`}>
                 {!isCompleted ? 'Checklist Pending' : isChecklistComplete ? 'Checklist Complete' : `${completed}/${total || 0} Fixed`}
-              </span>
+                </span>
+              </td>
 
-              <span className={`inline-flex items-center h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
-                audit.is_public ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300'
+              <td className="px-3 py-4">
+                <span className={`inline-flex h-7 items-center whitespace-nowrap rounded-full px-3 text-[10px] font-black uppercase tracking-widest ${
+                audit.is_public ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/35 dark:text-blue-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-300'
               }`}>
                 {audit.is_public ? 'Public Link On' : 'Private'}
-              </span>
-            </div>
+                </span>
+              </td>
 
-            <div className="flex justify-end min-h-[34px]">
+              <td className="px-3 py-4 text-right">
               {status === 'failed' ? (
                 <RetryAuditButton websiteUrl={audit.website_url} />
               ) : isCompleted && audit.is_public ? (
@@ -161,20 +183,20 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: an
                     e.stopPropagation()
                     handleCopyPreviewLink(audit.id)
                   }}
-                  className="inline-flex items-center h-8 px-3 rounded-full border border-gray-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
+                  className="inline-flex h-8 items-center rounded-full border border-black/10 px-3 text-[10px] font-black uppercase tracking-widest text-black hover:bg-white dark:border-slate-700 dark:text-white dark:hover:bg-slate-900"
                 >
                   {copiedAuditId === audit.id ? 'Copied!' : 'Copy Link'}
                 </button>
               ) : (
-                <span className="inline-flex items-center h-8 px-3 rounded-full border border-transparent text-[10px] font-black uppercase tracking-widest invisible">
-                  Copy Link
-                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">View</span>
               )}
-            </div>
-          </div>
+              </td>
+          </tr>
           )
         })()
       ))}
+        </tbody>
+      </table>
     </div>
   )
 }

@@ -1,37 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Zap, ArrowRight, ShieldCheck, X, FileText, Search, MessageSquareText, BarChart3, Sparkles, Linkedin, Lock, ChevronRight, AlertCircle, Loader2, Video, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown, Users } from 'lucide-react';
+import { Check, Zap, ArrowRight, X, FileText, BarChart3, Sparkles, ChevronRight, Loader2, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown, Users } from 'lucide-react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import { createClient } from '@/utils/supabase/client';
 // Removed submitLead and client-side lead logic — checkout handled server-side
-// Score color helper
-function scoreColor(score: number) {
-  if (score >= 90) return 'text-green-400';
-  if (score >= 50) return 'text-yellow-400';
-  return 'text-red-400';
-}
-
-function scoreBg(score: number) {
-  if (score >= 90) return 'bg-green-400/10 border-green-400/20';
-  if (score >= 50) return 'bg-yellow-400/10 border-yellow-400/20';
-  return 'bg-red-400/10 border-red-400/20';
-}
-
-function scoreLabel(score: number) {
-  if (score >= 90) return 'Good';
-  if (score >= 50) return 'Needs Work';
-  return 'Poor';
-}
-
-interface ScoreResult {
-  performance: number;
-  accessibility: number;
-  seo: number;
-  issues: string[];
-  totalIssues: number;
-}
 
 type PreviewChecklistItem = {
   issue: string;
@@ -146,178 +120,6 @@ const INITIAL_PREVIEW_WORKFLOW_TASKS: PreviewWorkflowTask[] = [
     comments: [{ author: 'pm@sample.com', text: 'Variant is live in staging and awaiting review.' }],
   },
 ];
-
-function FreeScoreCard({ onUpgrade }: { onUpgrade: () => void }) {
-  const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ScoreResult | null>(null);
-  const [error, setError] = useState('');
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setResult(null);
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/score', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong. Please try again.');
-        return;
-      }
-
-      setResult(data);
-    } catch {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="relative group col-span-1 md:col-span-2">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-400 rounded-[2rem] opacity-10 group-hover:opacity-20 blur transition duration-500" />
-      <div className="relative bg-[#0f0f0f] border border-white/10 rounded-[1.75rem] p-8 space-y-6">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="bg-white/10 border border-white/10 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400">Free</div>
-              <div className="bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-green-400">No signup needed</div>
-            </div>
-            <h3 className="text-2xl font-extrabold tracking-tight">Quick Score</h3>
-            <p className="text-gray-500 text-sm">Enter your URL and instantly see your Performance, Accessibility, and SEO scores.</p>
-          </div>
-          <div className="flex-shrink-0">
-            <span className="text-4xl font-black tracking-tighter text-gray-500">Free</span>
-          </div>
-        </div>
-
-        {/* Input form */}
-        {!result && (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://yourstartup.com"
-              required
-              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white placeholder:text-gray-600"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-white text-black font-black px-8 py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  Get Free Score
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-5 py-4 text-red-400 text-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </div>
-        )}
-
-        {/* Results */}
-        {result && (
-          <div className="space-y-6">
-
-            {/* Score pills */}
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { label: 'Performance', score: result.performance },
-                { label: 'Accessibility', score: result.accessibility },
-                { label: 'SEO', score: result.seo },
-              ].map((item) => (
-                <div key={item.label} className={`border rounded-2xl p-4 text-center space-y-1 ${scoreBg(item.score)}`}>
-                  <div className={`text-3xl font-black ${scoreColor(item.score)}`}>{item.score}</div>
-                  <div className="text-white text-xs font-bold">{item.label}</div>
-                  <div className={`text-[10px] font-black uppercase tracking-widest ${scoreColor(item.score)}`}>{scoreLabel(item.score)}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Free issues preview */}
-            <div className="space-y-3">
-              <p className="text-white font-bold text-sm">Issues found:</p>
-              {result.issues.map((issue, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-300">
-                  <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                  {issue}
-                </div>
-              ))}
-
-              {/* Locked issues */}
-              {result.totalIssues > 3 && (
-                <div className="relative">
-                  <div className="space-y-2 blur-sm pointer-events-none select-none">
-                    {Array.from({ length: Math.min(result.totalIssues - 3, 3) }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-300">
-                        <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                        {'█'.repeat(Math.floor(Math.random() * 20) + 20)}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex items-center gap-2 bg-[#0f0f0f] border border-white/10 rounded-xl px-4 py-2 text-sm font-bold text-white">
-                      <Lock className="w-4 h-4 text-blue-400" />
-                      {result.totalIssues - 3} more issues locked
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Upsell */}
-            <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-6 space-y-4">
-              <div className="space-y-1">
-                <p className="text-white font-bold">Want to know exactly how to fix all of this?</p>
-                <p className="text-gray-400 text-sm">Unlock dashboard access for full prioritized audits, issue history, and a workflow your team can re-run as you ship.</p>
-              </div>
-              <button
-                onClick={onUpgrade}
-                className="w-full bg-white text-black font-black py-3 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
-              >
-                Unlock Dashboard Access — $29
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Try another URL */}
-            <button
-              onClick={() => { setResult(null); setUrl(''); }}
-              className="text-gray-600 text-xs hover:text-gray-400 transition-colors underline underline-offset-2 w-full text-center"
-            >
-              Try a different URL
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function Pricing() {
   const [shouldAutoCheckout, setShouldAutoCheckout] = useState(false);
@@ -773,6 +575,47 @@ export default function Pricing() {
             </div>
           </div> */}
         </div> 
+
+        <section className="mt-14 overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-[0_20px_55px_rgba(0,0,0,0.06)]">
+          <div className="border-b border-black/10 p-6 sm:p-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700">Plan comparison</p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-black sm:text-3xl">What is included</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
+              Free is for trying the workflow. Pro is for teams that want repeatable audits, live walkthrough evidence, and a prioritized fix loop.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-black/10 bg-gray-50 text-left">
+                  <th className="w-[42%] px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-gray-500">Feature</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-gray-500">Free</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">Pro</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/10">
+                {[
+                  { feature: 'Full AI website audits', free: '2 total audits', pro: 'Unlimited during beta' },
+                  { feature: 'Dashboard history and audit detail pages', free: 'Included', pro: 'Included' },
+                  { feature: 'Interactive checklist and prioritized fixes', free: 'Included', pro: 'Included with ongoing tracking' },
+                  { feature: 'Live browser agent walkthrough', free: 'Demo preview', pro: 'Full agent runs' },
+                  { feature: 'Agent replay recordings', free: 'Not included', pro: 'Screenshot replay for each live run' },
+                  { feature: 'Free-score and modal interaction testing', free: 'Basic audit notes', pro: 'Agent tests safe public widgets' },
+                  { feature: 'Predict tool', free: 'Locked', pro: 'Included' },
+                  { feature: 'Sharing, developer invites, and task assignment', free: 'First 2 audits only', pro: 'Unlimited collaboration' },
+                  { feature: 'Re-audits after fixes', free: 'Counts toward free limit', pro: 'Unlimited during beta' },
+                ].map((row) => (
+                  <tr key={row.feature} className="align-top">
+                    <td className="px-6 py-4 font-bold text-black">{row.feature}</td>
+                    <td className="px-6 py-4 text-gray-600">{row.free}</td>
+                    <td className="px-6 py-4 font-semibold text-gray-900">{row.pro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {/* Auditor Trust Strip */}
         {/* <div className="mt-16 bg-[#fafafa] border border-black/10 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">

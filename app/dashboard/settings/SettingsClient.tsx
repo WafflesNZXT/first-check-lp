@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { Lock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import DashboardHeaderActions from '@/components/DashboardHeaderActions'
 
@@ -176,79 +177,86 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8 transition-colors">
-      <div className="max-w-2xl mx-auto py-2 sm:py-4">
-        <div className="rounded-3xl border border-black/10 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)] p-6 md:p-10">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-black dark:text-white mb-8">Settings</h1>
-        <div className="mb-8 flex justify-end">
-          <DashboardHeaderActions />
-        </div>
-        <div className="mb-8 space-y-6">
+    <div className="min-h-screen audo-dashboard-surface px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:py-10">
+      <div className="mx-auto max-w-[1180px]">
+        <header className="flex flex-col gap-5 border-b border-black/10 pb-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>
-            <div className="font-mono text-lg text-black dark:text-white">{email}</div>
+            <h1 className="text-3xl font-black tracking-tight text-black sm:text-4xl">Settings</h1>
+          </div>
+          <DashboardHeaderActions />
+        </header>
+
+        <div className="mt-8 space-y-8">
+          <div className="mx-auto max-w-[760px] border-b border-black/10 pb-7 dark:border-slate-800">
+            <div className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">Email</div>
+            <div className="mt-3 text-xl font-black tracking-tight text-black dark:text-white sm:text-2xl">{email}</div>
           </div>
 
-          <div className="rounded-2xl border border-black/10 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <div className="mx-auto max-w-[760px] rounded-2xl audo-panel border p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Billing</p>
-                <p className="text-xl font-extrabold tracking-tight text-black dark:text-white mt-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">Billing</p>
+                <p className="mt-5 text-2xl font-black tracking-tight text-black">
                   {isPro ? 'Pro Plan' : 'Free Plan'}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                  Audits used: <strong>{billing.auditCount}</strong> / {billing.maxAudits}
+                <p className="mt-2 text-base font-medium text-gray-500">
+                  Audits used <strong className="font-black text-black">{billing.auditCount}</strong> / {billing.maxAudits}
                 </p>
                 {isPro ? (
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-2">Predict is enabled. Audit detail history remains available.</p>
+                  <p className="mt-4 text-sm font-medium text-emerald-600">Predict is enabled. Audit detail history remains available.</p>
                 ) : (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Predict is locked on Free. You can still access all previous audits.</p>
+                  <p className="mt-4 text-sm font-medium text-gray-500">Predict is locked on Free. You can still access all previous audits.</p>
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 min-w-[220px]">
+              <div className="flex min-w-[180px] flex-col gap-2">
                 <button
                   type="button"
                   onClick={openBillingPortal}
                   disabled={loading || !billing.hasStripeCustomer}
-                  className="rounded-xl border border-black/15 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-black dark:text-white disabled:opacity-60"
+                  className="rounded-full audo-panel border px-4 py-2.5 text-sm font-black text-black shadow-sm disabled:opacity-60"
                 >
                   Manage Billing
                 </button>
 
                 {isPro && billing.hasSubscription && (
                   <button
-                    type="button"
-                    onClick={() => setShowCancelModal(true)}
-                    disabled={loading}
-                    className="rounded-xl bg-red-600 dark:bg-red-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                  >
-                    Cancel Pro Plan
-                  </button>
+                  type="button"
+                  onClick={() => setShowCancelModal(true)}
+                  disabled={loading}
+                  className="rounded-full bg-red-600 px-4 py-2.5 text-sm font-black text-white disabled:opacity-60"
+                >
+                  Cancel Pro Plan
+                </button>
                 )}
               </div>
             </div>
 
             {(billingError || billingMsg) && (
-              <p className={`text-xs mt-3 ${billingError ? 'text-red-500 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
+              <p className={`mt-4 text-sm ${billingError ? 'text-red-500' : 'text-emerald-700'}`}>
                 {billingError || billingMsg}
               </p>
             )}
           </div>
 
-          <div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Password</div>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-black dark:text-white">••••••••</span>
-              <button className="text-blue-600 dark:text-blue-400 hover:underline text-sm" onClick={() => setShowChangePw(v => !v)}>
-                Change Password
-              </button>
+          <div className="mx-auto max-w-[760px] border-b border-black/10 pb-7 dark:border-slate-800">
+            <div className="flex items-center justify-between gap-5">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">Password</div>
+                <div className="mt-3 flex flex-wrap items-center gap-5">
+                  <span className="font-mono text-xl tracking-[0.28em] text-black dark:text-white">••••••</span>
+                  <button className="text-base font-black text-emerald-600" onClick={() => setShowChangePw(v => !v)}>
+                    Change Password
+                  </button>
+                </div>
+              </div>
+              <Lock className="hidden h-6 w-6 text-gray-400 sm:block" />
             </div>
             {showChangePw && (
-              <form className="mt-2 space-y-2" onSubmit={handleChangePassword}>
+              <form className="mt-6 space-y-3" onSubmit={handleChangePassword}>
                 <input
                   type="password"
-                  className="border border-black/10 dark:border-slate-700 bg-white dark:bg-slate-900 rounded px-2 py-1 w-full text-black dark:text-white"
+                  className="w-full rounded-xl audo-panel border px-3 py-3 text-black outline-none focus:border-black focus:ring-4 focus:ring-black/5"
                   placeholder="New password"
                   value={pw1}
                   onChange={e => setPw1(e.target.value)}
@@ -257,7 +265,7 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
                 />
                 <input
                   type="password"
-                  className="border border-black/10 dark:border-slate-700 bg-white dark:bg-slate-900 rounded px-2 py-1 w-full text-black dark:text-white"
+                  className="w-full rounded-xl audo-panel border px-3 py-3 text-black outline-none focus:border-black focus:ring-4 focus:ring-black/5"
                   placeholder="Confirm new password"
                   value={pw2}
                   onChange={e => setPw2(e.target.value)}
@@ -265,50 +273,36 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
                   required
                 />
                 <div className="flex gap-2 items-center">
-                  <button type="submit" className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-1 rounded disabled:opacity-60" disabled={loading}>
+                  <button type="submit" className="rounded-full bg-black px-5 py-2 text-sm font-black text-white disabled:opacity-60" disabled={loading}>
                     Save
                   </button>
-                  <button type="button" className="text-gray-500 dark:text-gray-400 hover:underline text-sm" onClick={() => setShowChangePw(false)}>
+                  <button type="button" className="text-sm font-bold text-gray-500 hover:underline" onClick={() => setShowChangePw(false)}>
                     Cancel
                   </button>
-                  {pwMsg && <span className="text-xs ml-2 text-gray-600 dark:text-gray-300">{pwMsg}</span>}
+                  {pwMsg && <span className="ml-2 text-xs text-gray-600">{pwMsg}</span>}
                 </div>
               </form>
             )}
           </div>
         </div>
-        <div className="mt-12">
-          {/* <h2 className="text-lg font-semibold text-black dark:text-white mb-2">Dictionary</h2>
-          <div className="rounded-2xl border border-black/10 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 mb-8">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Quick definitions for dashboard terms.</p>
-            {/* <div className="space-y-2">
-              {SETTINGS_DICTIONARY.map((entry) => (
-                <div key={entry.term} className="rounded-xl border border-black/10 dark:border-slate-700 px-3 py-2">
-                  <p className="text-xs font-black uppercase tracking-widest text-black dark:text-white">{entry.term}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{entry.definition}</p>
-                </div>
-              ))}
-            </div> 
-            <p className="mt-3 text-[11px] text-gray-500 dark:text-gray-400">Shortcut hint: <span className="font-black text-black dark:text-white">Esc</span> closes open confirmation modals.</p>
-          </div> */}
-
-          <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h2>
+        <div className="mx-auto mt-10 max-w-[760px]">
+          <h2 className="mb-5 text-2xl font-black tracking-tight text-red-600">Danger Zone</h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-4">
+            <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50 p-5 shadow-sm dark:border-red-900/60 dark:bg-red-950/25 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className="font-semibold text-red-700 dark:text-red-400">Delete Account</div>
-                <div className="text-xs text-red-500 dark:text-red-300">This will permanently delete your account and all data.</div>
+                <div className="text-lg font-black text-black dark:text-red-100">Delete Account</div>
+                <div className="mt-1.5 text-sm font-medium text-gray-500 dark:text-red-200/80">This will permanently delete your account and all data.</div>
               </div>
-              <button className="bg-red-600 dark:bg-red-700 text-white px-4 py-1 rounded" onClick={() => setDangerAction('delete')}>
+              <button className="rounded-full bg-red-600 px-5 py-2.5 text-sm font-black text-white" onClick={() => setDangerAction('delete')}>
                 Delete
               </button>
             </div>
-            <div className="flex items-center justify-between bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-4">
+            <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50 p-5 shadow-sm dark:border-red-900/60 dark:bg-red-950/25 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className="font-semibold text-red-700 dark:text-red-400">Erase Audit History</div>
-                <div className="text-xs text-red-500 dark:text-red-300">This will delete all your audits. This cannot be undone.</div>
+                <div className="text-lg font-black text-black dark:text-red-100">Erase Audit History</div>
+                <div className="mt-1.5 text-sm font-medium text-gray-500 dark:text-red-200/80">This will delete all your audits. This cannot be undone.</div>
               </div>
-              <button className="bg-red-500 dark:bg-red-600 text-white px-4 py-1 rounded" onClick={() => setDangerAction('erase')}>
+              <button className="rounded-full bg-red-600 px-5 py-2.5 text-sm font-black text-white" onClick={() => setDangerAction('erase')}>
                 Erase
               </button>
             </div>
@@ -395,7 +389,6 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
             </div>
           </div>
         )}
-      </div>
       </div>
     </div>
   )

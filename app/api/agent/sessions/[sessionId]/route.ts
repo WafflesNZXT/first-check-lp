@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 const VALID_STATUSES = new Set(['queued', 'running', 'completed', 'failed', 'cancelled'])
+const AGENT_SESSION_SELECT = 'id,audit_id,user_id,target_url,status,mode,current_url,live_view_url,replay_url,worker_id,last_heartbeat_at,summary,error_message,started_at,finished_at,created_at,updated_at'
 
 async function getSupabase() {
   const cookieStore = await cookies()
@@ -41,6 +42,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ sessio
     const summary = String(body?.summary || '').trim()
     const errorMessage = String(body?.errorMessage || '').trim()
     const currentUrl = String(body?.currentUrl || '').trim()
+    const liveViewUrl = String(body?.liveViewUrl || body?.live_view_url || '').trim()
+    const replayUrl = String(body?.replayUrl || body?.replay_url || '').trim()
 
     if (!VALID_STATUSES.has(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
@@ -50,6 +53,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ sessio
     if (summary) patch.summary = summary
     if (errorMessage) patch.error_message = errorMessage
     if (currentUrl) patch.current_url = currentUrl
+    if (liveViewUrl) patch.live_view_url = liveViewUrl
+    if (replayUrl) patch.replay_url = replayUrl
     if (status === 'running') patch.started_at = new Date().toISOString()
     if (status === 'completed' || status === 'failed' || status === 'cancelled') {
       patch.finished_at = new Date().toISOString()
@@ -60,7 +65,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ sessio
       .update(patch)
       .eq('id', sessionId)
       .eq('user_id', user.id)
-      .select('id,audit_id,user_id,target_url,status,mode,current_url,summary,error_message,started_at,finished_at,created_at,updated_at')
+      .select(AGENT_SESSION_SELECT)
       .single()
 
     if (error || !data) {

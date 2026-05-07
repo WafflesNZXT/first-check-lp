@@ -29,17 +29,17 @@ function getOverallScore(audit: HistoryAuditRow) {
 }
 
 function getScoreTone(score: number) {
-  if (score >= 80) return 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60'
-  if (score >= 50) return 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60'
-  return 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60'
+  if (score >= 80) return 'text-emerald-800 bg-emerald-50 border-emerald-100 dark:text-emerald-200 dark:bg-emerald-950/35 dark:border-emerald-900/60'
+  if (score >= 50) return 'text-amber-800 bg-amber-50 border-amber-100 dark:text-amber-200 dark:bg-amber-950/35 dark:border-amber-900/60'
+  return 'text-rose-800 bg-rose-50 border-rose-100 dark:text-rose-200 dark:bg-rose-950/35 dark:border-rose-900/60'
 }
 
 function getStatusTone(status: string) {
-  if (status === 'completed') return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-  if (status === 'failed') return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300'
-  if (status === 'processing') return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-  if (status === 'cancelled') return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-300'
-  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-300'
+  if (status === 'completed') return 'text-emerald-700 dark:text-emerald-300'
+  if (status === 'failed') return 'text-rose-700 dark:text-rose-300'
+  if (status === 'processing') return 'text-amber-700 dark:text-amber-300'
+  if (status === 'cancelled') return 'text-gray-500 dark:text-slate-400'
+  return 'text-gray-500 dark:text-slate-400'
 }
 
 export default function DashboardHistoryTable({ audits }: { audits: HistoryAuditRow[] }) {
@@ -132,12 +132,11 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
   }
 
   return (
-    <section className="rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
+    <section className="rounded-[1.7rem] audo-panel border p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-4 sm:gap-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-600">History Explorer</p>
-            {/* <h2 className="text-xl sm:text-2xl font-black tracking-tight text-black dark:text-white">Audit History</h2> */}
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-400">History Explorer</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -150,8 +149,8 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
                   onClick={() => toggleFilter(filter)}
                   className={`h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors ${
                     active
-                      ? 'bg-black text-white dark:bg-white dark:text-slate-900 border-black dark:border-white'
-                      : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-300 border-gray-200 dark:border-slate-700'
+                      ? 'bg-black text-white border-black dark:bg-white dark:text-slate-950 dark:border-white'
+                      : 'bg-white text-gray-500 border-black/10 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700'
                   }`}
                 >
                   {filter}
@@ -166,17 +165,17 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search domain..."
-            className="w-full h-11 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-sm text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+            className="h-12 w-full rounded-xl border border-black/10 bg-[#fafafa] px-4 text-sm text-black placeholder:text-gray-400 outline-none focus:border-black focus:ring-4 focus:ring-black/5 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-slate-400 dark:focus:ring-white/10"
           />
 
           {suggestions.length > 0 && (
-            <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-20 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+            <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-20 overflow-hidden rounded-xl audo-panel border shadow-lg">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => setSearchQuery(suggestion)}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   {suggestion}
                 </button>
@@ -186,11 +185,11 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto rounded-xl border border-gray-100 dark:border-slate-800">
+      <div className="mt-5 overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-slate-800/70 text-gray-500 dark:text-gray-300 uppercase text-[10px] tracking-widest">
+          <thead className="border-y border-black/10 text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
             <tr>
-              <th className="px-4 py-3 text-left">Domain</th>
+              <th className="px-4 py-4 text-left">Domain</th>
               <th className="px-4 py-3 text-left">Date</th>
               <th className="px-4 py-3 text-left">Overall</th>
               <th className="px-4 py-3 text-left">Performance</th>
@@ -209,40 +208,40 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
               const isCompleted = status === 'completed'
 
               return (
-                <tr key={audit.id} className="border-t border-gray-100 dark:border-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50/70 dark:hover:bg-slate-800/50">
-                  <td className="px-4 py-3 font-semibold text-black dark:text-white">{domain}</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{new Date(audit.created_at).toLocaleDateString()}</td>
+                <tr key={audit.id} className="border-b border-black/5 text-gray-700 hover:bg-gray-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800/70">
+                  <td className="px-4 py-5 font-bold text-black dark:text-white">{domain}</td>
+                  <td className="px-4 py-5 text-gray-500 dark:text-slate-400">{new Date(audit.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
                     {isCompleted ? (
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center h-7 px-2.5 rounded-full border font-bold ${getScoreTone(score)}`}>
+                        <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-black ${getScoreTone(score)}`}>
                           {score}
                         </span>
                         {typeof delta === 'number' && (
-                          <span className={`inline-flex items-center h-6 px-2 rounded-full text-[10px] font-black uppercase tracking-widest ${delta > 0 ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : delta < 0 ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300'}`}>
+                          <span className={`inline-flex h-6 items-center rounded-full px-2 text-[10px] font-black uppercase tracking-widest ${delta > 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-300' : delta < 0 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/35 dark:text-rose-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-300'}`}>
                             {delta > 0 ? `+${delta}` : `${delta}`}
                           </span>
                         )}
                       </div>
                     ) : (
-                      <span className="inline-flex items-center h-7 px-2.5 rounded-full border font-bold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-100 font-bold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                         —
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3">{isCompleted ? (audit.performance_score ?? 0) : '—'}</td>
-                  <td className="px-4 py-3">{isCompleted ? (audit.ux_score ?? 0) : '—'}</td>
-                  <td className="px-4 py-3">{isCompleted ? (audit.seo_score ?? 0) : '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center h-7 px-2.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusTone(status)}`}>
+                  <td className="px-4 py-5">{isCompleted ? (audit.performance_score ?? 0) : '—'}</td>
+                  <td className="px-4 py-5">{isCompleted ? (audit.ux_score ?? 0) : '—'}</td>
+                  <td className="px-4 py-5">{isCompleted ? (audit.seo_score ?? 0) : '—'}</td>
+                  <td className="px-4 py-5">
+                    <span className={`text-[10px] font-black uppercase tracking-[0.18em] ${getStatusTone(status)}`}>
                       {status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-5">
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/dashboard/audit/${audit.id}`}
-                        className="inline-flex items-center h-7 px-3 rounded-full border border-gray-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
+                        className="inline-flex h-9 items-center rounded-full audo-panel border px-4 text-[10px] font-black uppercase tracking-widest text-black shadow-sm hover:bg-gray-50 dark:text-white dark:hover:bg-slate-800"
                       >
                         Open
                       </Link>
@@ -255,7 +254,7 @@ export default function DashboardHistoryTable({ audits }: { audits: HistoryAudit
 
             {filteredAudits.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
+                <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
                   No audits match your current search/filters.
                 </td>
               </tr>

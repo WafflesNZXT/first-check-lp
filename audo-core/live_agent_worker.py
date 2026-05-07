@@ -3,12 +3,14 @@ from __future__ import annotations
 import asyncio
 import base64
 import os
+import re
+import socket
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import requests
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from browser_use import Agent, Browser, BrowserProfile, ChatGoogle, ChatOpenAI
@@ -43,6 +45,7 @@ class RunSessionRequest(BaseModel):
     audit_id: str
     user_id: str
     target_url: str
+    job_id: str | None = None
 
 
 def _required_env(name: str) -> str:
@@ -70,6 +73,19 @@ def _supabase_rest_url(path: str) -> str:
 def _patch_session(session_id: str, payload: dict[str, Any]) -> None:
     response = requests.patch(
         _supabase_rest_url(f"agent_sessions?id=eq.{session_id}"),
+        headers=_supabase_headers(),
+        json=payload,
+        timeout=15,
+    )
+    response.raise_for_status()
+
+
+def _patch_job(job_id: str | None, payload: dict[str, Any]) -> None:
+    if not job_id:
+        return
+
+    response = requests.patch(
+        _supabase_rest_url(f"agent_jobs?id=eq.{job_id}"),
         headers=_supabase_headers(),
         json=payload,
         timeout=15,
@@ -156,6 +172,47 @@ def _build_browser() -> Browser:
     )
 
 
+def _worker_id() -> str:
+    return os.getenv("LIVE_AGENT_WORKER_ID") or f"worker-{socket.gethostname()}"
+
+
+def _live_view_url_for_session(session_id: str) -> str | None:
+    template = os.getenv("LIVE_AGENT_LIVE_VIEW_URL_TEMPLATE", "").strip()
+    if not template:
+        return None
+    return template.format(session_id=session_id)
+
+
+def _claim_next_job() -> dict[str, Any] | None:
+    worker_id = _worker_id()
+    response = requests.get(
+        _supabase_rest_url("agent_jobs?status=eq.queued&order=priority.asc,created_at.asc&limit=1"),
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    response.raise_for_status()
+    jobs = response.json()
+    if not jobs:
+        return None
+
+    job = jobs[0]
+    attempts = int(job.get("attempts") or 0) + 1
+    claim = requests.patch(
+        _supabase_rest_url(f"agent_jobs?id=eq.{job['id']}&status=eq.queued"),
+        headers=_supabase_headers(),
+        json={
+            "status": "claimed",
+            "worker_id": worker_id,
+            "attempts": attempts,
+            "claimed_at": _now_iso(),
+        },
+        timeout=15,
+    )
+    claim.raise_for_status()
+    claimed_rows = claim.json()
+    return claimed_rows[0] if claimed_rows else None
+
+
 def _normalize_target_url(url: str) -> str:
     trimmed = str(url or "").strip()
     if not trimmed:
@@ -171,17 +228,22 @@ def _build_task(url: str) -> str:
     base_url = url.rstrip("/")
     return (
         f"Act like a senior conversion auditor. Open {url} and visibly inspect it like a human user. "
-        "Do not log into anything, submit forms, edit files, update todo.md, or open external domains. "
+        "Do not log into anything, submit paid/contact/signup forms, edit files, update todo.md, or open external domains. "
         "Be efficient: inspect the homepage first, then visit the most important internal pages directly instead of repeatedly rescanning the same page. "
         f"Required pages to check if they load: {base_url}/pricing, {base_url}/how-it-works, {base_url}/comparison, and {base_url}/case-studies. "
         "If a required page returns 404 or redirects, note that and move on. "
         "Scroll each important page enough to understand the offer, proof, objections, CTAs, accessibility, SEO, and trust issues. "
+        "Interact with safe public UI: open and close modals, click tabs/accordions, and try free score/demo widgets using the audited URL if a URL input is visible. "
+        "Never enter personal data, payment data, passwords, or private information. "
+        "If scrolling appears stuck or a page does not reveal more content after two attempts, do not stop the run; record that as a finding, then continue to the next required page by direct URL navigation. "
+        "Do not spend more than four browser steps on the same URL; if the page state repeats, summarize what you learned and navigate to the next required page. "
+        "On case-studies, inspect at most two detailed case studies, then move on; do not loop through every case study card. "
         "Do not click Log in, Sign in, Sign up, Get Started, or dashboard CTAs during this public-site pass. "
         "If you accidentally reach a login, signup, auth, or dashboard page, record that the CTA leads to authentication and immediately navigate to the next required public page. "
         "You are not finished until you have checked the required pages or confirmed they are unavailable. "
         "Prioritize evidence that can become a concrete checklist. Avoid spending more than three steps on any one page. "
         "When finished, call done with concise plain text using exactly these sections: Summary, Top Findings, Quick Wins. "
-        "For each Top Finding, include: severity, issue, evidence, fix."
+        "For each Top Finding, use a separate bullet with exactly: Severity, Issue, Evidence, Fix."
     )
 
 
@@ -269,8 +331,50 @@ def _get_session_status(session_id: str) -> str | None:
 
 def _parse_findings(final_result: str) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
-    lines = [line.strip(" -\t") for line in final_result.splitlines() if line.strip()]
     severity_words = {"critical", "high", "medium", "low"}
+    normalized = re.sub(r"\s+", " ", final_result or "").strip()
+
+    severity_chunks = re.split(r"(?i)(?=\bseverity\s*[:\-]\s*(?:critical|high|medium|low)\b)", normalized)
+    for chunk in severity_chunks:
+        text = chunk.strip(" -\t")
+        if not text or "severity" not in text.lower():
+            continue
+
+        lower = text.lower()
+        severity = "medium"
+        severity_match = re.search(r"(?i)severity\s*[:\-]\s*(critical|high|medium|low)", text)
+        if severity_match:
+            severity = severity_match.group(1).lower()
+        else:
+            for word in severity_words:
+                if word in lower:
+                    severity = word
+                    break
+
+        issue_match = re.search(r"(?i)issue\s*[:\-]\s*(.*?)(?=\s+evidence\s*[:\-]|\s+fix\s*[:\-]|\s+severity\s*[:\-]|$)", text)
+        evidence_match = re.search(r"(?i)evidence\s*[:\-]\s*(.*?)(?=\s+fix\s*[:\-]|\s+severity\s*[:\-]|$)", text)
+        fix_match = re.search(r"(?i)fix\s*[:\-]\s*(.*?)(?=\s+severity\s*[:\-]|$)", text)
+
+        issue = (issue_match.group(1).strip(" -") if issue_match else text).strip()
+        evidence = (evidence_match.group(1).strip(" -") if evidence_match else "").strip()
+        fix = (fix_match.group(1).strip(" -") if fix_match else "").strip()
+        if not fix:
+            fix = "Review this finding from the live agent walkthrough and apply the recommended fix."
+        if evidence and evidence.lower() not in issue.lower():
+            issue = f"{issue} Evidence: {evidence}"
+
+        findings.append(
+            {
+                "issue": issue[:280],
+                "fix": fix[:500],
+                "severity": severity,
+            }
+        )
+
+    if findings:
+        return findings[:8]
+
+    lines = [line.strip(" -\t") for line in final_result.splitlines() if line.strip()]
 
     for line in lines:
         lower = line.lower()
@@ -296,13 +400,25 @@ def _parse_findings(final_result: str) -> list[dict[str, str]]:
 
         findings.append(
             {
-                "issue": issue[:220],
-                "fix": fix[:400],
+                "issue": issue[:280],
+                "fix": fix[:500],
                 "severity": severity,
             }
         )
 
-    return findings[:6]
+    if findings:
+        return findings[:8]
+
+    if final_result.strip():
+        return [
+            {
+                "issue": "Live agent could not complete the visible walkthrough.",
+                "fix": final_result.strip()[:500],
+                "severity": "high" if _result_is_incomplete(final_result) else "medium",
+            }
+        ]
+
+    return []
 
 
 def _result_is_incomplete(final_result: str) -> bool:
@@ -314,6 +430,10 @@ def _result_is_incomplete(final_result: str) -> bool:
         "unable to complete the full audit",
         "remaining tasks",
         "was unable to complete",
+        "could not complete",
+        "could not proceed",
+        "did not visibly change",
+        "did not change the visible page content",
     )
     return any(marker in lower for marker in incomplete_markers)
 
@@ -366,7 +486,7 @@ def _append_findings_to_audit(audit_id: str, findings: list[dict[str, str]], fin
 
     report_content["checklist"] = checklist + live_items
     report_content["live_agent"] = {
-        "summary": final_result[:2000],
+        "summary": final_result[:6000],
         "added_checklist_items": len(live_items),
         "updated_at": _now_iso(),
     }
@@ -385,14 +505,27 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
     target_url = _normalize_target_url(request.target_url)
     browser = _build_browser()
     auth_steps = 0
+    worker_id = _worker_id()
+    live_view_url = _live_view_url_for_session(request.session_id)
 
     try:
+        _patch_job(
+            request.job_id,
+            {
+                "status": "running",
+                "worker_id": worker_id,
+                "started_at": _now_iso(),
+            },
+        )
         _patch_session(
             request.session_id,
             {
                 "status": "running",
                 "mode": "browser_worker",
                 "current_url": target_url,
+                "live_view_url": live_view_url,
+                "worker_id": worker_id,
+                "last_heartbeat_at": _now_iso(),
                 "started_at": _now_iso(),
             },
         )
@@ -406,7 +539,7 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
             cursor_x=12,
             cursor_y=14,
             scroll_y=0,
-            metadata={"source": "browser-worker"},
+            metadata={"source": "browser-worker", "worker_id": worker_id, "live_view": bool(live_view_url)},
         )
         _insert_event(
             session_id=request.session_id,
@@ -478,6 +611,13 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
                     "title": getattr(state, "title", ""),
                 },
             )
+            _patch_session(
+                request.session_id,
+                {
+                    "current_url": current_url,
+                    "last_heartbeat_at": _now_iso(),
+                },
+            )
 
         async def on_done(history: Any) -> None:
             final_result = ""
@@ -492,7 +632,7 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
                 audit_id=request.audit_id,
                 user_id=request.user_id,
                 event_type="error" if incomplete else "complete",
-                message=final_result[:700] if final_result else "Agent completed the visible walkthrough.",
+                message=final_result[:6000] if final_result else "Agent completed the visible walkthrough.",
                 current_url=target_url,
                 cursor_x=86,
                 cursor_y=24,
@@ -520,7 +660,15 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
                 request.session_id,
                 {
                     "status": "failed" if incomplete else "completed",
-                    "summary": final_result[:1000] if final_result else "Visible browser walkthrough completed.",
+                    "summary": final_result[:6000] if final_result else "Visible browser walkthrough completed.",
+                    "error_message": "Live agent reached its step limit before completing the required pages." if incomplete else None,
+                    "finished_at": _now_iso(),
+                },
+            )
+            _patch_job(
+                request.job_id,
+                {
+                    "status": "failed" if incomplete else "completed",
                     "error_message": "Live agent reached its step limit before completing the required pages." if incomplete else None,
                     "finished_at": _now_iso(),
                 },
@@ -544,6 +692,8 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
             register_new_step_callback=on_step,
             register_done_callback=on_done,
             register_should_stop_callback=should_stop,
+            enable_planning=False,
+            use_judge=False,
         )
 
         await asyncio.wait_for(
@@ -570,6 +720,14 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
                 "finished_at": _now_iso(),
             },
         )
+        _patch_job(
+            request.job_id,
+            {
+                "status": "failed",
+                "error_message": message[:1000],
+                "finished_at": _now_iso(),
+            },
+        )
     finally:
         close_fn = getattr(browser, "close", None)
         if close_fn:
@@ -584,13 +742,48 @@ async def root():
         "status": "ok",
         "message": "Audo live agent worker is running.",
         "endpoint": "POST /run-session",
+        "polling": _get_bool_env("LIVE_AGENT_POLL_JOBS", False),
+        "worker_id": _worker_id(),
     }
 
 
 @app.post("/run-session")
-async def run_session(request: RunSessionRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(_run_browser_agent, request)
-    return {"ok": True, "session_id": request.session_id}
+async def run_session(request: Request, payload: RunSessionRequest, background_tasks: BackgroundTasks):
+    expected_token = os.getenv("LIVE_AGENT_WORKER_TOKEN", "").strip()
+    if expected_token:
+        auth_header = request.headers.get("authorization", "")
+        if auth_header != f"Bearer {expected_token}":
+            raise HTTPException(status_code=401, detail="Unauthorized worker request")
+
+    background_tasks.add_task(_run_browser_agent, payload)
+    return {"ok": True, "session_id": payload.session_id}
+
+
+async def _poll_jobs_forever() -> None:
+    interval = float(os.getenv("LIVE_AGENT_POLL_INTERVAL_SECONDS", "2.5"))
+    while True:
+        try:
+            job = await asyncio.to_thread(_claim_next_job)
+            if job:
+                request = RunSessionRequest(
+                    session_id=str(job["session_id"]),
+                    audit_id=str(job["audit_id"]),
+                    user_id=str(job["user_id"]),
+                    target_url=str(job["target_url"]),
+                    job_id=str(job["id"]),
+                )
+                await _run_browser_agent(request)
+            else:
+                await asyncio.sleep(interval)
+        except Exception as exc:
+            print(f"[live-agent-worker] poll error: {exc}")
+            await asyncio.sleep(interval)
+
+
+@app.on_event("startup")
+async def start_job_poller() -> None:
+    if _get_bool_env("LIVE_AGENT_POLL_JOBS", False):
+        asyncio.create_task(_poll_jobs_forever())
 
 
 if __name__ == "__main__":

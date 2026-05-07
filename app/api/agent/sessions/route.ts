@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 type AgentSessionStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+const AGENT_SESSION_SELECT = 'id,audit_id,user_id,target_url,status,mode,current_url,live_view_url,replay_url,worker_id,last_heartbeat_at,summary,error_message,started_at,finished_at,created_at,updated_at'
 
 async function getSupabase() {
   const cookieStore = await cookies()
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
 
     const { data, error } = await supabase
       .from('agent_sessions')
-      .select('id,audit_id,user_id,target_url,status,mode,current_url,summary,error_message,started_at,finished_at,created_at,updated_at')
+      .select(AGENT_SESSION_SELECT)
       .eq('audit_id', auditId)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -129,7 +130,7 @@ export async function POST(req: Request) {
           started_at: status === 'running' ? now : null,
         },
       ])
-      .select('id,audit_id,user_id,target_url,status,mode,current_url,summary,error_message,started_at,finished_at,created_at,updated_at')
+      .select(AGENT_SESSION_SELECT)
       .single()
 
     if (error || !data) {

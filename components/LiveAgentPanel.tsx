@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, CheckCircle2, Code2, MousePointer2, Play, Radar, ScrollText } from 'lucide-react'
+import { Bot, Check, CheckCircle2, Code2, MousePointer2, Pause, Play, Radar, RotateCcw, ScrollText, Sparkles, Video, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type AgentSession = {
@@ -12,6 +12,10 @@ type AgentSession = {
   status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
   mode: string
   current_url: string | null
+  live_view_url: string | null
+  replay_url: string | null
+  worker_id: string | null
+  last_heartbeat_at: string | null
   summary: string | null
   error_message: string | null
   started_at: string | null
@@ -41,6 +45,15 @@ type Props = {
   auditId: string
   targetUrl: string
   canManage: boolean
+}
+
+type ConfettiPiece = {
+  id: number
+  left: number
+  top: number
+  delay: number
+  color: string
+  rotate: number
 }
 
 const PREVIEW_EVENTS: Array<{
@@ -73,12 +86,63 @@ function getEventIcon(type: AgentEvent['event_type']) {
   return Radar
 }
 
+function getSeverityTone(severity: AgentEvent['severity']) {
+  if (severity === 'critical') {
+    return {
+      card: 'border-rose-200 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/25',
+      badge: 'bg-rose-600 text-white',
+      text: 'text-rose-950 dark:text-rose-100',
+      muted: 'text-rose-700 dark:text-rose-200',
+      check: 'border-rose-300 bg-white text-rose-700 data-[checked=true]:bg-rose-600 data-[checked=true]:text-white',
+    }
+  }
+  if (severity === 'high') {
+    return {
+      card: 'border-amber-200 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/25',
+      badge: 'bg-amber-500 text-amber-950',
+      text: 'text-amber-950 dark:text-amber-100',
+      muted: 'text-amber-800 dark:text-amber-200',
+      check: 'border-amber-300 bg-white text-amber-700 data-[checked=true]:bg-amber-500 data-[checked=true]:text-amber-950',
+    }
+  }
+  if (severity === 'low') {
+    return {
+      card: 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/70',
+      badge: 'bg-slate-600 text-white',
+      text: 'text-slate-950 dark:text-slate-100',
+      muted: 'text-slate-600 dark:text-slate-300',
+      check: 'border-slate-300 bg-white text-slate-700 data-[checked=true]:bg-slate-700 data-[checked=true]:text-white',
+    }
+  }
+  return {
+    card: 'border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/25',
+    badge: 'bg-blue-600 text-white',
+    text: 'text-blue-950 dark:text-blue-100',
+    muted: 'text-blue-700 dark:text-blue-200',
+    check: 'border-blue-300 bg-white text-blue-700 data-[checked=true]:bg-blue-600 data-[checked=true]:text-white',
+  }
+}
+
+function splitFindingText(message: string) {
+  const [issuePart, evidencePart = ''] = message.split(/\s+Evidence:\s+/i)
+  return {
+    issue: issuePart.trim(),
+    evidence: evidencePart.trim(),
+  }
+}
+
 export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props) {
   const [activeSession, setActiveSession] = useState<AgentSession | null>(null)
   const [events, setEvents] = useState<AgentEvent[]>([])
   const [isStarting, setIsStarting] = useState(false)
   const [isStartingWorker, setIsStartingWorker] = useState(false)
   const [error, setError] = useState('')
+  const [isReplayOpen, setIsReplayOpen] = useState(false)
+  const [isReplayPlaying, setIsReplayPlaying] = useState(false)
+  const [replayIndex, setReplayIndex] = useState(0)
+  const [completedFindingIds, setCompletedFindingIds] = useState<number[]>([])
+  const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
+  const confettiBurstIdRef = useRef(0)
   const localRunIdRef = useRef(0)
 
   const latestEvent = events[events.length - 1]
@@ -87,17 +151,27 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
     y: Math.max(6, Math.min(86, Number(latestEvent?.cursor_y ?? 18))),
   }
   const scrollY = Math.max(0, Math.min(100, Number(latestEvent?.scroll_y ?? 0)))
-  const isRunning = activeSession?.status === 'running' || isStarting || isStartingWorker
+  const isRunning = activeSession?.status === 'queued' || activeSession?.status === 'running' || isStarting || isStartingWorker
   const latestScreenshotUrl = [...events].reverse().find((event) => event.screenshot_url)?.screenshot_url || null
+  const screenshotEvents = useMemo(() => {
+    return events.filter((event) => event.screenshot_url)
+  }, [events])
+  const replayEvent = screenshotEvents[Math.min(replayIndex, Math.max(0, screenshotEvents.length - 1))]
+  const canReplay = Boolean(activeSession?.replay_url || screenshotEvents.length > 0)
+  const liveViewUrl = activeSession?.live_view_url || null
   const previewUrl = latestEvent?.current_url || activeSession?.current_url || targetUrl
   const activeSessionId = activeSession?.id || ''
   const activeSessionStatus = activeSession?.status || ''
   const latestEventAgeSeconds = latestEvent ? Math.floor((Date.now() - new Date(latestEvent.created_at).getTime()) / 1000) : 0
   const isWaitingForFrame = activeSession?.status === 'running' && !latestScreenshotUrl
+  const isStaleRun = activeSession?.status === 'running' && latestEventAgeSeconds > 90
 
   const findings = useMemo(() => {
     return events.filter((event) => event.event_type === 'finding')
   }, [events])
+  const completedFindingCount = findings.filter((finding) => completedFindingIds.includes(finding.id)).length
+  const allFindingsCompleted = findings.length > 0 && completedFindingCount === findings.length
+  const completionPercent = findings.length > 0 ? Math.round((completedFindingCount / findings.length) * 100) : 0
 
   useEffect(() => {
     let active = true
@@ -183,6 +257,47 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
       supabase.removeChannel(channel)
     }
   }, [activeSessionId, activeSessionStatus, auditId])
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      setCompletedFindingIds([])
+      return
+    }
+
+    try {
+      const stored = window.localStorage.getItem(`audo-agent-findings:${activeSessionId}`)
+      const parsed = stored ? JSON.parse(stored) : []
+      setCompletedFindingIds(Array.isArray(parsed) ? parsed.map((id) => Number(id)).filter(Number.isFinite) : [])
+    } catch {
+      setCompletedFindingIds([])
+    }
+  }, [activeSessionId])
+
+  useEffect(() => {
+    if (!activeSessionId) return
+
+    window.localStorage.setItem(`audo-agent-findings:${activeSessionId}`, JSON.stringify(completedFindingIds))
+  }, [activeSessionId, completedFindingIds])
+
+  useEffect(() => {
+    setReplayIndex((prev) => Math.min(prev, Math.max(0, screenshotEvents.length - 1)))
+  }, [screenshotEvents.length])
+
+  useEffect(() => {
+    if (!isReplayPlaying || screenshotEvents.length <= 1) return
+
+    const timer = window.setInterval(() => {
+      setReplayIndex((prev) => {
+        if (prev >= screenshotEvents.length - 1) {
+          setIsReplayPlaying(false)
+          return prev
+        }
+        return prev + 1
+      })
+    }, 900)
+
+    return () => window.clearInterval(timer)
+  }, [isReplayPlaying, screenshotEvents.length])
 
   async function updateSession(sessionId: string, patch: Record<string, unknown>) {
     const res = await fetch(`/api/agent/sessions/${encodeURIComponent(sessionId)}`, {
@@ -298,6 +413,57 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
     }
   }
 
+  function openReplay() {
+    if (activeSession?.replay_url) {
+      window.open(activeSession.replay_url, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    if (!screenshotEvents.length) return
+    setReplayIndex(0)
+    setIsReplayPlaying(true)
+    setIsReplayOpen(true)
+  }
+
+  function triggerConfetti() {
+    confettiBurstIdRef.current += 1
+    const burstId = confettiBurstIdRef.current
+    const colors = ['bg-blue-500', 'bg-emerald-400', 'bg-amber-400', 'bg-rose-400', 'bg-violet-400']
+    const pieces = Array.from({ length: 28 }, (_, index) => ({
+      id: burstId * 100 + index,
+      left: 8 + Math.random() * 84,
+      top: 8 + Math.random() * 28,
+      delay: Math.random() * 0.18,
+      color: colors[index % colors.length],
+      rotate: Math.random() * 220 - 110,
+    }))
+
+    setConfettiPieces(pieces)
+    window.setTimeout(() => {
+      setConfettiPieces((current) => current.filter((piece) => piece.id < burstId * 100 || piece.id >= burstId * 100 + 100))
+    }, 1300)
+  }
+
+  function toggleFinding(findingId: number) {
+    setCompletedFindingIds((current) => {
+      const next = current.includes(findingId)
+        ? current.filter((id) => id !== findingId)
+        : [...current, findingId]
+      const nextCompletedCount = findings.filter((finding) => next.includes(finding.id)).length
+      if (findings.length > 0 && nextCompletedCount === findings.length && current.length !== next.length) {
+        triggerConfetti()
+      }
+      return next
+    })
+  }
+
+  function completeAllFindings() {
+    if (!findings.length) return
+
+    setCompletedFindingIds(findings.map((finding) => finding.id))
+    if (!allFindingsCompleted) triggerConfetti()
+  }
+
   return (
     <section className="print-hide rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -308,7 +474,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
           </p>
           <h3 className="text-lg sm:text-xl font-black tracking-tight text-black dark:text-white">Visible Website Walkthrough</h3>
           <p className="max-w-2xl text-sm text-gray-500 dark:text-gray-300">
-            This preview streams the same event shape the real browser worker will emit: navigation, cursor movement, scrolling, clicks, findings, and code-review checkpoints.
+            Watch the agent use the site, stream browser evidence, and convert findings into work your team can act on.
           </p>
         </div>
 
@@ -330,7 +496,16 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-black dark:bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-white dark:text-slate-900 disabled:opacity-60"
             >
               <Play className="h-3.5 w-3.5" />
-              {isStartingWorker ? 'Starting' : activeSession?.status === 'running' ? 'Running' : 'Run Real Agent'}
+              {isStartingWorker ? 'Queuing' : activeSession?.status === 'running' ? 'Running' : activeSession?.status === 'queued' ? 'Queued' : 'Run Agent'}
+            </button>
+            <button
+              type="button"
+              onClick={openReplay}
+              disabled={!canReplay}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white disabled:opacity-50"
+            >
+              <Video className="h-3.5 w-3.5" />
+              Replay
             </button>
             <button
               type="button"
@@ -338,7 +513,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
               disabled={isRunning}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white disabled:opacity-60"
             >
-              Demo Preview
+              Demo
             </button>
           </div>
         )}
@@ -366,14 +541,21 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
           </div>
 
           <div className="relative h-[320px] overflow-hidden bg-slate-100 dark:bg-slate-950">
-            {latestScreenshotUrl ? (
+            {liveViewUrl ? (
+              <iframe
+                src={liveViewUrl}
+                title="Live browser session"
+                className="h-full w-full border-0 bg-white"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+              />
+            ) : latestScreenshotUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={latestScreenshotUrl}
                 alt="Live browser screenshot"
                 className="h-full w-full object-cover"
               />
-            ) : activeSession?.status === 'running' ? (
+            ) : activeSession?.status === 'running' || activeSession?.status === 'queued' ? (
               <>
                 <iframe
                   src={previewUrl}
@@ -382,7 +564,9 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
                   sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                 />
                 <div className="absolute inset-x-4 bottom-4 rounded-xl border border-white/70 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm">
-                  Waiting for the first browser screenshot. Showing the target page directly for now.
+                  {activeSession.status === 'queued'
+                    ? 'The live agent run is queued. A hosted worker will pick it up automatically.'
+                    : 'Waiting for the first browser frame. Showing the target page directly for now.'}
                 </div>
               </>
             ) : (
@@ -422,9 +606,9 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
               <MousePointer2 className="h-6 w-6 fill-blue-600 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)]" />
             </div>
 
-            {!latestEvent && (
+            {!latestEvent && !liveViewUrl && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-slate-950/70">
-                <p className="text-sm font-bold text-gray-500 dark:text-gray-300">Run the preview to see the agent stream.</p>
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-300">Run the agent to start the visible walkthrough.</p>
               </div>
             )}
           </div>
@@ -442,6 +626,21 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
             <p className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-3 text-xs font-bold text-amber-800 dark:text-amber-200">
               No live screenshot frame yet. Last event was {latestEventAgeSeconds}s ago.
             </p>
+          )}
+
+          {isStaleRun && (
+            <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-3 text-xs font-bold text-amber-800 dark:text-amber-200">
+              <p>This run has not reported a new browser step in over 90 seconds.</p>
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={cancelActiveSession}
+                  className="mt-2 rounded-lg border border-amber-300 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest"
+                >
+                  Stop stale run
+                </button>
+              )}
+            </div>
           )}
 
           <div className="max-h-[280px] overflow-auto space-y-2 pr-1">
@@ -470,13 +669,175 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
       </div>
 
       {findings.length > 0 && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {findings.map((finding) => (
-            <div key={finding.id} className="rounded-xl border border-blue-100 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/30 p-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">{finding.severity || 'finding'}</p>
-              <p className="mt-1 text-sm font-bold text-blue-950 dark:text-blue-100">{finding.message}</p>
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3 sm:p-4">
+          {confettiPieces.length > 0 && (
+            <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+              {confettiPieces.map((piece) => (
+                <span
+                  key={piece.id}
+                  className={`absolute h-2 w-1.5 rounded-sm animate-checklist-confetti ${piece.color}`}
+                  style={{
+                    left: `${piece.left}%`,
+                    top: `${piece.top}%`,
+                    animationDelay: `${piece.delay}s`,
+                    transform: `rotate(${piece.rotate}deg)`,
+                  }}
+                />
+              ))}
             </div>
-          ))}
+          )}
+
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Agent Checklist</p>
+              <h4 className="mt-1 text-lg font-black tracking-tight text-black dark:text-white">Live findings</h4>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="min-w-[130px]">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                  <span>{completedFindingCount}/{findings.length}</span>
+                  <span>{completionPercent}%</span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-slate-800">
+                  <div className="h-full rounded-full bg-black dark:bg-white transition-all" style={{ width: `${completionPercent}%` }} />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={completeAllFindings}
+                className="inline-flex items-center gap-2 rounded-xl bg-black px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white dark:bg-white dark:text-slate-950"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Complete all
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {findings.map((finding) => {
+              const tone = getSeverityTone(finding.severity)
+              const completed = completedFindingIds.includes(finding.id)
+              const { issue, evidence } = splitFindingText(finding.message)
+              const fix = typeof finding.metadata?.fix === 'string' ? finding.metadata.fix : ''
+
+              return (
+                <button
+                  type="button"
+                  key={finding.id}
+                  onClick={() => toggleFinding(finding.id)}
+                  className={`group min-h-[138px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm ${tone.card} ${completed ? 'opacity-70' : ''}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      data-checked={completed}
+                      className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition-colors ${tone.check}`}
+                    >
+                      {completed && <Check className="h-3.5 w-3.5" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${tone.badge}`}>
+                          {finding.severity || 'finding'}
+                        </span>
+                        {completed && <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Done</span>}
+                      </div>
+                      <p className={`mt-3 text-sm font-black leading-snug ${tone.text} ${completed ? 'line-through' : ''}`}>
+                        {issue}
+                      </p>
+                      {evidence && (
+                        <p className={`mt-3 border-l-2 border-current/30 pl-3 text-xs font-semibold leading-relaxed ${tone.muted}`}>
+                          <span className="font-black">Evidence: </span>{evidence}
+                        </p>
+                      )}
+                      {fix && (
+                        <p className="mt-3 rounded-xl bg-white/70 px-3 py-2 text-xs font-semibold leading-relaxed text-slate-700 dark:bg-slate-950/50 dark:text-slate-200">
+                          <span className="font-black">Fix: </span>{fix}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {isReplayOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close replay"
+            className="absolute inset-0 bg-black/70"
+            onClick={() => {
+              setIsReplayOpen(false)
+              setIsReplayPlaying(false)
+            }}
+          />
+          <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">Agent Replay</p>
+                <p className="mt-1 max-w-xl truncate text-xs font-bold text-slate-300">{replayEvent?.message || 'Recorded browser walkthrough'}</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close replay"
+                onClick={() => {
+                  setIsReplayOpen(false)
+                  setIsReplayPlaying(false)
+                }}
+                className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-white hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="relative aspect-video bg-black">
+              {replayEvent?.screenshot_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={replayEvent.screenshot_url} alt="Recorded agent step" className="h-full w-full object-contain" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm font-bold text-slate-400">No recorded frames yet.</div>
+              )}
+            </div>
+            <div className="flex flex-col gap-3 border-t border-white/10 px-4 py-3 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReplayPlaying((prev) => !prev)}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black uppercase tracking-widest text-slate-950"
+                >
+                  {isReplayPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                  {isReplayPlaying ? 'Pause' : 'Play'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplayIndex(0)
+                    setIsReplayPlaying(true)
+                  }}
+                  className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-white hover:bg-white/10"
+                  aria-label="Restart replay"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, screenshotEvents.length - 1)}
+                value={replayIndex}
+                onChange={(event) => {
+                  setReplayIndex(Number(event.target.value))
+                  setIsReplayPlaying(false)
+                }}
+                className="min-w-0 flex-1"
+              />
+              <span className="text-xs font-bold text-slate-400">
+                {Math.min(replayIndex + 1, screenshotEvents.length || 1)} / {Math.max(1, screenshotEvents.length)}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </section>

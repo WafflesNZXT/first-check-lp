@@ -420,7 +420,7 @@ export default function AuditInput() {
   }
 
   return (
-    <div id="audit-input" className="w-full max-w-2xl mx-auto space-y-4 rounded-t-[2rem] rounded-b-[1.30rem] transition-shadow">
+    <div id="audit-input" className="w-full space-y-4">
       {pendingDemoAudit?.url && (
         <div className="rounded-2xl border border-blue-100 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/35 p-4 text-left">
           <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">Resume Free Demo</p>
@@ -463,32 +463,32 @@ export default function AuditInput() {
             type="text"
             required
             placeholder="yourstartup.com or https://yourstartup.com"
-            className="w-full p-4 sm:p-6 sm:pr-40 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all text-base sm:text-lg text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            className="w-full rounded-2xl border border-black/10 bg-[#fafafa] p-4 text-base text-black outline-none transition-all placeholder:text-gray-400 focus:border-black focus:ring-4 focus:ring-black/5 sm:pr-40 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-slate-400 dark:focus:ring-white/10"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
           <button
             disabled={loading || activeStatus === 'processing' || bulkRunning || isSitemapLoading}
-            className="w-full sm:w-auto sm:absolute sm:right-3 bg-black dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-3xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all disabled:opacity-50"
+            className="w-full rounded-2xl bg-black px-6 py-3 font-bold text-white transition-all hover:bg-gray-800 disabled:opacity-50 sm:absolute sm:right-2 sm:w-auto"
           >
             {loading ? 'Starting...' : activeStatus === 'processing' ? 'Running...' : 'Run Audit'}
           </button>
         </div>
       </form>
 
-      <p className="text-center text-xs text-gray-500 dark:text-gray-400">Tip: enter just a domain like useaudo.com — we auto-add https://</p>
+      <p className="text-xs font-medium text-gray-500 dark:text-slate-400">Tip: enter just a domain like useaudo.com. We auto-add https://.</p>
 
-      <div className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm space-y-3">
+      <div className="space-y-3 border-t border-black/10 pt-4 dark:border-slate-800">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Bulk Scan</p>
-            <p className="text-sm text-gray-500 dark:text-gray-300">Scan sitemap.xml and run audits for multiple pages.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">Bulk Scan</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-slate-400">Scan sitemap.xml and run audits for multiple pages.</p>
           </div>
           <button
             type="button"
             onClick={handleScanEntireSite}
             disabled={isSitemapLoading || bulkRunning}
-            className="rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-2 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl audo-panel border px-4 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-gray-50 disabled:opacity-60 dark:text-white dark:hover:bg-slate-800"
           >
             {isSitemapLoading ? 'Scanning...' : 'Scan Entire Site'}
           </button>
@@ -501,40 +501,40 @@ export default function AuditInput() {
         {scannedUrls.length > 0 && (
           <>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-gray-500 dark:text-gray-300">{selectedUrls.length} of {scannedUrls.length} pages selected</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{selectedUrls.length} of {scannedUrls.length} pages selected</p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={selectTopTenUrls}
-                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200"
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   Top 10
                 </button>
                 <button
                   type="button"
                   onClick={selectKeyPages}
-                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200"
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   Key Pages
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedUrls(scannedUrls)}
-                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200"
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   Select All
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedUrls([])}
-                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200"
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   Clear
                 </button>
               </div>
             </div>
 
-            <div className="max-h-56 overflow-y-auto rounded-xl border border-gray-100 dark:border-slate-800 divide-y divide-gray-100 dark:divide-slate-800">
+            <div className="max-h-56 overflow-y-auto rounded-xl audo-panel border divide-y divide-gray-100 dark:divide-slate-800">
               {scannedUrls.map((pageUrl) => {
                 const checked = selectedUrls.includes(pageUrl)
                 return (
@@ -551,7 +551,7 @@ export default function AuditInput() {
                       }}
                       className="mt-1"
                     />
-                    <span className="text-xs text-gray-600 dark:text-gray-300 break-all">{pageUrl}</span>
+                    <span className="break-all text-xs text-gray-600 dark:text-slate-300">{pageUrl}</span>
                   </label>
                 )
               })}
@@ -561,7 +561,7 @@ export default function AuditInput() {
               type="button"
               onClick={handleRunBulkAudits}
               disabled={selectedUrls.length === 0 || bulkRunning || activeStatus === 'processing'}
-              className="w-full rounded-xl bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 text-xs font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-60"
+              className="w-full rounded-xl bg-black px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-gray-800 disabled:opacity-60"
             >
               {bulkRunning ? 'Running Bulk Scan...' : 'Run Audits for Selected Pages'}
             </button>
@@ -570,17 +570,17 @@ export default function AuditInput() {
 
         {bulkRunning && (
           <div className="space-y-2">
-            <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-800">
               <div
-                className="h-full bg-black dark:bg-white transition-all duration-300"
+                className="h-full bg-black transition-all duration-300 dark:bg-white"
                 style={{ width: `${bulkPercent}%` }}
               />
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-300">
-              {bulkProgress.completed}/{bulkProgress.total} completed • {bulkProgress.failed} failed
+            <p className="text-xs text-gray-600 dark:text-slate-300">
+              {bulkProgress.completed}/{bulkProgress.total} completed - {bulkProgress.failed} failed
             </p>
             {bulkProgress.currentUrl && (
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 break-all">
+              <p className="break-all text-[11px] text-gray-500 dark:text-slate-400">
                 Currently scanning: {bulkProgress.currentUrl}
               </p>
             )}

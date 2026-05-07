@@ -31,6 +31,60 @@ body {
   transition: background-color 180ms ease, color 180ms ease;
 }
 
+.audo-dashboard-surface {
+  background: #f7f7f5;
+  color: #111111;
+}
+
+.dark .audo-dashboard-surface {
+  background: #020617;
+  color: #e2e8f0;
+}
+
+.audo-panel {
+  background: #ffffff;
+  border-color: rgb(0 0 0 / 0.1);
+  color: #111111;
+}
+
+.dark .audo-panel {
+  background: #0f172a;
+  border-color: rgb(51 65 85 / 0.9);
+  color: #f8fafc;
+}
+
+.audo-muted {
+  color: #6b7280;
+}
+
+.dark .audo-muted {
+  color: #cbd5e1;
+}
+
+.dark .audo-dashboard-surface .text-black {
+  color: #f8fafc;
+}
+
+.dark .audo-dashboard-surface .text-gray-500,
+.dark .audo-dashboard-surface .text-gray-600,
+.dark .audo-dashboard-surface .text-gray-700 {
+  color: #cbd5e1;
+}
+
+.dark .audo-dashboard-surface .border-black\/10,
+.dark .audo-dashboard-surface .border-black\/5 {
+  border-color: rgb(51 65 85 / 0.85);
+}
+
+.dark .audo-dashboard-surface .bg-white {
+  background-color: #0f172a;
+}
+
+.dark .audo-dashboard-surface .bg-gray-50,
+.dark .audo-dashboard-surface .bg-gray-100 {
+  background-color: #1e293b;
+}
+
 /* Ensure clickable elements show pointer cursor across the site */
 button,
 [role="button"],
