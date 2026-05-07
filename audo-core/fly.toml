@@ -6,12 +6,12 @@ primary_region = "sjc"
 
 [env]
   LIVE_AGENT_WORKER_HOST = "0.0.0.0"
-  LIVE_AGENT_WORKER_PORT = "8001"
+  LIVE_AGENT_WORKER_PORT = "8080"
   LIVE_AGENT_POLL_JOBS = "true"
   LIVE_AGENT_HEADLESS = "true"
 
 [http_service]
-  internal_port = 8001
+  internal_port = 8080
   force_https = true
   auto_stop_machines = false
   auto_start_machines = true
