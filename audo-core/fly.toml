@@ -1,24 +1,30 @@
-app = "audo-live-agent"
-primary_region = "sjc"
+# fly.toml app configuration file generated for audo-live-agent on 2026-05-07T06:30:01Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'audo-live-agent'
+primary_region = 'sjc'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  LIVE_AGENT_WORKER_HOST = "0.0.0.0"
-  LIVE_AGENT_WORKER_PORT = "8001"
-  LIVE_AGENT_POLL_JOBS = "true"
-  LIVE_AGENT_HEADLESS = "true"
+  LIVE_AGENT_HEADLESS = 'true'
+  LIVE_AGENT_POLL_JOBS = 'true'
+  LIVE_AGENT_WORKER_HOST = '0.0.0.0'
+  LIVE_AGENT_WORKER_PORT = '8001'
 
 [http_service]
-  internal_port = 8001
+  internal_port = 8080
   force_https = true
-  auto_stop_machines = false
+  auto_stop_machines = 'off'
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
+  processes = ['app']
 
 [[vm]]
-  cpu_kind = "shared"
+  memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
-  memory = "1gb"
+  memory_mb = 1024
