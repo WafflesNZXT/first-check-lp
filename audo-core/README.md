@@ -16,6 +16,7 @@ This service is the production worker for visible browser audits. It can be depl
 - `LIVE_AGENT_HEADLESS=true`
 - `LIVE_AGENT_MAX_STEPS=24`
 - `LIVE_AGENT_RUN_TIMEOUT_SECONDS=180`
+- `LIVE_AGENT_BROWSER_RESTARTS=1`: restarts the browser once if browser-use reports a startup watchdog timeout.
 - `LIVE_AGENT_LIVE_VIEW_URL_TEMPLATE`: optional provider URL template, for example a cloud browser live-view URL that includes `{session_id}`.
 
 ## Deployment Shape
@@ -28,3 +29,5 @@ The Next.js app should set:
 - `LIVE_AGENT_WORKER_TOKEN=the-same-secret`
 
 If `LIVE_AGENT_WORKER_URL` is not set, the dashboard still queues jobs in Supabase. A deployed polling worker with `LIVE_AGENT_POLL_JOBS=true` will pick them up automatically.
+
+When `LIVE_AGENT_WORKER_URL` is set, the Next.js app claims the queued job before calling `/run-session`. This keeps a polling Fly worker from picking up the same run twice.

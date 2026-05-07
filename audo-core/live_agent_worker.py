@@ -172,6 +172,25 @@ def _build_browser() -> Browser:
     )
 
 
+def _is_browser_start_watchdog_timeout(exc: Exception) -> bool:
+    message = str(exc)
+    return (
+        "BrowserStartEvent" in message
+        and "timed out after" in message
+        and "watchdog" in message.lower()
+    )
+
+
+async def _close_browser(browser: Browser) -> None:
+    close_fn = getattr(browser, "close", None)
+    if not close_fn:
+        return
+
+    result = close_fn()
+    if asyncio.iscoroutine(result):
+        await result
+
+
 def _worker_id() -> str:
     return os.getenv("LIVE_AGENT_WORKER_ID") or f"worker-{socket.gethostname()}"
 
@@ -681,25 +700,61 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
                 return False
             return status == "cancelled"
 
-        agent = Agent(
-            task=_build_task(target_url),
-            llm=_build_llm(),
-            browser=browser,
-            use_vision=True,
-            llm_timeout=int(os.getenv("LIVE_AGENT_LLM_TIMEOUT_SECONDS", "30")),
-            step_timeout=int(os.getenv("LIVE_AGENT_STEP_TIMEOUT_SECONDS", "35")),
-            max_actions_per_step=3,
-            register_new_step_callback=on_step,
-            register_done_callback=on_done,
-            register_should_stop_callback=should_stop,
-            enable_planning=False,
-            use_judge=False,
-        )
+        max_browser_restarts = int(os.getenv("LIVE_AGENT_BROWSER_RESTARTS", "1"))
+        for restart_attempt in range(max_browser_restarts + 1):
+            try:
+                agent = Agent(
+                    task=_build_task(target_url),
+                    llm=_build_llm(),
+                    browser=browser,
+                    use_vision=True,
+                    llm_timeout=int(os.getenv("LIVE_AGENT_LLM_TIMEOUT_SECONDS", "30")),
+                    step_timeout=int(os.getenv("LIVE_AGENT_STEP_TIMEOUT_SECONDS", "35")),
+                    max_actions_per_step=3,
+                    register_new_step_callback=on_step,
+                    register_done_callback=on_done,
+                    register_should_stop_callback=should_stop,
+                    enable_planning=False,
+                    use_judge=False,
+                )
 
-        await asyncio.wait_for(
-            agent.run(max_steps=int(os.getenv("LIVE_AGENT_MAX_STEPS", "24"))),
-            timeout=int(os.getenv("LIVE_AGENT_RUN_TIMEOUT_SECONDS", "180")),
-        )
+                await asyncio.wait_for(
+                    agent.run(max_steps=int(os.getenv("LIVE_AGENT_MAX_STEPS", "24"))),
+                    timeout=int(os.getenv("LIVE_AGENT_RUN_TIMEOUT_SECONDS", "180")),
+                )
+                break
+            except Exception as exc:
+                if not _is_browser_start_watchdog_timeout(exc) or restart_attempt >= max_browser_restarts:
+                    raise
+
+                _insert_event(
+                    session_id=request.session_id,
+                    audit_id=request.audit_id,
+                    user_id=request.user_id,
+                    event_type="status",
+                    message="The browser startup watchdog timed out, so the worker is restarting the browser and continuing this run.",
+                    current_url=target_url,
+                    cursor_x=24,
+                    cursor_y=22,
+                    scroll_y=0,
+                    severity="low",
+                    metadata={
+                        "source": "browser-worker",
+                        "recoverable": True,
+                        "restart_attempt": restart_attempt + 1,
+                        "error": str(exc)[:500],
+                    },
+                )
+                _patch_session(
+                    request.session_id,
+                    {
+                        "status": "running",
+                        "error_message": None,
+                        "last_heartbeat_at": _now_iso(),
+                    },
+                )
+                await _close_browser(browser)
+                browser = _build_browser()
     except Exception as exc:
         message = str(exc)
         _insert_event(
@@ -729,11 +784,7 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
             },
         )
     finally:
-        close_fn = getattr(browser, "close", None)
-        if close_fn:
-            result = close_fn()
-            if asyncio.iscoroutine(result):
-                await result
+        await _close_browser(browser)
 
 
 @app.get("/")

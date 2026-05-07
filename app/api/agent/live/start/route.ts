@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const { error: jobError } = await supabase
+    const { data: job, error: jobError } = await supabase
       .from('agent_jobs')
       .insert([
         {
@@ -113,8 +113,10 @@ export async function POST(req: Request) {
           metadata: { source: 'dashboard' },
         },
       ])
+      .select('id')
+      .single()
 
-    if (jobError) {
+    if (jobError || !job) {
       console.error('Live agent job queue failed', jobError)
       await supabase
         .from('agent_sessions')
@@ -160,7 +162,27 @@ export async function POST(req: Request) {
     const workerBase = String(process.env.LIVE_AGENT_WORKER_URL || '').replace(/\/$/, '')
 
     if (workerBase) {
+      let directClaimed = false
       try {
+        const { data: claimedJob, error: claimError } = await supabase
+          .from('agent_jobs')
+          .update({
+            status: 'claimed',
+            worker_id: 'direct-dispatch',
+            claimed_at: new Date().toISOString(),
+          })
+          .eq('id', job.id)
+          .eq('user_id', user.id)
+          .eq('status', 'queued')
+          .select('id')
+          .maybeSingle()
+
+        if (claimError || !claimedJob) {
+          throw new Error(claimError?.message || 'The queued job was already claimed by a polling worker.')
+        }
+
+        directClaimed = true
+
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         const workerToken = process.env.LIVE_AGENT_WORKER_TOKEN
         if (workerToken) headers.Authorization = `Bearer ${workerToken}`
@@ -173,6 +195,7 @@ export async function POST(req: Request) {
             audit_id: auditId,
             user_id: user.id,
             target_url: targetUrl,
+            job_id: job.id,
           }),
         })
 
@@ -180,6 +203,25 @@ export async function POST(req: Request) {
           throw new Error(`Worker returned ${workerResponse.status}`)
         }
       } catch (error) {
+        if (!directClaimed) {
+          return NextResponse.json({ session, queued: true, workerAccepted: false, dispatchSkipped: true })
+        }
+
+        if (directClaimed) {
+          await supabase
+            .from('agent_jobs')
+            .update({
+              status: 'queued',
+              worker_id: null,
+              claimed_at: null,
+              error_message: error instanceof Error ? `Direct dispatch failed: ${error.message}` : 'Direct dispatch failed.',
+            })
+            .eq('id', job.id)
+            .eq('user_id', user.id)
+            .eq('worker_id', 'direct-dispatch')
+            .in('status', ['claimed', 'queued'])
+        }
+
         await supabase
           .from('agent_sessions')
           .update({
