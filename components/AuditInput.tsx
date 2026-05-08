@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AuditLoading from '@/components/AuditLoading'
+import { supabase } from '@/lib/supabase'
 
 type PendingDemoAudit = {
   url: string
@@ -45,6 +46,7 @@ export default function AuditInput() {
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ total: 0, completed: 0, failed: 0, currentUrl: '' })
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null)
+  const [activeAuditUrl, setActiveAuditUrl] = useState<string | null>(null)
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [processingNotice, setProcessingNotice] = useState<string | null>(null)
   const [liveCaptions, setLiveCaptions] = useState<string[]>([])
@@ -65,6 +67,7 @@ export default function AuditInput() {
 
   const showAuditError = (message: string) => {
     setActiveAuditId(null)
+    setActiveAuditUrl(null)
     setActiveStatus(null)
     setProcessingNotice(null)
     setLiveCaptions([])
@@ -82,6 +85,29 @@ export default function AuditInput() {
 
     return raw
   }
+
+  const completeActiveAudit = useCallback((agent?: unknown) => {
+    setActiveStatus('completed')
+    setActiveAuditId(null)
+    setActiveAuditUrl(null)
+    setActiveStatus(null)
+    setProcessingNotice(null)
+    setProcessingStartedAt(null)
+    setLiveCaptions((prev) => {
+      const agentPayload = agent as { ok?: unknown; model?: unknown } | null | undefined
+      const completionLine = agentPayload && typeof agentPayload === 'object'
+        ? `Agent supplement: ${Boolean(agentPayload.ok) ? 'completed' : 'not available'}${agentPayload.model ? ` (${String(agentPayload.model)})` : ''}.`
+        : 'Audit completed.'
+
+      const next = [...prev]
+      if (next[next.length - 1] !== completionLine) next.push(completionLine)
+      return next
+    })
+    router.refresh()
+    window.setTimeout(() => {
+      router.refresh()
+    }, 900)
+  }, [router])
 
   useEffect(() => {
     try {
@@ -162,26 +188,8 @@ export default function AuditInput() {
         }
 
         if (nextStatus === 'completed') {
-          setActiveStatus(nextStatus)
           clearInterval(timer)
-          setActiveAuditId(null)
-          setActiveStatus(null)
-          setProcessingNotice(null)
-          setProcessingStartedAt(null)
-          setLiveCaptions((prev) => {
-            const agent = statusJson?.agent
-            const completionLine = agent && typeof agent === 'object'
-              ? `Agent supplement: ${Boolean((agent as { ok?: unknown }).ok) ? 'completed' : 'not available'}${(agent as { model?: unknown }).model ? ` (${String((agent as { model?: unknown }).model)})` : ''}.`
-              : 'Audit completed.'
-
-            const next = [...prev]
-            if (next[next.length - 1] !== completionLine) next.push(completionLine)
-            return next
-          })
-          router.refresh()
-          window.setTimeout(() => {
-            router.refresh()
-          }, 900)
+          completeActiveAudit(statusJson?.agent)
           return
         }
 
@@ -208,7 +216,63 @@ export default function AuditInput() {
     }, 1500)
 
     return () => clearInterval(timer)
-  }, [activeAuditId, activeStatus, processingStartedAt, router])
+  }, [activeAuditId, activeStatus, completeActiveAudit, processingStartedAt, router])
+
+  useEffect(() => {
+    if (!activeAuditId || activeStatus !== 'processing') return
+
+    const channel = supabase
+      .channel(`audit-input-${activeAuditId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'audits', filter: `id=eq.${activeAuditId}` },
+        (payload) => {
+          const updated = payload.new as { status?: string; error_message?: string | null; report_content?: { agent_supplement?: unknown } | null } | null
+          const nextStatus = String(updated?.status || '').toLowerCase()
+
+          if (typeof updated?.error_message === 'string' && updated.error_message.trim()) {
+            const message = updated.error_message.trim()
+            setLiveCaptions((prev) => {
+              if (prev[prev.length - 1] === message) return prev
+              return [...prev, message]
+            })
+          }
+
+          if (nextStatus === 'completed') {
+            completeActiveAudit(updated?.report_content?.agent_supplement)
+          }
+
+          if (nextStatus === 'failed' || nextStatus === 'cancelled') {
+            showAuditError(getFriendlyAuditError(updated?.error_message || (nextStatus === 'cancelled'
+              ? 'Audit was cancelled.'
+              : 'Audit failed. Please try again.')))
+            router.refresh()
+          }
+        }
+      )
+      .subscribe()
+
+    void fetch(`/api/audit/status?id=${encodeURIComponent(activeAuditId)}`, {
+      method: 'GET',
+      cache: 'no-store',
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((statusJson) => {
+        const nextStatus = String(statusJson?.status || '').toLowerCase()
+        if (nextStatus === 'completed') completeActiveAudit(statusJson?.agent)
+        if (nextStatus === 'failed' || nextStatus === 'cancelled') {
+          showAuditError(getFriendlyAuditError(statusJson?.error || (nextStatus === 'cancelled'
+            ? 'Audit was cancelled.'
+            : 'Audit failed. Please try again.')))
+          router.refresh()
+        }
+      })
+      .catch(() => undefined)
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [activeAuditId, activeStatus, completeActiveAudit, router])
 
   useEffect(() => {
     if (activeStatus !== 'processing' || !processingStartedAt) return
@@ -223,6 +287,30 @@ export default function AuditInput() {
 
     return () => window.clearTimeout(timer)
   }, [activeStatus, processingStartedAt])
+
+  useEffect(() => {
+    if (!activeAuditId || activeStatus !== 'processing') return
+
+    function handleCompletedAudit(event: Event) {
+      const detail = (event as CustomEvent<{ id?: string; websiteUrl?: string; createdAt?: string }>).detail
+      if (!detail) return
+
+      const isSameAudit = detail.id === activeAuditId
+      const isSameUrl = activeAuditUrl
+        ? normalizeWebsiteUrl(detail.websiteUrl || '') === normalizeWebsiteUrl(activeAuditUrl)
+        : false
+      const completedAt = detail.createdAt ? new Date(detail.createdAt).getTime() : 0
+      const startedAt = processingStartedAt || 0
+      const isRecentEnough = !startedAt || !completedAt || completedAt >= startedAt - 1000 * 60 * 5
+
+      if (isSameAudit || (isSameUrl && isRecentEnough)) {
+        completeActiveAudit()
+      }
+    }
+
+    window.addEventListener('audo:audit-completed', handleCompletedAudit)
+    return () => window.removeEventListener('audo:audit-completed', handleCompletedAudit)
+  }, [activeAuditId, activeAuditUrl, activeStatus, completeActiveAudit, processingStartedAt])
 
   const startAudit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -256,6 +344,7 @@ export default function AuditInput() {
 
       const auditId = initJson.id
       setActiveAuditId(auditId)
+      setActiveAuditUrl(normalizedUrl)
       setActiveStatus('processing')
       setProcessingNotice(null)
       setProcessingStartedAt(Date.now())

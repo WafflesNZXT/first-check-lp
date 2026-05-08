@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from html.parser import HTMLParser
 import os
 import re
 import socket
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urljoin, urlparse, urlunparse
+import xml.etree.ElementTree as ET
 
 import requests
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
@@ -17,6 +20,8 @@ from pydantic import BaseModel
 from browser_use import Agent, Browser, BrowserProfile, ChatGoogle, ChatOpenAI
 
 app = FastAPI()
+
+DEFAULT_REQUIRED_PATHS = ("/pricing", "/how-it-works", "/comparison", "/case-studies")
 
 
 def _load_local_env_files() -> None:
@@ -69,6 +74,20 @@ def _supabase_headers() -> dict[str, str]:
 def _supabase_rest_url(path: str) -> str:
     base = _required_env("NEXT_PUBLIC_SUPABASE_URL").rstrip("/")
     return f"{base}/rest/v1/{path.lstrip('/')}"
+
+
+def _supabase_storage_object_url(bucket: str, object_path: str) -> str:
+    base = _required_env("NEXT_PUBLIC_SUPABASE_URL").rstrip("/")
+    return f"{base}/storage/v1/object/{bucket}/{object_path.lstrip('/')}"
+
+
+def _supabase_public_storage_url(bucket: str, object_path: str) -> str:
+    base = _required_env("NEXT_PUBLIC_SUPABASE_URL").rstrip("/")
+    return f"{base}/storage/v1/object/public/{bucket}/{object_path.lstrip('/')}"
+
+
+def _screenshot_bucket() -> str:
+    return os.getenv("LIVE_AGENT_SCREENSHOT_BUCKET", "agent-screenshots")
 
 
 def _patch_session(session_id: str, payload: dict[str, Any]) -> None:
@@ -239,6 +258,78 @@ def _claim_next_job() -> dict[str, Any] | None:
     return claimed_rows[0] if claimed_rows else None
 
 
+def _recover_stale_jobs() -> None:
+    stale_after_seconds = int(os.getenv("LIVE_AGENT_STALE_AFTER_SECONDS", "240"))
+    response = requests.get(
+        _supabase_rest_url(
+            "agent_jobs?status=in.(claimed,running)&select=id,session_id,audit_id,user_id,target_url,status,attempts,max_attempts,claimed_at,started_at,worker_id&limit=25"
+        ),
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    response.raise_for_status()
+
+    for job in response.json():
+        session = _get_session_fields(str(job["session_id"]))
+        heartbeat_age = _seconds_since(session.get("last_heartbeat_at") if session else None)
+        claimed_age = _seconds_since(job.get("claimed_at"))
+        started_age = _seconds_since(job.get("started_at"))
+        age = heartbeat_age if heartbeat_age is not None else claimed_age if claimed_age is not None else started_age
+
+        if age is None or age < stale_after_seconds:
+            continue
+
+        attempts = int(job.get("attempts") or 0)
+        max_attempts = int(job.get("max_attempts") or 2)
+        can_retry = attempts < max_attempts
+        next_status = "queued" if can_retry else "failed"
+        message = (
+            "Previous worker stopped reporting progress, so this run was returned to the queue."
+            if can_retry
+            else "Live agent worker stopped reporting progress and the run reached its retry limit."
+        )
+
+        requests.patch(
+            _supabase_rest_url(f"agent_jobs?id=eq.{job['id']}"),
+            headers=_supabase_headers(),
+            json={
+                "status": next_status,
+                "worker_id": None if can_retry else job.get("worker_id"),
+                "claimed_at": None if can_retry else job.get("claimed_at"),
+                "started_at": None if can_retry else job.get("started_at"),
+                "finished_at": None if can_retry else _now_iso(),
+                "error_message": None if can_retry else message,
+            },
+            timeout=15,
+        ).raise_for_status()
+
+        _patch_session(
+            str(job["session_id"]),
+            {
+                "status": "queued" if can_retry else "failed",
+                "worker_id": None if can_retry else job.get("worker_id"),
+                "error_message": message,
+                "finished_at": None if can_retry else _now_iso(),
+            },
+        )
+        _insert_event(
+            session_id=str(job["session_id"]),
+            audit_id=str(job["audit_id"]),
+            user_id=str(job["user_id"]),
+            event_type="status" if can_retry else "error",
+            message=message,
+            current_url=str(job.get("target_url") or ""),
+            severity="medium",
+            metadata={
+                "source": "browser-worker",
+                "stale_recovery": True,
+                "stale_after_seconds": stale_after_seconds,
+                "attempts": attempts,
+                "max_attempts": max_attempts,
+            },
+        )
+
+
 def _normalize_target_url(url: str) -> str:
     trimmed = str(url or "").strip()
     if not trimmed:
@@ -250,13 +341,139 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _build_task(url: str) -> str:
+def _parse_iso(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _seconds_since(value: Any) -> float | None:
+    timestamp = _parse_iso(value)
+    if not timestamp:
+        return None
+    return (datetime.now(timezone.utc) - timestamp).total_seconds()
+
+
+class _LinkCollector(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.links: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() != "a":
+            return
+        for key, value in attrs:
+            if key.lower() == "href" and value:
+                self.links.append(value)
+
+
+def _same_origin(url: str, base_url: str) -> bool:
+    parsed = urlparse(url)
+    base = urlparse(base_url)
+    return parsed.scheme in {"http", "https"} and parsed.netloc.lower() == base.netloc.lower()
+
+
+def _clean_url(url: str) -> str:
+    parsed = urlparse(url)
+    return urlunparse((parsed.scheme, parsed.netloc, parsed.path.rstrip("/") or "/", "", "", ""))
+
+
+def _fetch_text(url: str) -> str | None:
+    try:
+        response = requests.get(
+            url,
+            headers={"User-Agent": "AudoLiveAgent/1.0 (+https://useaudo.com)"},
+            timeout=10,
+            allow_redirects=True,
+        )
+        if response.status_code >= 400:
+            return None
+        return response.text[:1_500_000]
+    except Exception:
+        return None
+
+
+def _discover_sitemap_urls(base_url: str) -> list[str]:
+    sitemap_text = _fetch_text(urljoin(base_url.rstrip("/") + "/", "sitemap.xml"))
+    if not sitemap_text:
+        return []
+
+    try:
+        root = ET.fromstring(sitemap_text.encode("utf-8"))
+    except Exception:
+        return []
+
+    urls: list[str] = []
+    for element in root.iter():
+        if element.tag.lower().endswith("loc") and element.text:
+            candidate = _clean_url(element.text.strip())
+            if _same_origin(candidate, base_url):
+                urls.append(candidate)
+    return urls
+
+
+def _discover_homepage_links(base_url: str) -> list[str]:
+    html = _fetch_text(base_url)
+    if not html:
+        return []
+
+    parser = _LinkCollector()
+    try:
+        parser.feed(html)
+    except Exception:
+        return []
+
+    urls: list[str] = []
+    for href in parser.links:
+        if href.startswith(("#", "mailto:", "tel:", "javascript:")):
+            continue
+        candidate = _clean_url(urljoin(base_url, href))
+        if _same_origin(candidate, base_url):
+            urls.append(candidate)
+    return urls
+
+
+def _discover_audit_pages(url: str) -> list[str]:
+    base_url = _clean_url(url)
+    discovered = [base_url]
+    discovered.extend(_discover_sitemap_urls(base_url))
+    discovered.extend(_discover_homepage_links(base_url))
+    discovered.extend(_clean_url(urljoin(base_url.rstrip("/") + "/", path.lstrip("/"))) for path in DEFAULT_REQUIRED_PATHS)
+
+    seen: set[str] = set()
+    unique = []
+    for candidate in discovered:
+        normalized = _clean_url(candidate)
+        if normalized in seen or not _same_origin(normalized, base_url):
+            continue
+        seen.add(normalized)
+        unique.append(normalized)
+
+    priority_terms = ("pricing", "case", "study", "works", "comparison", "compare", "about", "features", "customers", "demo")
+
+    def score(candidate: str) -> int:
+        path = urlparse(candidate).path.lower()
+        if candidate == base_url:
+            return -100
+        return min((index for index, term in enumerate(priority_terms) if term in path), default=100)
+
+    return sorted(unique, key=score)[:12]
+
+
+def _build_task(url: str, discovered_urls: list[str] | None = None) -> str:
     base_url = url.rstrip("/")
+    discovered_list = discovered_urls or [url]
+    page_list = "\n".join(f"- {page}" for page in discovered_list[:12])
     return (
         f"Act like a senior conversion auditor. Open {url} and visibly inspect it like a human user. "
         "Do not log into anything, submit paid/contact/signup forms, edit files, update todo.md, or open external domains. "
         "Be efficient: inspect the homepage first, then visit the most important internal pages directly instead of repeatedly rescanning the same page. "
         f"Required pages to check if they load: {base_url}/pricing, {base_url}/how-it-works, {base_url}/comparison, and {base_url}/case-studies. "
+        "Use this discovered page plan before improvising:\n"
+        f"{page_list}\n"
         "If a required page returns 404 or redirects, note that and move on. "
         "Scroll each important page enough to understand the offer, proof, objections, CTAs, accessibility, SEO, and trust issues. "
         "Interact with safe public UI: open and close modals, click tabs/accordions, and try free score/demo widgets using the audited URL if a URL input is visible. "
@@ -312,20 +529,33 @@ def _save_screenshot(session_id: str, step: int, screenshot_b64: str | None) -> 
     if not screenshot_b64:
         return None
 
-    public_dir = Path(__file__).resolve().parents[1] / "public" / "agent-screenshots"
-    public_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{session_id}-{step}.jpg"
-    path = public_dir / filename
-
     try:
-        path.write_bytes(base64.b64decode(screenshot_b64))
+        return _save_screenshot_bytes(session_id, step, base64.b64decode(screenshot_b64))
     except Exception:
         return None
 
-    return f"/agent-screenshots/{filename}"
+
+def _upload_screenshot_bytes(session_id: str, step: int, screenshot: bytes) -> str | None:
+    bucket = _screenshot_bucket()
+    object_path = f"{session_id}/{step}.jpg"
+    headers = {
+        "apikey": _required_env("SUPABASE_SERVICE_ROLE_KEY"),
+        "Authorization": f"Bearer {_required_env('SUPABASE_SERVICE_ROLE_KEY')}",
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "3600",
+        "x-upsert": "true",
+    }
+    response = requests.post(
+        _supabase_storage_object_url(bucket, object_path),
+        headers=headers,
+        data=screenshot,
+        timeout=20,
+    )
+    response.raise_for_status()
+    return _supabase_public_storage_url(bucket, object_path)
 
 
-def _save_screenshot_bytes(session_id: str, step: int, screenshot: bytes | None) -> str | None:
+def _save_screenshot_locally(session_id: str, step: int, screenshot: bytes | None) -> str | None:
     if not screenshot:
         return None
 
@@ -342,6 +572,18 @@ def _save_screenshot_bytes(session_id: str, step: int, screenshot: bytes | None)
     return f"/agent-screenshots/{filename}"
 
 
+def _save_screenshot_bytes(session_id: str, step: int, screenshot: bytes | None) -> str | None:
+    if not screenshot:
+        return None
+
+    try:
+        return _upload_screenshot_bytes(session_id, step, screenshot)
+    except Exception:
+        if _get_bool_env("LIVE_AGENT_LOCAL_SCREENSHOT_FALLBACK", True):
+            return _save_screenshot_locally(session_id, step, screenshot)
+        return None
+
+
 def _get_session_status(session_id: str) -> str | None:
     response = requests.get(
         _supabase_rest_url(f"agent_sessions?id=eq.{session_id}&select=status"),
@@ -353,6 +595,17 @@ def _get_session_status(session_id: str) -> str | None:
     if not rows:
         return None
     return str(rows[0].get("status") or "")
+
+
+def _get_session_fields(session_id: str) -> dict[str, Any] | None:
+    response = requests.get(
+        _supabase_rest_url(f"agent_sessions?id=eq.{session_id}&select=id,status,last_heartbeat_at,audit_id,user_id,target_url"),
+        headers=_supabase_headers(),
+        timeout=10,
+    )
+    response.raise_for_status()
+    rows = response.json()
+    return rows[0] if rows else None
 
 
 def _parse_findings(final_result: str) -> list[dict[str, str]]:
@@ -533,6 +786,7 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
     auth_steps = 0
     worker_id = _worker_id()
     live_view_url = _live_view_url_for_session(request.session_id)
+    discovered_urls = await asyncio.to_thread(_discover_audit_pages, target_url)
 
     try:
         _patch_job(
@@ -578,6 +832,18 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
             cursor_y=18,
             scroll_y=0,
             metadata={"source": "browser-worker", "waiting_for_first_frame": True},
+        )
+        _insert_event(
+            session_id=request.session_id,
+            audit_id=request.audit_id,
+            user_id=request.user_id,
+            event_type="status",
+            message=f"Discovered {len(discovered_urls)} internal pages to guide the walkthrough.",
+            current_url=target_url,
+            cursor_x=22,
+            cursor_y=18,
+            scroll_y=0,
+            metadata={"source": "browser-worker", "discovered_urls": discovered_urls[:12]},
         )
 
         async def on_step(state: Any, output: Any, step: int) -> None:
@@ -711,7 +977,7 @@ async def _run_browser_agent(request: RunSessionRequest) -> None:
         for restart_attempt in range(max_browser_restarts + 1):
             try:
                 agent = Agent(
-                    task=_build_task(target_url),
+                    task=_build_task(target_url, discovered_urls),
                     llm=_build_llm(),
                     browser=browser,
                     use_vision=True,
@@ -856,6 +1122,7 @@ async def _poll_jobs_forever() -> None:
     interval = float(os.getenv("LIVE_AGENT_POLL_INTERVAL_SECONDS", "2.5"))
     while True:
         try:
+            await asyncio.to_thread(_recover_stale_jobs)
             job = await asyncio.to_thread(_claim_next_job)
             if job:
                 request = RunSessionRequest(

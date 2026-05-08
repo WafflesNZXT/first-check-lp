@@ -24,6 +24,18 @@ type AuditRow = {
   report_content?: AuditReportContent | null
 }
 
+function announceCompletedAudit(audit: AuditRow) {
+  if (typeof window === 'undefined' || audit.status !== 'completed') return
+
+  window.dispatchEvent(new CustomEvent('audo:audit-completed', {
+    detail: {
+      id: audit.id,
+      websiteUrl: audit.website_url,
+      createdAt: audit.created_at,
+    },
+  }))
+}
+
 function getChecklistStats(audit: AuditRow) {
   const report = (audit?.report_content || {}) as AuditReportContent
   const checklist = Array.isArray(report.checklist) ? report.checklist : []
@@ -40,7 +52,11 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: Au
   const router = useRouter()
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setAudits(initialAudits || []), 0)
+    const timer = window.setTimeout(() => {
+      const nextAudits = initialAudits || []
+      setAudits(nextAudits)
+      nextAudits.filter((audit) => audit.status === 'completed').forEach(announceCompletedAudit)
+    }, 0)
     return () => window.clearTimeout(timer)
   }, [initialAudits])
 
@@ -50,6 +66,7 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: Au
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'audits', filter: `user_id=eq.${userId}` }, (payload) => {
         const inserted = payload.new as AuditRow | null
         if (!inserted || inserted.status !== 'completed') return
+        announceCompletedAudit(inserted)
         setAudits((prev) => {
           const exists = prev.some((a) => a.id === inserted.id)
           if (exists) return prev
@@ -59,6 +76,7 @@ export default function AuditList({ initialAudits, userId }: { initialAudits: Au
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'audits', filter: `user_id=eq.${userId}` }, (payload) => {
         const updated = payload.new as AuditRow | null
         if (!updated) return
+        if (updated.status === 'completed') announceCompletedAudit(updated)
         setAudits((prev) => {
           const exists = prev.some((a) => a.id === updated.id)
           if (!exists) {

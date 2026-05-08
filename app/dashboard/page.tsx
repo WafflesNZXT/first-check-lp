@@ -281,7 +281,7 @@ function PortfolioTrendChart({ data, delta }: { data: PortfolioTrendPoint[]; del
   const width = 360
   const height = 160
   const paddingX = 16
-  const paddingY = 18
+  const paddingY = 32
   const chartWidth = width - paddingX * 2
   const chartHeight = height - paddingY * 2
   const points = data.length > 0 ? data : []
@@ -337,6 +337,27 @@ function PortfolioTrendChart({ data, delta }: { data: PortfolioTrendPoint[]; del
               <polyline points={linePoints} fill="none" stroke={trendColor} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
               {coordinates.map((point, index) => (
                 <g key={`${point.id}-${index}`}>
+                  <title>{`${point.websiteUrl} scored ${point.score} on ${point.label}`}</title>
+                  <rect
+                    x={point.x - 15}
+                    y={Math.max(4, point.y - 28)}
+                    width="30"
+                    height="18"
+                    rx="9"
+                    fill="#ffffff"
+                    stroke="#e5e7eb"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={point.x}
+                    y={Math.max(17, point.y - 15)}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontWeight="900"
+                    fill="#111827"
+                  >
+                    {point.score}
+                  </text>
                   <circle cx={point.x} cy={point.y} r="5" fill="#ffffff" stroke={trendColor} strokeWidth="3" />
                   {index === coordinates.length - 1 && <circle cx={point.x} cy={point.y} r="9" fill={trendColor} opacity="0.16" />}
                 </g>

@@ -18,6 +18,9 @@ primary_region = 'sjc'
   LIVE_AGENT_RUN_TIMEOUT_SECONDS = "300"
   LIVE_AGENT_STEP_TIMEOUT_SECONDS = "60"
   TIMEOUT_BrowserStartEvent = "90"
+  LIVE_AGENT_STALE_AFTER_SECONDS = "240"
+  LIVE_AGENT_SCREENSHOT_BUCKET = "agent-screenshots"
+  LIVE_AGENT_LOCAL_SCREENSHOT_FALLBACK = "false"
 
 [http_service]
   internal_port = 8080

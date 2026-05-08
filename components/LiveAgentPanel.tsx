@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bot, Check, CheckCircle2, Code2, MousePointer2, Pause, Play, Radar, RotateCcw, ScrollText, Sparkles, Video, X } from 'lucide-react'
+import { AlertTriangle, Bot, Check, CheckCircle2, Clock3, Code2, MousePointer2, Pause, Play, Radar, RotateCcw, ScrollText, Sparkles, Video, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type AgentSession = {
@@ -123,6 +123,69 @@ function getSeverityTone(severity: AgentEvent['severity']) {
   }
 }
 
+function getRunStatusCopy(session: AgentSession | null, eventAgeSeconds: number, frameCount: number) {
+  if (!session) {
+    return {
+      title: 'Ready',
+      copy: 'Start a hosted browser run to stream navigation, frames, and findings here.',
+      tone: 'border-gray-200 bg-gray-50 text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300',
+      Icon: Bot,
+    }
+  }
+
+  if (session.status === 'queued') {
+    return {
+      title: 'Queued',
+      copy: 'The run is saved in Supabase and waiting for the Fly worker to claim it.',
+      tone: 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/25 dark:text-blue-200',
+      Icon: Clock3,
+    }
+  }
+
+  if (session.status === 'running' && eventAgeSeconds > 90) {
+    return {
+      title: 'Needs attention',
+      copy: `No worker update for ${eventAgeSeconds}s. You can stop it, or the worker recovery loop can re-queue stale jobs.`,
+      tone: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-200',
+      Icon: AlertTriangle,
+    }
+  }
+
+  if (session.status === 'running') {
+    return {
+      title: 'Running',
+      copy: frameCount > 0 ? `${frameCount} browser frame${frameCount === 1 ? '' : 's'} captured so far.` : 'The browser worker is active and waiting for the first frame.',
+      tone: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200',
+      Icon: Radar,
+    }
+  }
+
+  if (session.status === 'completed') {
+    return {
+      title: 'Completed',
+      copy: frameCount > 0 ? `${frameCount} frames were recorded and findings were added to the audit checklist.` : 'The worker finished and added its result to the audit.',
+      tone: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200',
+      Icon: CheckCircle2,
+    }
+  }
+
+  if (session.status === 'cancelled') {
+    return {
+      title: 'Cancelled',
+      copy: 'This run was stopped from the dashboard.',
+      tone: 'border-gray-200 bg-gray-50 text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300',
+      Icon: X,
+    }
+  }
+
+  return {
+    title: 'Failed',
+    copy: session.error_message || 'The browser worker could not finish this run.',
+    tone: 'border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/25 dark:text-red-200',
+    Icon: AlertTriangle,
+  }
+}
+
 function splitFindingText(message: string) {
   const [issuePart, evidencePart = ''] = message.split(/\s+Evidence:\s+/i)
   return {
@@ -165,6 +228,8 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
   const latestEventAgeSeconds = latestEvent ? Math.floor((Date.now() - new Date(latestEvent.created_at).getTime()) / 1000) : 0
   const isWaitingForFrame = activeSession?.status === 'running' && !latestScreenshotUrl
   const isStaleRun = activeSession?.status === 'running' && latestEventAgeSeconds > 90
+  const runStatus = getRunStatusCopy(activeSession, latestEventAgeSeconds, screenshotEvents.length)
+  const RunStatusIcon = runStatus.Icon
 
   const findings = useMemo(() => {
     return events.filter((event) => event.event_type === 'finding')
@@ -530,6 +595,34 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
           {activeSession.error_message}
         </div>
       )}
+
+      <div className={`rounded-2xl border p-3 sm:p-4 ${runStatus.tone}`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/70 dark:bg-slate-950/50">
+              <RunStatusIcon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-black">{runStatus.title}</p>
+              <p className="mt-1 text-xs font-semibold opacity-80">{runStatus.copy}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-widest sm:min-w-[260px]">
+            <div className="rounded-xl bg-white/70 px-2 py-2 dark:bg-slate-950/50">
+              <p className="text-base font-black tabular-nums">{events.length}</p>
+              <p className="opacity-60">Events</p>
+            </div>
+            <div className="rounded-xl bg-white/70 px-2 py-2 dark:bg-slate-950/50">
+              <p className="text-base font-black tabular-nums">{screenshotEvents.length}</p>
+              <p className="opacity-60">Frames</p>
+            </div>
+            <div className="rounded-xl bg-white/70 px-2 py-2 dark:bg-slate-950/50">
+              <p className="text-base font-black tabular-nums">{findings.length}</p>
+              <p className="opacity-60">Finds</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)]">
         <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-slate-950">
