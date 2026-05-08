@@ -153,8 +153,7 @@ function extractThirdPartyResources(pageUrl: string, siteContent: string) {
 }
 
 function isAgentSupplementEnabled() {
-  const enabledRaw = String(process.env.AUDIT_AGENT_SUPPLEMENT_ENABLED || 'false').toLowerCase()
-  return enabledRaw === '1' || enabledRaw === 'true' || enabledRaw === 'yes'
+  return false
 }
 
 async function runAgentSupplement(url: string) {

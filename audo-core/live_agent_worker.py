@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from browser_use import Agent, Browser, BrowserProfile, ChatGoogle, ChatOpenAI
 
 app = FastAPI()
+_ensured_storage_buckets: set[str] = set()
 
 DEFAULT_REQUIRED_PATHS = ("/pricing", "/how-it-works", "/comparison", "/case-studies")
 
@@ -76,18 +77,21 @@ def _supabase_rest_url(path: str) -> str:
     return f"{base}/rest/v1/{path.lstrip('/')}"
 
 
-def _supabase_storage_object_url(bucket: str, object_path: str) -> str:
+def _supabase_storage_url(path: str) -> str:
     base = _required_env("NEXT_PUBLIC_SUPABASE_URL").rstrip("/")
-    return f"{base}/storage/v1/object/{bucket}/{object_path.lstrip('/')}"
+    return f"{base}/storage/v1/{path.lstrip('/')}"
+
+
+def _supabase_storage_object_url(bucket: str, object_path: str) -> str:
+    return _supabase_storage_url(f"object/{bucket}/{object_path.lstrip('/')}")
 
 
 def _supabase_public_storage_url(bucket: str, object_path: str) -> str:
-    base = _required_env("NEXT_PUBLIC_SUPABASE_URL").rstrip("/")
-    return f"{base}/storage/v1/object/public/{bucket}/{object_path.lstrip('/')}"
+    return _supabase_storage_url(f"object/public/{bucket}/{object_path.lstrip('/')}")
 
 
 def _screenshot_bucket() -> str:
-    return os.getenv("LIVE_AGENT_SCREENSHOT_BUCKET", "agent-screenshots")
+    return os.getenv("LIVE_AGENT_SCREENSHOT_BUCKET", "agent-screenshots").strip() or "agent-screenshots"
 
 
 def _patch_session(session_id: str, payload: dict[str, Any]) -> None:
@@ -538,6 +542,7 @@ def _save_screenshot(session_id: str, step: int, screenshot_b64: str | None) -> 
 def _upload_screenshot_bytes(session_id: str, step: int, screenshot: bytes) -> str | None:
     bucket = _screenshot_bucket()
     object_path = f"{session_id}/{step}.jpg"
+    _ensure_screenshot_bucket(bucket)
     headers = {
         "apikey": _required_env("SUPABASE_SERVICE_ROLE_KEY"),
         "Authorization": f"Bearer {_required_env('SUPABASE_SERVICE_ROLE_KEY')}",
@@ -563,13 +568,43 @@ def _save_screenshot_locally(session_id: str, step: int, screenshot: bytes | Non
     public_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{session_id}-{step}.jpg"
     path = public_dir / filename
-
     try:
         path.write_bytes(screenshot)
     except Exception:
         return None
 
     return f"/agent-screenshots/{filename}"
+
+
+def _ensure_screenshot_bucket(bucket: str) -> None:
+    if bucket in _ensured_storage_buckets:
+        return
+
+    lookup = requests.get(
+        _supabase_storage_url(f"bucket/{bucket}"),
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    if lookup.ok:
+        _ensured_storage_buckets.add(bucket)
+        return
+
+    response = requests.post(
+        _supabase_storage_url("bucket"),
+        headers=_supabase_headers(),
+        json={
+            "id": bucket,
+            "name": bucket,
+            "public": True,
+            "file_size_limit": 5242880,
+            "allowed_mime_types": ["image/jpeg", "image/png", "image/webp"],
+        },
+        timeout=15,
+    )
+    if response.status_code not in {200, 201, 409} and "already" not in response.text.lower():
+        response.raise_for_status()
+
+    _ensured_storage_buckets.add(bucket)
 
 
 def _save_screenshot_bytes(session_id: str, step: int, screenshot: bytes | None) -> str | None:

@@ -21,6 +21,7 @@ primary_region = 'sjc'
   LIVE_AGENT_STALE_AFTER_SECONDS = "240"
   LIVE_AGENT_SCREENSHOT_BUCKET = "agent-screenshots"
   LIVE_AGENT_LOCAL_SCREENSHOT_FALLBACK = "false"
+  BROWSER_USE_CDP_CONNECT_TIMEOUT = "60"
 
 [http_service]
   internal_port = 8080
@@ -33,5 +34,5 @@ primary_region = 'sjc'
 [[vm]]
   memory = '2gb'
   cpu_kind = 'shared'
-  cpus = 1
+  cpus = 2
   memory_mb = 2048

@@ -205,6 +205,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
   const [replayIndex, setReplayIndex] = useState(0)
   const [completedFindingIds, setCompletedFindingIds] = useState<number[]>([])
   const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
+  const [brokenScreenshotUrls, setBrokenScreenshotUrls] = useState<string[]>([])
   const confettiBurstIdRef = useRef(0)
   const localRunIdRef = useRef(0)
 
@@ -215,10 +216,10 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
   }
   const scrollY = Math.max(0, Math.min(100, Number(latestEvent?.scroll_y ?? 0)))
   const isRunning = activeSession?.status === 'queued' || activeSession?.status === 'running' || isStarting || isStartingWorker
-  const latestScreenshotUrl = [...events].reverse().find((event) => event.screenshot_url)?.screenshot_url || null
+  const latestScreenshotUrl = [...events].reverse().find((event) => event.screenshot_url && !brokenScreenshotUrls.includes(event.screenshot_url))?.screenshot_url || null
   const screenshotEvents = useMemo(() => {
-    return events.filter((event) => event.screenshot_url)
-  }, [events])
+    return events.filter((event) => event.screenshot_url && !brokenScreenshotUrls.includes(event.screenshot_url))
+  }, [brokenScreenshotUrls, events])
   const replayEvent = screenshotEvents[Math.min(replayIndex, Math.max(0, screenshotEvents.length - 1))]
   const canReplay = Boolean(activeSession?.replay_url || screenshotEvents.length > 0)
   const liveViewUrl = activeSession?.live_view_url || null
@@ -647,6 +648,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
                 src={latestScreenshotUrl}
                 alt="Live browser screenshot"
                 className="h-full w-full object-cover"
+                onError={() => setBrokenScreenshotUrls((prev) => (prev.includes(latestScreenshotUrl) ? prev : [...prev, latestScreenshotUrl]))}
               />
             ) : activeSession?.status === 'running' || activeSession?.status === 'queued' ? (
               <>
@@ -888,7 +890,16 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
             <div className="relative aspect-video bg-black">
               {replayEvent?.screenshot_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={replayEvent.screenshot_url} alt="Recorded agent step" className="h-full w-full object-contain" />
+                <img
+                  src={replayEvent.screenshot_url}
+                  alt="Recorded agent step"
+                  className="h-full w-full object-contain"
+                  onError={() => {
+                    const brokenUrl = replayEvent.screenshot_url
+                    if (!brokenUrl) return
+                    setBrokenScreenshotUrls((prev) => (prev.includes(brokenUrl) ? prev : [...prev, brokenUrl]))
+                  }}
+                />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm font-bold text-slate-400">No recorded frames yet.</div>
               )}

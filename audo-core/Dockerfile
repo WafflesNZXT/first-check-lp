@@ -7,6 +7,7 @@ ENV LIVE_AGENT_WORKER_HOST=0.0.0.0
 ENV LIVE_AGENT_WORKER_PORT=8080
 ENV LIVE_AGENT_POLL_JOBS=true
 ENV TIMEOUT_BrowserStartEvent=90
+ENV BROWSER_USE_CDP_CONNECT_TIMEOUT=60
 
 WORKDIR /app
 
@@ -17,6 +18,9 @@ RUN apt-get update \
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
   && python -m playwright install chromium --with-deps
+
+RUN python -c "from pathlib import Path; import browser_use; p = Path(browser_use.__file__).parent / 'browser' / 'session.py'; s = p.read_text(); s = s.replace('import logging\n', 'import logging\nimport os\n', 1); s = s.replace('timeout=15.0)', 'timeout=float(os.getenv(\"BROWSER_USE_CDP_CONNECT_TIMEOUT\", \"60\")))'); p.write_text(s)" \
+  && python -c "from pathlib import Path; import browser_use; p = Path(browser_use.__file__).parent / 'browser' / 'session.py'; s = p.read_text(); assert 'BROWSER_USE_CDP_CONNECT_TIMEOUT' in s; print('browser_use CDP connect timeout patched')"
 
 COPY live_agent_worker.py ./live_agent_worker.py
 

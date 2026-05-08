@@ -79,6 +79,20 @@ create index if not exists idx_agent_jobs_status_priority_created_at
 create index if not exists idx_agent_jobs_session_id
   on public.agent_jobs(session_id);
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('agent-screenshots', 'agent-screenshots', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists agent_screenshots_public_select on storage.objects;
+create policy agent_screenshots_public_select
+on storage.objects
+for select
+using (bucket_id = 'agent-screenshots');
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
