@@ -8,9 +8,16 @@ export async function GET(request: Request) {
   const flow = searchParams.get('flow')
   const rawNext = searchParams.get('next') ?? '/dashboard'
   const next = rawNext.startsWith('/') ? rawNext : '/dashboard'
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+  const redirectOrigin = process.env.NODE_ENV === 'development'
+    ? origin
+    : forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : origin
 
   const sendToSignIn = (reason: string) => {
-    const target = `${origin}/signin?next=${encodeURIComponent(next)}&auth=${encodeURIComponent(reason)}`
+    const target = `${redirectOrigin}/signin?next=${encodeURIComponent(next)}&auth=${encodeURIComponent(reason)}`
     return NextResponse.redirect(target)
   }
 
@@ -21,26 +28,25 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
+          getAll() {
+            return cookieStore.getAll()
           },
-          set(name: string, value: string, options: CookieOptions) {
-            cookieStore.set({ name, value, ...options })
-          },
-          remove(name: string, options: CookieOptions) {
-            cookieStore.set({ name, value: '', ...options })
+          setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set({ name, value, ...options })
+            })
           },
         },
       }
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${redirectOrigin}${next}`)
     }
 
     const { data: sessionData } = await supabase.auth.getSession()
     if (sessionData?.session) {
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${redirectOrigin}${next}`)
     }
 
     if (flow === 'oauth') {

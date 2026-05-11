@@ -368,17 +368,33 @@ export default function PredictPage() {
           <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-auto">
             <div className="bg-white/90 dark:bg-slate-900/85 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-center shadow-lg max-w-sm w-full">
               <h3 className="text-lg font-black text-black dark:text-white mb-2">Upgrade to Pro</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Predict is a Pro feature. Upgrade to unlock content forecasting and fine-grained model insights.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Predict is a Pro feature. Upgrade to unlock pre-ship content forecasting and model notes.</p>
               <a href="/pricing" className="inline-block bg-black dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-2xl font-black">Unlock Predict</a>
             </div>
           </div>
         )}
 
         <header className="border-b border-black/10 pb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-400">SEO Forecast</p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight text-black sm:text-6xl">Predict Content Performance</h1>
-          <p className="mt-3 max-w-2xl text-sm font-medium text-gray-500 sm:text-base">Paste code or content, run prediction per file tab, and compare model notes without losing previous drafts.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-gray-400">Predict</p>
+          <h1 className="mt-3 text-4xl font-black tracking-tight text-black sm:text-6xl">Forecast Before You Ship</h1>
+          <p className="mt-3 max-w-2xl text-sm font-medium text-gray-500 sm:text-base">
+            Test landing page copy, HTML, or content drafts before they go live. Audo estimates score movement and calls out the risks that could hurt conversion, readability, or SEO.
+          </p>
         </header>
+
+        <section className="grid gap-3 sm:grid-cols-3">
+          {[
+            ['1', 'Paste a draft', 'Drop in page copy, HTML, metadata, or a component you are about to ship.'],
+            ['2', 'Run a forecast', 'Predict scores, readability, and likely red flags before touching production.'],
+            ['3', 'Use the notes', 'Turn model feedback into a tighter audit checklist or a coding-agent task.'],
+          ].map(([step, title, copy]) => (
+            <div key={step} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <span className="inline-grid h-7 w-7 place-items-center rounded-full bg-black text-xs font-black text-white dark:bg-white dark:text-slate-950">{step}</span>
+              <h2 className="mt-3 text-sm font-black text-black dark:text-white">{title}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-slate-400">{copy}</p>
+            </div>
+          ))}
+        </section>
 
         <div className={`rounded-[1.7rem] audo-panel border p-4 shadow-sm space-y-4 ${locked ? 'pointer-events-none opacity-60' : ''}`}>
           <div className="flex flex-wrap items-center gap-2">

@@ -5,6 +5,14 @@ import { cookies } from 'next/headers'
 const AGENT_SESSION_SELECT = 'id,audit_id,user_id,target_url,status,mode,current_url,live_view_url,replay_url,worker_id,last_heartbeat_at,summary,error_message,started_at,finished_at,created_at,updated_at'
 const SETUP_MESSAGE = 'Live agent database setup is not applied yet. Run supabase/agent_sessions.sql in Supabase SQL editor, then try again.'
 
+function getWorkerBase() {
+  const configured = String(process.env.LIVE_AGENT_WORKER_URL || '').replace(/\/$/, '')
+  if (process.env.NODE_ENV === 'development' && configured.includes('audo-live-agent.fly.dev')) {
+    return 'http://127.0.0.1:8001'
+  }
+  return configured
+}
+
 function isSchemaSetupError(error: unknown) {
   const message = String((error as { message?: unknown })?.message || error || '').toLowerCase()
   return (
@@ -146,7 +154,7 @@ export async function POST(req: Request) {
           audit_id: auditId,
           user_id: user.id,
           event_type: 'status',
-          message: 'Live agent queued. A hosted browser worker will pick up this run automatically.',
+          message: 'Live agent queued. The browser worker will pick up this run automatically.',
           current_url: targetUrl,
           cursor_x: 12,
           cursor_y: 14,
@@ -159,7 +167,7 @@ export async function POST(req: Request) {
       console.error('Live agent queued event failed', eventError)
     }
 
-    const workerBase = String(process.env.LIVE_AGENT_WORKER_URL || '').replace(/\/$/, '')
+    const workerBase = getWorkerBase()
 
     if (workerBase) {
       let directClaimed = false

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Bot, Check, CheckCircle2, Clock3, Code2, MousePointer2, Pause, Play, Radar, RotateCcw, ScrollText, Sparkles, Video, X } from 'lucide-react'
+import { type Dispatch, type RefObject, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react'
+import { AlertTriangle, Bot, Check, CheckCircle2, Clock3, Code2, Maximize2, MousePointer2, Pause, Play, Radar, RotateCcw, ScrollText, Sparkles, Video, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type AgentSession = {
@@ -136,7 +136,7 @@ function getRunStatusCopy(session: AgentSession | null, eventAgeSeconds: number,
   if (session.status === 'queued') {
     return {
       title: 'Queued',
-      copy: 'The run is saved in Supabase and waiting for the Fly worker to claim it.',
+      copy: 'The run is saved in Supabase and waiting for the browser worker to claim it.',
       tone: 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/25 dark:text-blue-200',
       Icon: Clock3,
     }
@@ -194,6 +194,213 @@ function splitFindingText(message: string) {
   }
 }
 
+function LiveStreamViewport({
+  activeSession,
+  latestCursor,
+  latestEvent,
+  latestScreenshotUrl,
+  liveViewUrl,
+  previewUrl,
+  scrollY,
+  setBrokenScreenshotUrls,
+  variant = 'panel',
+}: {
+  activeSession: AgentSession | null
+  latestCursor: { x: number; y: number }
+  latestEvent: AgentEvent | undefined
+  latestScreenshotUrl: string | null
+  liveViewUrl: string | null
+  previewUrl: string
+  scrollY: number
+  setBrokenScreenshotUrls: Dispatch<SetStateAction<string[]>>
+  variant?: 'panel' | 'fullscreen'
+}) {
+  const heightClass = variant === 'fullscreen' ? 'h-[52vh] min-h-[320px] lg:h-[62vh] lg:min-h-[360px]' : 'h-[320px]'
+  const cursorScale = variant === 'fullscreen' ? 'scale-125' : ''
+  const isLive = activeSession?.status === 'running'
+  const isQueued = activeSession?.status === 'queued'
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-slate-950">
+      <div className="flex items-center gap-2 border-b border-white/10 bg-slate-900 px-4 py-3">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+        <span className="ml-2 truncate rounded-lg bg-white/8 px-3 py-1 text-xs text-slate-300">{previewUrl}</span>
+      </div>
+
+      <div className={`relative overflow-hidden bg-slate-100 dark:bg-slate-950 ${heightClass}`}>
+        {liveViewUrl ? (
+          <iframe
+            src={liveViewUrl}
+            title="Live browser session"
+            className="h-full w-full border-0 bg-white"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          />
+        ) : latestScreenshotUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={latestScreenshotUrl}
+            alt="Live browser screenshot"
+            className={`h-full w-full bg-white ${variant === 'fullscreen' ? 'object-contain' : 'object-cover'}`}
+            onError={() => setBrokenScreenshotUrls((prev) => (prev.includes(latestScreenshotUrl) ? prev : [...prev, latestScreenshotUrl]))}
+          />
+        ) : isLive || isQueued ? (
+          <>
+            <iframe
+              src={previewUrl}
+              title="Live browser target preview"
+              className="h-full w-full border-0 bg-white"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+            />
+            <div className="absolute inset-x-4 bottom-4 rounded-xl border border-white/70 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm">
+              {isQueued
+                ? 'The live agent run is queued. The browser worker will pick it up automatically.'
+                : 'Waiting for the first browser frame. Showing the target page directly for now.'}
+            </div>
+          </>
+        ) : (
+          <div
+            className="absolute inset-x-0 top-0 transition-transform duration-1000 ease-out"
+            style={{ transform: `translateY(-${scrollY * 2.2}px)` }}
+          >
+            <div className="h-[220px] bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-6 text-white">
+              <div className="h-5 w-28 rounded-full bg-white/20" />
+              <div className="mt-8 h-10 w-4/5 rounded-xl bg-white/85" />
+              <div className="mt-3 h-4 w-3/5 rounded-lg bg-white/35" />
+              <div className="mt-8 flex gap-3">
+                <div className="h-11 w-36 rounded-xl bg-blue-500" />
+                <div className="h-11 w-28 rounded-xl border border-white/30" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 bg-white p-6">
+              <div className="h-28 rounded-xl border border-slate-200 bg-slate-50" />
+              <div className="h-28 rounded-xl border border-slate-200 bg-slate-50" />
+              <div className="h-28 rounded-xl border border-slate-200 bg-slate-50" />
+            </div>
+            <div className="bg-slate-50 p-6">
+              <div className="h-8 w-64 rounded-lg bg-slate-900" />
+              <div className="mt-5 grid gap-3">
+                <div className="h-16 rounded-xl bg-white shadow-sm" />
+                <div className="h-16 rounded-xl bg-white shadow-sm" />
+                <div className="h-16 rounded-xl bg-white shadow-sm" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={`absolute z-10 transition-[left,top,transform] duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${cursorScale}`}
+          style={{
+            left: `${latestCursor.x}%`,
+            top: `${latestCursor.y}%`,
+            transform: 'translate3d(0, 0, 0)',
+          }}
+        >
+          <MousePointer2 className="h-6 w-6 fill-blue-600 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)]" />
+        </div>
+
+        {!latestEvent && !liveViewUrl && !activeSession && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-slate-950/70">
+            <p className="text-sm font-bold text-gray-500 dark:text-gray-300">Run the agent to start the visible walkthrough.</p>
+          </div>
+        )}
+
+        {activeSession?.status === 'failed' && (
+          <div className="absolute inset-x-4 bottom-4 rounded-xl border border-red-200 bg-red-50/95 px-3 py-2 text-xs font-bold text-red-800 shadow-sm">
+            The browser run failed. You can replay captured frames, run the demo fallback, or start a fresh run.
+          </div>
+        )}
+
+        {!liveViewUrl && !latestScreenshotUrl && activeSession?.status === 'completed' && (
+          <div className="absolute inset-x-4 bottom-4 rounded-xl border border-emerald-200 bg-emerald-50/95 px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm">
+            The walkthrough completed, but no browser frames were captured for this run.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TimelineList({
+  activeSession,
+  canManage,
+  events,
+  isStaleRun,
+  isWaitingForFrame,
+  latestEventAgeSeconds,
+  onCancel,
+  scrollRef,
+  variant = 'panel',
+}: {
+  activeSession: AgentSession | null
+  canManage: boolean
+  events: AgentEvent[]
+  isStaleRun: boolean
+  isWaitingForFrame: boolean
+  latestEventAgeSeconds: number
+  onCancel: () => void
+  scrollRef?: RefObject<HTMLDivElement | null>
+  variant?: 'panel' | 'fullscreen'
+}) {
+  const maxHeightClass = variant === 'fullscreen' ? 'max-h-[38vh] lg:max-h-[62vh]' : 'max-h-[280px]'
+
+  return (
+    <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-3 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Timeline</p>
+        <span className="rounded-full bg-white dark:bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
+          {activeSession?.status || 'idle'}
+        </span>
+      </div>
+
+      {isWaitingForFrame && (
+        <p className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-3 text-xs font-bold text-amber-800 dark:text-amber-200">
+          No live screenshot frame yet. Last event was {latestEventAgeSeconds}s ago. Showing the public page preview as a fallback.
+        </p>
+      )}
+
+      {isStaleRun && (
+        <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/25 p-3 text-xs font-bold text-amber-800 dark:text-amber-200">
+          <p>This run has not reported a new browser step in over 90 seconds.</p>
+          {canManage && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="mt-2 rounded-lg border border-amber-300 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest"
+            >
+              Stop stale run
+            </button>
+          )}
+        </div>
+      )}
+
+      <div ref={scrollRef} className={`${maxHeightClass} overflow-auto space-y-2 pr-1 scroll-smooth`}>
+        {events.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-gray-200 dark:border-slate-700 p-4 text-sm text-gray-500 dark:text-gray-400">
+            No live events yet.
+          </p>
+        ) : (
+          events.map((event) => {
+            const Icon = getEventIcon(event.event_type)
+            return (
+              <div key={event.id} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
+                <div className="flex items-start gap-2">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-black dark:text-white">{event.message}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500">{event.event_type}</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props) {
   const [activeSession, setActiveSession] = useState<AgentSession | null>(null)
   const [events, setEvents] = useState<AgentEvent[]>([])
@@ -201,6 +408,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
   const [isStartingWorker, setIsStartingWorker] = useState(false)
   const [error, setError] = useState('')
   const [isReplayOpen, setIsReplayOpen] = useState(false)
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const [isReplayPlaying, setIsReplayPlaying] = useState(false)
   const [replayIndex, setReplayIndex] = useState(0)
   const [completedFindingIds, setCompletedFindingIds] = useState<number[]>([])
@@ -208,6 +416,8 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
   const [brokenScreenshotUrls, setBrokenScreenshotUrls] = useState<string[]>([])
   const confettiBurstIdRef = useRef(0)
   const localRunIdRef = useRef(0)
+  const timelineRef = useRef<HTMLDivElement | null>(null)
+  const fullscreenTimelineRef = useRef<HTMLDivElement | null>(null)
 
   const latestEvent = events[events.length - 1]
   const latestCursor = {
@@ -365,6 +575,27 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
     return () => window.clearInterval(timer)
   }, [isReplayPlaying, screenshotEvents.length])
 
+  useEffect(() => {
+    for (const timeline of [timelineRef.current, fullscreenTimelineRef.current]) {
+      if (!timeline) continue
+      timeline.scrollTo({
+        top: timeline.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+  }, [events.length, activeSessionStatus, isFullscreenOpen])
+
+  useEffect(() => {
+    if (!isFullscreenOpen) return
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsFullscreenOpen(false)
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [isFullscreenOpen])
+
   async function updateSession(sessionId: string, patch: Record<string, unknown>) {
     const res = await fetch(`/api/agent/sessions/${encodeURIComponent(sessionId)}`, {
       method: 'PATCH',
@@ -466,7 +697,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
   }
 
   async function cancelActiveSession() {
-    if (!activeSession?.id || activeSession.status !== 'running') return
+    if (!activeSession?.id || (activeSession.status !== 'running' && activeSession.status !== 'queued')) return
 
     setError('')
     try {
@@ -546,7 +777,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
 
         {canManage && (
           <div className="flex flex-col sm:flex-row gap-2">
-            {activeSession?.status === 'running' && (
+            {(activeSession?.status === 'running' || activeSession?.status === 'queued') && (
               <button
                 type="button"
                 onClick={cancelActiveSession}
@@ -660,7 +891,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
                 />
                 <div className="absolute inset-x-4 bottom-4 rounded-xl border border-white/70 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm">
                   {activeSession.status === 'queued'
-                    ? 'The live agent run is queued. A hosted worker will pick it up automatically.'
+                    ? 'The live agent run is queued. The browser worker will pick it up automatically.'
                     : 'Waiting for the first browser frame. Showing the target page directly for now.'}
                 </div>
               </>
@@ -695,8 +926,12 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
             )}
 
             <div
-              className="absolute z-10 transition-all duration-700 ease-out"
-              style={{ left: `${latestCursor.x}%`, top: `${latestCursor.y}%` }}
+              className="absolute z-10 transition-[left,top,transform] duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{
+                left: `${latestCursor.x}%`,
+                top: `${latestCursor.y}%`,
+                transform: 'translate3d(0, 0, 0)',
+              }}
             >
               <MousePointer2 className="h-6 w-6 fill-blue-600 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)]" />
             </div>
@@ -706,6 +941,16 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
                 <p className="text-sm font-bold text-gray-500 dark:text-gray-300">Run the agent to start the visible walkthrough.</p>
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => setIsFullscreenOpen(true)}
+              className="absolute bottom-3 right-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 text-slate-900 shadow-sm transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-white/10 dark:bg-slate-900/90 dark:text-white"
+              aria-label="Open fullscreen live stream"
+              title="Open fullscreen"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -738,7 +983,7 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
             </div>
           )}
 
-          <div className="max-h-[280px] overflow-auto space-y-2 pr-1">
+          <div ref={timelineRef} className="max-h-[280px] overflow-auto space-y-2 pr-1 scroll-smooth">
             {events.length === 0 ? (
               <p className="rounded-xl border border-dashed border-gray-200 dark:border-slate-700 p-4 text-sm text-gray-500 dark:text-gray-400">
                 No live events yet.
@@ -762,6 +1007,78 @@ export default function LiveAgentPanel({ auditId, targetUrl, canManage }: Props)
           </div>
         </div>
       </div>
+
+      {isFullscreenOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Fullscreen live agent stream">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/75"
+            onClick={() => setIsFullscreenOpen(false)}
+            aria-label="Close fullscreen live stream"
+          />
+          <div className="relative flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-white p-3 shadow-2xl dark:bg-slate-950 sm:p-4">
+            <div className="mb-3 flex shrink-0 items-center justify-between gap-3 border-b border-gray-100 pb-3 dark:border-slate-800">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600 dark:text-blue-300">Live Agent</p>
+                <p className="truncate text-sm font-black text-black dark:text-white">{previewUrl}</p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                {screenshotEvents.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReplayOpen(true)
+                      setIsFullscreenOpen(false)
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-[10px] font-black uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200"
+                  >
+                    <Video className="h-4 w-4" />
+                    Replay
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenOpen(false)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200"
+                  aria-label="Close fullscreen live stream"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)] lg:overflow-hidden">
+              <div className="min-h-0">
+                <LiveStreamViewport
+                  activeSession={activeSession}
+                  latestCursor={latestCursor}
+                  latestEvent={latestEvent}
+                  latestScreenshotUrl={latestScreenshotUrl}
+                  liveViewUrl={liveViewUrl}
+                  previewUrl={previewUrl}
+                  scrollY={scrollY}
+                  setBrokenScreenshotUrls={setBrokenScreenshotUrls}
+                  variant="fullscreen"
+                />
+              </div>
+
+              <div className="min-h-0">
+                <TimelineList
+                  activeSession={activeSession}
+                  canManage={canManage}
+                  events={events}
+                  isStaleRun={isStaleRun}
+                  isWaitingForFrame={isWaitingForFrame}
+                  latestEventAgeSeconds={latestEventAgeSeconds}
+                  onCancel={cancelActiveSession}
+                  scrollRef={fullscreenTimelineRef}
+                  variant="fullscreen"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {findings.length > 0 && (
         <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3 sm:p-4">

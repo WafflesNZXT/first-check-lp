@@ -169,7 +169,7 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/${mode === 'signin' ? 'signin' : 'signup'}?next=${encodeURIComponent(nextPath)}&oauth=1`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}&flow=oauth`,
         },
       })
 

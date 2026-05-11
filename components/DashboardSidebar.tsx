@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, FileText, LayoutGrid, PlugZap, Settings } from 'lucide-react'
+import { FileText, LayoutGrid, PlugZap, Settings, Sparkles } from 'lucide-react'
 import { LogoMark } from '@/components/Logo'
 
 type DashboardNavItem = {
@@ -27,8 +27,8 @@ const NAV_ITEMS: DashboardNavItem[] = [
   },
   {
     href: '/dashboard/predict',
-    label: 'Analytics',
-    icon: BarChart3,
+    label: 'Predict',
+    icon: Sparkles,
     isActive: (pathname) => pathname.startsWith('/dashboard/predict'),
   },
   {
@@ -88,8 +88,8 @@ export default function DashboardSidebar() {
           </div>
         </nav>
 
-        <div className="mt-auto overflow-hidden rounded-2xl border border-black/5 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-white ring-1 ring-black/10 dark:bg-slate-950 dark:ring-slate-700">
+        <div className="mx-auto mt-auto flex w-12 flex-col items-center overflow-hidden rounded-2xl border border-black/5 bg-white p-1.5 shadow-sm transition-all duration-200 dark:border-slate-800 dark:bg-slate-900 group-hover:w-full group-hover:items-stretch group-hover:p-2.5">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white ring-1 ring-black/10 dark:bg-slate-950 dark:ring-slate-700 group-hover:self-start">
             <LogoMark size={22} />
           </span>
           <div className="max-h-0 w-[184px] opacity-0 transition-all duration-200 group-hover:max-h-44 group-hover:opacity-100">
