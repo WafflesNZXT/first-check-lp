@@ -48,6 +48,7 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
   const [loading, setLoading] = useState(false)
 
   const isPro = billing.planType === 'pro' || billing.planType === 'admin'
+  const canOpenBillingPortal = isPro || billing.hasStripeCustomer || billing.hasSubscription
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -213,10 +214,10 @@ export default function SettingsClient({ email, initialBilling }: { email: strin
                 <button
                   type="button"
                   onClick={openBillingPortal}
-                  disabled={loading || !billing.hasStripeCustomer}
+                  disabled={loading || !canOpenBillingPortal}
                   className="rounded-full audo-panel border px-4 py-2.5 text-sm font-black text-black shadow-sm disabled:opacity-60"
                 >
-                  Manage Billing
+                  {loading ? 'Opening...' : 'Manage Billing'}
                 </button>
 
                 {isPro && billing.hasSubscription && (
