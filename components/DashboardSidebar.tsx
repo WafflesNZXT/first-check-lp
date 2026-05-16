@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, LayoutGrid, PlugZap, Settings, Sparkles } from 'lucide-react'
+import { Activity, FileText, LayoutGrid, PlugZap, Settings, Sparkles } from 'lucide-react'
 import { LogoMark } from '@/components/Logo'
 
 type DashboardNavItem = {
@@ -24,6 +24,12 @@ const NAV_ITEMS: DashboardNavItem[] = [
     label: 'Audits',
     icon: FileText,
     isActive: (pathname) => pathname.startsWith('/dashboard/history'),
+  },
+  {
+    href: '/dashboard/site-health',
+    label: 'Health',
+    icon: Activity,
+    isActive: (pathname) => pathname.startsWith('/dashboard/site-health'),
   },
   {
     href: '/dashboard/predict',
@@ -102,7 +108,7 @@ export default function DashboardSidebar() {
         </div>
       </div>
 
-      <nav className="grid grid-cols-4 gap-1 p-2 lg:hidden">
+      <nav className="grid grid-cols-5 gap-1 p-2 lg:hidden">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           const active = item.isActive(pathname)
