@@ -30,6 +30,7 @@ function normalizeDomain(value: string | null | undefined) {
 function formatDate(value: string | null) {
   if (!value) return 'Not checked yet'
   return new Date(value).toLocaleString('en-US', {
+    timeZone: 'America/Los_Angeles',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
