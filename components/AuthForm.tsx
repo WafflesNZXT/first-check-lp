@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -109,6 +110,8 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
     setMessage('')
 
     try {
+      const cleanedFullName = fullName.trim()
+
       // Wrap auth call with a timeout so it can't hang the UI indefinitely
       const authPromise = (async () => {
         if (mode === 'signup') {
@@ -116,6 +119,9 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
             email,
             password,
             options: {
+              data: {
+                full_name: cleanedFullName,
+              },
               emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
             },
           })
@@ -216,6 +222,17 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
         </div>
 
         <div className="space-y-2">
+          {mode === 'signup' && (
+            <input
+              type="text"
+              placeholder="Full name"
+              className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all text-black text-base placeholder:text-gray-400"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              autoComplete="name"
+              required
+            />
+          )}
           <input
             type="email"
             placeholder="email@example.com"

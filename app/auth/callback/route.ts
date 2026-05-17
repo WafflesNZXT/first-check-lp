@@ -41,6 +41,16 @@ export async function GET(request: Request) {
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData?.user
+      const fullName = String(user?.user_metadata?.full_name || user?.user_metadata?.name || '').trim()
+      if (user?.id && fullName) {
+        await supabase
+          .from('profiles')
+          .update({ full_name: fullName })
+          .eq('id', user.id)
+      }
+
       return NextResponse.redirect(`${redirectOrigin}${next}`)
     }
 

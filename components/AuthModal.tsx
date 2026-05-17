@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,7 +21,12 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+      options: {
+        data: {
+          full_name: fullName.trim(),
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      }
     })
     if (error) alert(error.message)
     else alert('Check your email to confirm!')
@@ -36,17 +42,30 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
         
         <form onSubmit={handleSignUp} className="space-y-4">
           <input 
+            type="text" 
+            placeholder="Full name" 
+            className="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-black"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            autoComplete="name"
+            required
+          />
+          <input 
             type="email" 
             placeholder="Email Address" 
             className="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-black"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
           />
           <input 
             type="password" 
             placeholder="Password" 
             className="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-black"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
           <button 

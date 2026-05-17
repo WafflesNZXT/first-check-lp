@@ -7,6 +7,7 @@ import AuditInput from '@/components/AuditInput'
 import AuditList from '@/components/AuditList' // The new client component
 import DashboardBoot from '../../components/DashboardBoot'
 import DashboardTopbar from '@/components/DashboardTopbar'
+import DashboardHeaderActions from '@/components/DashboardHeaderActions'
 import RecentAuditsRefreshButton from '@/components/RecentAuditsRefreshButton'
 import StripeCheckoutConfirm from '@/components/StripeCheckoutConfirm'
 import DashboardGuidedFlow from '@/components/DashboardGuidedFlow'
@@ -175,7 +176,10 @@ export default async function DashboardPage({
             <p className="mt-3 text-sm font-medium text-gray-500 sm:text-base">Run agent audits, watch site health, and keep fixes moving.</p>
           </div>
 
-          <DashboardTopbar audits={typedAudits} userId={userId} email={currentUser.email ?? null} />
+          <div className="flex flex-col items-start gap-3 sm:items-end">
+            <DashboardHeaderActions className="flex-wrap justify-start sm:justify-end" />
+            <DashboardTopbar audits={typedAudits} userId={userId} email={currentUser.email ?? null} />
+          </div>
         </header>
 
         {showUpgradeBanner && (
