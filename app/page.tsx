@@ -105,7 +105,7 @@ export default function Home() {
                 ))}
               </div>
               {!!result.issues?.length && <div className="mt-6 space-y-4"><h3 className="text-sm font-semibold">Ideas to explore</h3>{result.issues.map((item, index) => <div key={index} className="border-t border-slate-100 pt-4"><p className="text-sm font-semibold">{item.issue}</p>{item.fix && <p className="mt-1 text-sm leading-6 text-slate-600">{item.fix}</p>}</div>)}</div>}
-              <Link onClick={saveResult} href="/signup" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900">Explore the full dashboard <ArrowRight className="h-4 w-4" /></Link>
+              <Link onClick={saveResult} href="/signup?next=%2Fdashboard%3FresumeDemo%3D1" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900">Explore the full dashboard <ArrowRight className="h-4 w-4" /></Link>
             </div>
           )}
         </div>
