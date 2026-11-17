@@ -85,10 +85,10 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
         className="max-w-7xl mx-auto px-6 sticky top-0 md:top-[var(--announcement-offset,0px)] z-40 font-sans pt-3 md:pt-4"
       >
         <div
-          className={`origin-top rounded-[2rem] transition-[transform,background-color,border-color,box-shadow,backdrop-filter] duration-500 ${
+          className={`origin-top rounded-[2rem] transition-[margin,padding,background-color,border-color,box-shadow,backdrop-filter] duration-500 ${
             isHeroTop
-              ? 'scale-100 border border-transparent bg-transparent backdrop-blur-0 shadow-none px-5 md:px-8 py-3.5'
-              : 'scale-[0.97] border border-white/45 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-5 md:px-8 py-3.5'
+              ? 'mx-0 border border-transparent bg-transparent backdrop-blur-0 shadow-none px-2 md:px-4 py-3.5'
+              : 'mx-2 md:mx-4 border border-white/45 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-5 md:px-8 py-3.5'
           }`}
         >
           <div className="flex justify-between items-center gap-4">
