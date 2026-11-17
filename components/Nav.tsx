@@ -20,7 +20,7 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
 
   useEffect(() => {
     const updateScrollState = () => {
-      setHasScrolled(window.scrollY > 24);
+      setHasScrolled(previous => previous ? window.scrollY > 4 : window.scrollY > 24);
     };
 
     updateScrollState();
@@ -82,14 +82,12 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
   return (
     <>
       <nav
-        className={`max-w-7xl mx-auto px-6 sticky top-0 md:top-[var(--announcement-offset,0px)] z-40 font-sans transition-all duration-500 ${
-          isHeroTop ? 'pt-5 md:pt-7' : 'pt-2 md:pt-4'
-        }`}
+        className="max-w-7xl mx-auto px-6 sticky top-0 md:top-[var(--announcement-offset,0px)] z-40 font-sans pt-3 md:pt-4"
       >
         <div
           className={`rounded-[2rem] transition-all duration-500 ${
             isHeroTop
-              ? 'border border-transparent bg-transparent backdrop-blur-0 shadow-none px-2 md:px-4 py-4 md:py-5'
+              ? 'border border-transparent bg-transparent backdrop-blur-0 shadow-none px-5 md:px-8 py-3.5'
               : 'border border-white/45 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] px-5 md:px-8 py-3.5'
           }`}
         >
@@ -107,7 +105,7 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
               <Link href="/case-studies" className="hover:text-black dark:hover:text-white transition-colors">Case Studies</Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
               {isAuthenticated ? (
                 <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-7 py-3 rounded-full text-sm font-bold transition-colors shadow-[0_8px_24px_rgba(37,99,235,0.35)]">
                   Dashboard
@@ -124,9 +122,10 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
               )}
             </div>
 
-            <div className="md:hidden relative z-30">
+            <div className="lg:hidden relative z-30">
               <button
                 aria-label={open ? 'Close menu' : 'Open menu'}
+                aria-expanded={open}
                 className={`p-2 rounded-md border transition-all ${
                   isHeroTop
                     ? 'bg-transparent border-transparent text-black dark:text-slate-100 hover:bg-white/10'
@@ -146,7 +145,7 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
       </nav>
 
       {/* Mobile overlay */}
-      <div className={`md:hidden fixed left-0 right-0 z-50 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ top: 'var(--announcement-offset, 0px)', height: 'calc(100% - var(--announcement-offset, 0px))' }}>
+      <div className={`lg:hidden fixed left-0 right-0 z-50 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ top: 'var(--announcement-offset, 0px)', height: 'calc(100% - var(--announcement-offset, 0px))' }}>
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
         <div className={`absolute top-0 right-0 h-full w-3/4 max-w-xs shadow-xl transform transition-transform duration-300 bg-white dark:bg-slate-900 border-l border-black/10 dark:border-slate-700 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
