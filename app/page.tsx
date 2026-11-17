@@ -74,11 +74,11 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fcfcfb] text-[#16191f] font-sans">
+    <main className="relative min-h-screen bg-[#fcfcfb] text-[#16191f] font-sans">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[650px] overflow-hidden"><div className="absolute left-1/2 top-[-110px] h-[520px] w-[800px] max-w-full -translate-x-1/2 rounded-full bg-blue-100/70 blur-[100px]" /></div>
       <Nav />
 
       <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:pt-24 md:pb-28">
-        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[800px] max-w-full -translate-x-1/2 rounded-full bg-blue-100/70 blur-[100px]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <h1 className="mx-auto max-w-4xl text-5xl font-semibold leading-[1.06] tracking-[-0.055em] sm:text-6xl md:text-7xl">
             You built the product.<br /><span className="text-blue-600">Make the message click.</span>
