@@ -118,7 +118,7 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
                     Log in
                   </Link>
                   <Link href="/signup" className="bg-blue-600 hover:bg-blue-500 text-white px-7 py-3 rounded-full text-sm font-bold transition-colors shadow-[0_8px_24px_rgba(37,99,235,0.35)]">
-                    Get Started ↗
+                    Get Started
                   </Link>
                 </>
               )}
