@@ -319,7 +319,7 @@ export default function Pricing() {
         </div>
         <div className="relative mx-auto mt-10 flex max-w-5xl flex-col gap-2 rounded-2xl border border-blue-100 bg-blue-50/70 px-6 py-5 text-left sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Black Friday</p><p className="mt-1 text-base font-semibold text-slate-900">Get more from your site for less.</p></div>
-          <p className="text-sm font-medium text-blue-700">Audo Pro · $9 / month</p>
+          <p className="text-sm font-medium text-blue-700">Audo Pro · $9/month for 12 months</p>
         </div>
         <div className="relative mx-auto mt-5 grid max-w-5xl gap-5 md:grid-cols-2">
           <article className="flex flex-col rounded-[28px] border border-slate-200 bg-white p-8 sm:p-10">
@@ -335,6 +335,7 @@ export default function Pricing() {
             <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-2xl font-semibold tracking-tight">Pro</h2><span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Black Friday offer</span></div>
             <p className="mt-2 text-sm leading-6 text-slate-600">For teams and founders who ship changes regularly. Re-audit after a release, watch browser walkthroughs, and share findings with a teammate.</p>
             <p className="mt-8 flex items-baseline gap-3"><span className="text-5xl font-semibold tracking-tight">$9</span><span className="text-base font-normal text-slate-500">/ month</span><span className="text-base text-slate-400 line-through">$20</span></p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">$9/month for the first 12 months, then $20/month.</p>
             <button type="button" onClick={startCheckout} disabled={isRedirecting} className="mt-8 inline-flex justify-center rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">{isRedirecting ? 'Opening checkout…' : 'Get Pro'}</button>
             <div className="mt-8 border-t border-slate-100 pt-6"><p className="text-sm font-semibold">Everything in Free, plus</p><ul className="mt-5 space-y-4">{['Ongoing audits and re-audits during beta','Live browser agent walkthroughs and screenshot replays','Predict tool for before-and-after copy','Sharing, developer invitations, and task assignment'].map(item=><li key={item} className="flex gap-3 text-sm leading-6 text-slate-600"><Check className="mt-1 h-4 w-4 shrink-0 text-blue-600" />{item}</li>)}</ul></div>
           </article>
