@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
+import AuditExample from '@/components/AuditExample';
 import { Activity, ArrowRight, Check, Globe, MousePointer2, Search, ShieldCheck, UserRoundCheck } from 'lucide-react';
 
 type Result = {
@@ -169,6 +170,8 @@ export default function Home() {
           <p className="pb-6 pt-3 text-center text-xs text-slate-500">Dashboard preview based on Audo’s interface. Scores and activity are sample data.</p>
         </div>
       </section>
+
+      <AuditExample />
 
       <section id="how-it-works" className="mx-auto max-w-6xl px-6 pb-24 md:pb-32">
         <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">How it works</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">From website to next step.</h2><p className="mt-4 text-slate-600">Run an audit and decide what to fix first.</p></div>
