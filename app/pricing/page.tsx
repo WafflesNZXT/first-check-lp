@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Zap, ArrowRight, X, FileText, BarChart3, Sparkles, ChevronRight, Loader2, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown, Users } from 'lucide-react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
+import AuditExample from '@/components/AuditExample';
 import { createClient } from '@/utils/supabase/client';
 // Removed submitLead and client-side lead logic — checkout handled server-side
 
@@ -332,13 +333,15 @@ export default function Pricing() {
           </article>
           <article className="flex flex-col rounded-[28px] border border-blue-200 bg-white p-8 shadow-[0_18px_50px_rgba(37,99,235,0.08)] sm:p-10">
             <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-2xl font-semibold tracking-tight">Pro</h2><span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Black Friday offer</span></div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">For ongoing audits and collaboration.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">For teams and founders who ship changes regularly. Re-audit after a release, watch browser walkthroughs, and share findings with a teammate.</p>
             <p className="mt-8 flex items-baseline gap-3"><span className="text-5xl font-semibold tracking-tight">$9</span><span className="text-base font-normal text-slate-500">/ month</span><span className="text-base text-slate-400 line-through">$20</span></p>
             <button type="button" onClick={startCheckout} disabled={isRedirecting} className="mt-8 inline-flex justify-center rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">{isRedirecting ? 'Opening checkout…' : 'Get Pro'}</button>
             <div className="mt-8 border-t border-slate-100 pt-6"><p className="text-sm font-semibold">Everything in Free, plus</p><ul className="mt-5 space-y-4">{['Ongoing audits and re-audits during beta','Live browser agent walkthroughs and screenshot replays','Predict tool for before-and-after copy','Sharing, developer invitations, and task assignment'].map(item=><li key={item} className="flex gap-3 text-sm leading-6 text-slate-600"><Check className="mt-1 h-4 w-4 shrink-0 text-blue-600" />{item}</li>)}</ul></div>
           </article>
         </div>
       </section>
+      <AuditExample />
+
       <section className="mx-auto max-w-5xl px-5 pb-24">
         <div className="rounded-[28px] bg-[#f4f6fa] p-8 sm:p-10">
           <h2 className="text-2xl font-semibold tracking-tight">Questions about Audo?</h2>
