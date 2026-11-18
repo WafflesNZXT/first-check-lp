@@ -337,11 +337,24 @@ export default function Pricing() {
         </div>
       </section>
       <section className="mx-auto max-w-5xl px-5 pb-24">
-        <div className="rounded-[28px] bg-[#f4f6fa] p-8 sm:p-10"><h2 className="text-2xl font-semibold tracking-tight">Questions about Audo?</h2><div className="mt-7 grid gap-7 md:grid-cols-3">
-          <div><h3 className="text-sm font-semibold">What is included in an audit?</h3><p className="mt-2 text-sm leading-6 text-slate-600">A dashboard report with findings covering areas such as UX, SEO, performance, and accessibility.</p></div>
-          <div><h3 className="text-sm font-semibold">Can I try it first?</h3><p className="mt-2 text-sm leading-6 text-slate-600">Yes. Create a free account for two full audits, or explore the dashboard demo above.</p></div>
-          <div><h3 className="text-sm font-semibold">Can I run another audit?</h3><p className="mt-2 text-sm leading-6 text-slate-600">Yes. Re-runs count toward the free plan limit. Pro supports ongoing audits during beta.</p></div>
-        </div></div>
+        <div className="rounded-[28px] bg-[#f4f6fa] p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold tracking-tight">Questions about Audo?</h2>
+          <div className="mt-6 divide-y divide-slate-200">
+            {[
+              { question: 'What is included in an audit?', answer: 'A dashboard report with findings covering areas such as UX, SEO, performance, and accessibility.' },
+              { question: 'Can I try it first?', answer: 'Yes. Create a free account for two full audits, or explore the dashboard demo above.' },
+              { question: 'Can I run another audit?', answer: 'Yes. Re-runs count toward the free plan limit. Pro supports ongoing audits during beta.' },
+            ].map((item) => (
+              <details key={item.question} className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-5 py-5 text-left text-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
+                  {item.question}
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 rotate-90 text-slate-500 transition-transform duration-200 group-open:-rotate-90" />
+                </summary>
+                <p className="max-w-2xl pb-5 text-sm leading-6 text-slate-600">{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
       </section>
 
       {isPreviewModalOpen && (
