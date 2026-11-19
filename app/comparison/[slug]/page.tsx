@@ -90,7 +90,7 @@ export default async function ComparisonDetailPage({ params }: { params: Promise
   if (!page) notFound();
 
   return (
-    <main className="min-h-screen bg-[#fcfcfc] text-black">
+    <main className="min-h-screen audo-public-surface">
       <section className="max-w-6xl mx-auto px-6 py-16 md:py-20 space-y-10">
         <div className="space-y-5">
           <Link href="/#comparison" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-blue-700 hover:text-black transition-colors">
@@ -99,7 +99,7 @@ export default async function ComparisonDetailPage({ params }: { params: Promise
           </Link>
           <div className="space-y-3 max-w-4xl">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-700">Comparison</p>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight">Audo vs {page.competitorName}</h1>
+            <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">Audo vs {page.competitorName}</h1>
             <p className="text-base text-gray-600">{page.summary}</p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2">
@@ -129,10 +129,10 @@ export default async function ComparisonDetailPage({ params }: { params: Promise
           ))}
         </div>
 
-        <div className="rounded-3xl border border-black/10 bg-black text-white p-8 md:p-10 space-y-4">
+        <div className="rounded-3xl border border-blue-100 bg-blue-50 text-slate-900 p-8 md:p-10 space-y-4">
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">Want the same format on your own landing page?</h2>
-          <p className="text-sm md:text-base text-gray-300">Run an audit, get your highest-impact fixes, and track each rerun from your dashboard.</p>
-          <Link href="/pricing" className="inline-flex items-center gap-2 rounded-2xl bg-white text-black px-6 py-3 text-sm font-black hover:bg-blue-600 hover:text-white transition-colors">
+          <p className="text-sm md:text-base text-slate-600">Run an audit, get your highest-impact fixes, and track each rerun from your dashboard.</p>
+          <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full bg-blue-600 text-white px-6 py-3 text-sm font-semibold hover:bg-blue-700 transition-colors">
             Start for Free
             <ArrowRight className="w-4 h-4" />
           </Link>
