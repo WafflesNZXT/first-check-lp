@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import type { ComponentType } from 'react'
-import { Activity, MousePointer2, ShieldCheck, UserRoundCheck } from 'lucide-react'
+import Link from 'next/link'
+import { Activity } from 'lucide-react'
 import { getUserFromCookie } from '@/lib/auth'
 import AuditInput from '@/components/AuditInput'
 import AuditList from '@/components/AuditList' // The new client component
@@ -111,6 +111,8 @@ export default async function DashboardPage({
   const shouldShowGuidedFlow = hasNoAudits || hasWelcomeEmailSignalPending
   const completedAudits = typedAudits.filter((audit) => audit.status === 'completed')
   const recentAudits = typedAudits.slice(0, 3)
+  const latestAudit = completedAudits[0]
+
 
   const averagePerformance = getAverage(
     completedAudits
@@ -118,7 +120,7 @@ export default async function DashboardPage({
       .filter((score) => Number.isFinite(score))
   )
 
-  const averageAccessibility = getAverage(
+  const averageUx = getAverage(
     completedAudits
       .map((audit) => Number(audit.ux_score ?? 0))
       .filter((score) => Number.isFinite(score))
@@ -173,7 +175,7 @@ export default async function DashboardPage({
             <h1 className="text-4xl font-black tracking-tight text-black sm:text-6xl">
               Welcome back{firstName ? `, ${firstName}` : ''}
             </h1>
-            <p className="mt-3 text-sm font-medium text-gray-500 sm:text-base">Run agent audits, watch site health, and keep fixes moving.</p>
+            <p className="mt-3 text-sm font-medium text-gray-500 sm:text-base">Review your live site for unclear messaging, confusing calls to action, and usability issues.</p>
           </div>
 
           <div className="flex flex-col items-start gap-3 sm:items-end">
@@ -194,38 +196,23 @@ export default async function DashboardPage({
 
         <DashboardGuidedFlow userId={userId} shouldShow={shouldShowGuidedFlow} />
 
-        <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricTile label="SEO Avg" value={averageSeo} delta={formatDelta(getScoreDelta(completedAudits, 'seo_score'))} progress={averageSeo} />
-          <MetricTile label="Performance" value={averagePerformance} delta={formatDelta(getScoreDelta(completedAudits, 'performance_score'))} progress={averagePerformance} />
-          <MetricTile label="Accessibility" value={averageAccessibility} delta={formatDelta(getScoreDelta(completedAudits, 'ux_score'))} progress={averageAccessibility} />
-          <MetricTile label="Fixes Remaining" value={totalFixesRemaining} delta={totalFixesRemaining === 0 ? 'All clear' : 'Open items'} progress={Math.max(8, Math.min(100, 100 - totalFixesRemaining * 4))} />
-        </section>
-
-        <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-          <div className="rounded-[1.7rem] audo-panel border p-5 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h2 className="text-2xl font-black tracking-tight text-black">New Audit</h2>
-                <p className="mt-2 text-sm font-medium text-gray-500">Let the AI agent navigate your site like a real user.</p>
-              </div>
-              <span className="inline-flex h-8 items-center rounded-full border border-black/10 bg-gray-50 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                Agent mode
-              </span>
-            </div>
-
-            <div className="mt-6">
-              <AuditInput />
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <FeatureMini icon={MousePointer2} title="Click & scroll" copy="Real interaction" />
-              <FeatureMini icon={UserRoundCheck} title="Auto sign-in" copy="Test gated flows" />
-              <FeatureMini icon={ShieldCheck} title="Bulk scan" copy="From sitemap.xml" />
-            </div>
+        <section aria-labelledby="new-audit-heading" className="mt-8 rounded-[1.7rem] audo-panel border p-5 shadow-sm sm:p-7">
+          <h2 id="new-audit-heading" className="text-2xl font-bold tracking-tight text-black">Audit a page</h2>
+          <p className="mt-2 text-sm text-gray-500">Start with your homepage or the page where visitors sign up or buy.</p>
+          <div className="mt-5">
+            <AuditInput />
           </div>
-
-          <PortfolioTrendChart data={trendData} delta={portfolioDelta} />
         </section>
+
+        {latestAudit && (
+          <section aria-labelledby="next-fix-heading" className="mt-5 rounded-[1.7rem] audo-panel border p-5 shadow-sm sm:p-7">
+            <h2 id="next-fix-heading" className="text-xl font-bold tracking-tight text-black">Review your latest audit</h2>
+            <p className="mt-1 break-all text-xs text-gray-500">From your latest completed audit · {latestAudit.website_url}</p>
+            <Link href={`/dashboard/audit/${latestAudit.id}`} className="mt-4 inline-block text-sm font-semibold text-blue-700 hover:underline dark:text-blue-300">
+              Review recommendations
+            </Link>
+          </section>
+        )}
 
         <section className="mt-5 rounded-[1.7rem] audo-panel border p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3">
@@ -241,6 +228,21 @@ export default async function DashboardPage({
             <p className="py-10 text-center text-gray-400">No audits run yet.</p>
           )}
         </section>
+
+        {completedAudits.length > 0 && (
+          <details className="mt-5 rounded-[1.7rem] audo-panel border p-5 shadow-sm sm:p-7">
+            <summary className="cursor-pointer text-sm font-semibold text-black">Audit scores and trends</summary>
+            <section className="mt-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
+              <MetricTile label="SEO average" value={averageSeo} delta={formatDelta(getScoreDelta(completedAudits, 'seo_score'))} progress={averageSeo} />
+              <MetricTile label="Performance" value={averagePerformance} delta={formatDelta(getScoreDelta(completedAudits, 'performance_score'))} progress={averagePerformance} />
+              <MetricTile label="UX" value={averageUx} delta={formatDelta(getScoreDelta(completedAudits, 'ux_score'))} progress={averageUx} />
+              <MetricTile label="Fixes Remaining" value={totalFixesRemaining} delta={totalFixesRemaining === 0 ? 'All clear' : 'Open items'} progress={Math.max(8, Math.min(100, 100 - totalFixesRemaining * 4))} />
+            </section>
+            <div className="mt-4">
+              <PortfolioTrendChart data={trendData} delta={portfolioDelta} />
+            </div>
+          </details>
+        )}
       </div>
     </div>
   )
@@ -257,16 +259,6 @@ function MetricTile({ label, value, delta, progress }: { label: string, value: n
       <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-gray-100">
         <div className="h-full rounded-full bg-black" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
       </div>
-    </div>
-  )
-}
-
-function FeatureMini({ icon: Icon, title, copy }: { icon: ComponentType<{ className?: string }>; title: string; copy: string }) {
-  return (
-    <div className="rounded-2xl border border-black/10 bg-[#fafafa] p-4 dark:border-slate-700 dark:bg-slate-900">
-      <Icon className="h-5 w-5 text-black dark:text-blue-300" />
-      <p className="mt-4 text-sm font-black text-black dark:text-white">{title}</p>
-      <p className="mt-1 text-xs font-medium text-gray-500 dark:text-slate-300">{copy}</p>
     </div>
   )
 }
