@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import ConversionHandoff from '@/components/ConversionHandoff'
 import AuditChecklist from '../../../../components/AuditChecklist'
 import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
@@ -425,6 +426,14 @@ function AuditDetail({
             <h2 id="conversion-idea" className="text-lg font-semibold text-slate-900 dark:text-white">A conversion change to try</h2>
             <p className="mt-3 font-medium text-slate-900 dark:text-slate-100">{conversionFinding.issue}</p>
             <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700 dark:text-slate-300">{conversionFinding.fix}</p>
+            {viewerIsOwner && (
+              <ConversionHandoff
+                page={audit.website_url.replace(/[?#].*$/, '')}
+                finding={conversionFinding.issue}
+                suggestion={conversionFinding.fix}
+                selector={conversionFinding.selector}
+              />
+            )}
           </section>
         )}
         <div className={`relative print-break-before ${isLocked ? 'max-h-[28rem] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]' : ''}`}>
