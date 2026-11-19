@@ -60,7 +60,7 @@ export default async function PublicAuditViewPage({ params }: { params: Promise<
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] p-4 sm:p-6 lg:p-12 xl:p-24 relative">
+    <div className="min-h-screen audo-public-surface p-4 sm:p-6 lg:p-12 xl:p-24 relative">
       <div className="max-w-5xl mx-auto space-y-10 sm:space-y-12 lg:space-y-16">
         <header className="space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -73,7 +73,7 @@ export default async function PublicAuditViewPage({ params }: { params: Promise<
 
         <section className="flex flex-col items-center gap-6 sm:gap-8">
           <div className="space-y-6 text-center w-full">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black lowercase tracking-tighter text-black leading-[0.95] break-words">{hostname}</h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold lowercase tracking-tighter text-black leading-[0.95] break-words">{hostname}</h1>
 
             <div className="mt-4 w-full max-w-2xl mx-auto">
               <div className="bg-gray-50 dark:bg-slate-900 p-6 rounded-2xl">
