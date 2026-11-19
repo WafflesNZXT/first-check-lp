@@ -91,7 +91,7 @@ export default function Home() {
             <label htmlFor="hero-url" className="sr-only">Your website URL</label>
             <div className="flex flex-1 items-center gap-3 px-4">
               <Globe aria-hidden="true" className="h-5 w-5 shrink-0 text-slate-400" />
-              <input id="hero-url" value={url} onChange={(event) => { setUrl(event.target.value); setError(''); setResult(null); }} disabled={loading} placeholder="Enter your website URL" autoComplete="url" inputMode="url" className="min-w-0 flex-1 bg-transparent py-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500" />
+              <input id="hero-url" value={url} onChange={(event) => { setUrl(event.target.value); setError(''); setResult(null); }} disabled={loading} placeholder="Enter your website URL" autoComplete="url" inputMode="url" className="scroll-mt-28 min-w-0 flex-1 bg-transparent py-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500" />
             </div>
             <button type="submit" disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">
               {loading ? 'Analyzing…' : 'Get your free score'} <ArrowRight className="h-4 w-4" />
@@ -127,7 +127,7 @@ export default function Home() {
               <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">A look inside the dashboard.</h2>
               <p className="mt-4 max-w-lg text-base leading-7 text-slate-600">Run an audit, review your scores, and track your recent work.</p>
             </div>
-            <Link href="/pricing#get-audit" className="inline-flex shrink-0 items-center gap-2 pb-1 text-sm font-semibold text-blue-700 hover:text-blue-900">Explore the dashboard <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/pricing?demo=1" className="inline-flex shrink-0 items-center gap-2 pb-1 text-sm font-semibold text-blue-700 hover:text-blue-900">Explore the dashboard demo <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="relative mx-auto mt-10 max-w-5xl overflow-hidden rounded-t-[22px] border border-b-0 border-black/10 bg-white shadow-[0_24px_75px_rgba(41,68,117,0.14)]">
             <div className="flex items-center justify-between border-b border-black/10 bg-white px-5 py-3">
@@ -173,7 +173,7 @@ export default function Home() {
 
       <AuditExample />
 
-      <section id="how-it-works" className="mx-auto max-w-6xl px-6 pb-24 md:pb-32">
+      <section id="how-it-works" className="scroll-mt-28 "mx-auto max-w-6xl px-6 pb-24 md:pb-32">
         <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">How it works</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">From website to next step.</h2><p className="mt-4 text-slate-600">Run an audit and decide what to fix first.</p></div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[{n:'01', title:'Share your site', text:'Enter your URL for a quick score, or create an account for the full audit.', icon:Globe},{n:'02', title:'Review the findings', text:'See suggestions for your content, usability, and technical health.', icon:Search},{n:'03', title:'Make changes', text:'Prioritize the issues, make changes, and run another audit when you are ready.', icon:MousePointer2}].map((step) => (
@@ -182,7 +182,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="comparison" className="mx-auto max-w-6xl px-6 pb-24">
+      <section id="comparison" className="scroll-mt-28 "mx-auto max-w-6xl px-6 pb-24">
         <div className="grid gap-10 rounded-[32px] bg-[#f4f5f7] p-8 sm:p-12 md:grid-cols-2">
           <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Your audit</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Decide what to fix first.</h2><p className="mt-5 text-sm leading-7 text-slate-600">Keep audit findings and follow-up work together in your dashboard.</p></div>
           <div className="space-y-3">{['Review prioritized audit findings','Explore messaging, UX, SEO and performance','Re-run audits and track your progress'].map(item => <div key={item} className="flex items-center gap-3 rounded-2xl bg-white px-5 py-4 text-sm font-medium"><Check className="h-4 w-4 shrink-0 text-blue-600" />{item}</div>)}</div>
