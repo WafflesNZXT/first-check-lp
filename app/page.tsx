@@ -85,13 +85,13 @@ export default function Home() {
             Find what your landing page<br className="hidden sm:block" /> <span className="text-blue-600">should say more clearly.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-            Paste a published URL to review your headline, calls to action, and site usability. A full audit can turn a messaging finding into a brief for Codex, Replit, or your preferred coding tool.
+            Paste a published URL to review your headline, calls to action, and site usability. Get a free review with suggestions, then use a full audit to create a brief for your coding tool.
           </p>
           <form onSubmit={handleSubmit} className="mx-auto mt-10 flex max-w-2xl flex-col gap-2 rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_18px_60px_rgba(37,73,129,0.12)] sm:flex-row sm:rounded-full">
             <label htmlFor="hero-url" className="sr-only">Your website URL</label>
             <div className="flex flex-1 items-center gap-3 px-4">
               <Globe aria-hidden="true" className="h-5 w-5 shrink-0 text-slate-400" />
-              <input id="hero-url" value={url} onChange={(event) => { setUrl(event.target.value); setError(''); setResult(null); }} disabled={loading} placeholder="Enter your website URL" autoComplete="url" inputMode="url" className="scroll-mt-28 min-w-0 flex-1 bg-transparent py-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500" />
+              <input id="hero-url" value={url} onChange={(event) => { setUrl(event.target.value); setError(''); setResult(null); }} disabled={loading} placeholder="Enter your website URL" autoComplete="url" inputMode="url" className="scroll-mt-28 min-w-0 flex-1 bg-transparent py-4 text-base sm:text-sm text-slate-900 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500" />
             </div>
             <button type="submit" disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">
               {loading ? 'Analyzing…' : 'Review my page'} <ArrowRight className="h-4 w-4" />
@@ -191,7 +191,7 @@ export default function Home() {
 
       <section className="mx-auto max-w-4xl px-6 pb-24 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Made for founders</p>
-        <blockquote className="mt-6 text-2xl font-medium leading-snug tracking-tight sm:text-3xl">“The fixes are clear, direct, and immediately useful.”</blockquote>
+        <blockquote className="mt-6 text-2xl font-medium leading-snug tracking-tight sm:text-3xl">“The information is genuinely useful. Even as someone who already had an idea of the issues, the audit added good notes for improvement.”</blockquote>
         <p className="mt-4 text-sm text-slate-500">Founder, WLink</p>
         <Link href="/case-studies#case-study-1" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-700">Read the case study <ArrowRight className="h-4 w-4" /></Link>
       </section>
