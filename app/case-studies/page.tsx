@@ -343,10 +343,10 @@ function CategoryBadge({ category }: { category: string }) {
 
 export default function CaseStudies() {
   return (
-    <main className="min-h-screen bg-white text-black font-sans">
+    <main className="min-h-screen audo-public-surface font-sans">
       <Nav useHomeStyleTop />
 
-      <div className="max-w-6xl mx-auto px-6 py-24 space-y-24">
+      <div className="max-w-6xl mx-auto px-6 py-14 space-y-14 md:py-20 md:space-y-20">
 
         {/* Header */}
         <div className="space-y-6">
@@ -355,14 +355,11 @@ export default function CaseStudies() {
             Back to home
           </Link>
           <div className="space-y-4">
-            <span className="px-4 py-1.5 text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-700 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
-              Beta Results
-            </span>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-black leading-[0.95] py-2">
+            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-slate-900">
               8 real sites.<br />8 real audits.
             </h1>
             <p className="text-gray-700 text-lg max-w-2xl leading-relaxed">
-              These are real sites from the audo beta — real founders, real scores, real findings. No cherry-picking, no fake data.
+              See what Audo found while auditing eight sites during the beta.
             </p>
           </div>
 
@@ -384,7 +381,7 @@ export default function CaseStudies() {
 
         {/* Case Studies */}
         {caseStudies.map((cs, index) => (
-          <article id={`case-study-${cs.id}`} key={cs.id} className="space-y-8 scroll-mt-28 relative rounded-[2rem] border border-black/10 bg-white p-7 md:p-9 shadow-[0_18px_50px_rgba(0,0,0,0.05)]">
+          <article id={`case-study-${cs.id}`} key={cs.id} className="space-y-8 scroll-mt-28 relative rounded-[2rem] border border-slate-200 bg-white p-7 md:p-9 shadow-sm">
 
             {/* Header */}
             <div className="space-y-4">
