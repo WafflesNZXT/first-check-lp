@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function RefundPolicy() {
   return (
-    <main className="min-h-screen bg-white text-black font-sans">
+    <main className="min-h-screen audo-public-surface font-sans">
       <Nav />
 
       <div className="max-w-3xl mx-auto px-6 py-24 space-y-12">
@@ -13,11 +13,11 @@ export default function RefundPolicy() {
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Refund Policy</h1>
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">Refund Policy</h1>
           <p className="text-gray-600 text-sm">Last updated: April 13, 2026</p>
         </div>
 
-        <div className="space-y-8 text-gray-700 leading-relaxed rounded-3xl border border-black/10 bg-white p-8 md:p-10 shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
+        <div className="space-y-8 text-gray-700 leading-relaxed rounded-3xl border border-slate-200 bg-white p-8 md:p-10 shadow-sm">
 
           <section className="space-y-3 pb-6 border-b border-black/10">
             <h2 className="text-black font-bold text-lg">Overview</h2>
