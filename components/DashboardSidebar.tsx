@@ -101,7 +101,7 @@ export default function DashboardSidebar() {
           <div className="max-h-0 w-[184px] opacity-0 transition-all duration-200 group-hover:max-h-44 group-hover:opacity-100">
             <h2 className="mt-5 text-lg font-black tracking-tight text-black dark:text-white">Upgrade to Pro</h2>
             <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-slate-400">Unlimited audits, agents, and history.</p>
-            <Link href="/pricing" className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full bg-[#151515] text-xs font-black text-white dark:bg-white dark:text-slate-950">
+            <Link href="/pricing" className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-xs font-black text-white dark:bg-white dark:text-slate-950">
               Upgrade
             </Link>
           </div>
@@ -119,7 +119,7 @@ export default function DashboardSidebar() {
               href={item.href}
               className={`flex h-12 flex-col items-center justify-center rounded-2xl px-2 text-[10px] font-black transition-colors ${
                 active
-                  ? 'bg-black text-white dark:bg-white dark:text-slate-950'
+                  ? 'bg-blue-600 text-white dark:bg-white dark:text-slate-950'
                   : 'text-gray-500 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
               }`}
               title={item.label}
