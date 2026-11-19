@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/Logo';
@@ -11,6 +11,8 @@ type NavProps = {
 };
 
 export default function Nav({ useHomeStyleTop = false }: NavProps) {
+  const navRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -59,21 +61,40 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 64rem)');
+    const closeOnDesktop = () => {
+      if (desktop.matches) menuRef.current?.close();
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, []);
+
+  function openMenu() {
+    menuRef.current?.showModal();
+    setOpen(true);
+  }
+
+  function closeMenu() {
+    menuRef.current?.close();
+  }
+
   function smoothScrollTo(elId: string) {
     const el = document.getElementById(elId.replace('#', ''));
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--announcement-offset') || '0', 10) || 0;
-    const targetY = window.scrollY + rect.top - 24 - offset;
-    window.scrollTo({ top: targetY, behavior: 'smooth' });
+    const navBottom = navRef.current?.getBoundingClientRect().bottom ?? 0;
+    const targetY = window.scrollY + rect.top - navBottom - 16;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: targetY, behavior: reducedMotion ? 'instant' : 'smooth' });
   }
 
   function handleSectionClick(
     e: React.MouseEvent<HTMLAnchorElement>,
     sectionId: '#how-it-works' | '#comparison',
-    closeMenu = false
+    fromMobileMenu = false
   ) {
-    if (closeMenu) setOpen(false);
+    if (fromMobileMenu) closeMenu();
     if (!isHome) return;
     e.preventDefault();
     smoothScrollTo(sectionId);
@@ -82,6 +103,7 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
   return (
     <>
       <nav
+        ref={navRef}
         className="max-w-7xl mx-auto px-6 sticky top-0 md:top-[var(--announcement-offset,0px)] z-40 font-sans pt-3 md:pt-4"
       >
         <div
@@ -126,12 +148,14 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
               <button
                 aria-label={open ? 'Close menu' : 'Open menu'}
                 aria-expanded={open}
+                aria-haspopup="dialog"
+                aria-controls="mobile-navigation"
                 className={`p-2 rounded-md border transition-all ${
                   isHeroTop
                     ? 'bg-transparent border-transparent text-black dark:text-slate-100 hover:bg-white/10'
                     : 'bg-white/60 dark:bg-slate-900/70 border-white/60 dark:border-slate-700 text-black dark:text-slate-100 backdrop-blur-md hover:bg-white/80 dark:hover:bg-slate-800'
                 }`}
-                onClick={() => setOpen(s => !s)}
+                onClick={openMenu}
               >
                 {open ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -145,35 +169,40 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
       </nav>
 
       {/* Mobile overlay */}
-      <div className={`lg:hidden fixed left-0 right-0 z-50 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ top: 'var(--announcement-offset, 0px)', height: 'calc(100% - var(--announcement-offset, 0px))' }}>
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-
-        <div className={`absolute top-0 right-0 h-full w-3/4 max-w-xs shadow-xl transform transition-transform duration-300 bg-white dark:bg-slate-900 border-l border-black/10 dark:border-slate-700 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+      <dialog
+        ref={menuRef}
+        id="mobile-navigation"
+        aria-label="Navigation menu"
+        onClose={() => setOpen(false)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) closeMenu();
+        }}
+        className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-3/4 max-w-xs overflow-y-auto border-l border-black/10 bg-white shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900"
+      >
           <div className="px-6 pt-6">
             <div className="flex items-center justify-end">
-              <button aria-label="Close menu" className="p-2 text-black dark:text-slate-100" onClick={() => setOpen(false)}>
+              <button aria-label="Close menu" className="p-2 text-black dark:text-slate-100" onClick={closeMenu}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
 
             <nav className="mt-6 flex flex-col gap-4 px-1">
-              <Link href="/" onClick={() => setOpen(false)} className="text-black dark:text-slate-100 text-lg">Home</Link>
+              <Link href="/" onClick={closeMenu} className="text-black dark:text-slate-100 text-lg">Home</Link>
               <Link href="/#how-it-works" onClick={(e) => handleSectionClick(e, '#how-it-works', true)} className="text-black dark:text-slate-100 text-lg">How it Works</Link>
               <Link href="/#comparison" onClick={(e) => handleSectionClick(e, '#comparison', true)} className="text-black dark:text-slate-100 text-lg">Comparison</Link>
-              <Link href="/pricing" onClick={() => setOpen(false)} className="text-black dark:text-slate-100 text-lg">Pricing</Link>
-              <Link href="/case-studies" onClick={() => setOpen(false)} className="text-black dark:text-slate-100 text-lg">Case Studies</Link>
+              <Link href="/pricing" onClick={closeMenu} className="text-black dark:text-slate-100 text-lg">Pricing</Link>
+              <Link href="/case-studies" onClick={closeMenu} className="text-black dark:text-slate-100 text-lg">Case Studies</Link>
               {isAuthenticated ? (
-                <Link href="/dashboard" onClick={() => setOpen(false)} className="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-bold transition-colors">Dashboard</Link>
+                <Link href="/dashboard" onClick={closeMenu} className="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-bold transition-colors">Dashboard</Link>
               ) : (
                 <>
-                  <Link href="/signin" onClick={() => setOpen(false)} className="mt-4 inline-block px-4 py-2 border border-black/15 dark:border-slate-600 text-black dark:text-slate-100 rounded-md font-semibold transition-colors">Log in</Link>
-                  <Link href="/signup" onClick={() => setOpen(false)} className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-bold transition-colors">Get Started</Link>
+                  <Link href="/signin" onClick={closeMenu} className="mt-4 inline-block px-4 py-2 border border-black/15 dark:border-slate-600 text-black dark:text-slate-100 rounded-md font-semibold transition-colors">Log in</Link>
+                  <Link href="/signup" onClick={closeMenu} className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-bold transition-colors">Get Started</Link>
                 </>
               )}
             </nav>
           </div>
-        </div>
-      </div>
+      </dialog>
     </>
   );
 }
