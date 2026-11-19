@@ -196,7 +196,7 @@ export default function Home() {
         <Link href="/case-studies#case-study-1" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-700">Read the case study <ArrowRight className="h-4 w-4" /></Link>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-24"><div className="rounded-[36px] bg-blue-600 px-6 py-16 text-center text-white sm:p-20"><h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Run your first audit.</h2><p className="mx-auto mt-5 max-w-xl text-blue-100">Enter your website to get a free quick score.</p><a href="#hero-url" className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-4 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">Analyze your site <ArrowRight className="h-4 w-4" /></a></div></section>
+      <section className="mx-auto max-w-6xl px-5 pb-24"><div className="rounded-[36px] bg-blue-600 px-6 py-16 text-center text-white sm:p-20"><h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Run your first audit.</h2><p className="mx-auto mt-5 max-w-xl text-blue-100">Enter your website to get a free quick score.</p><a href="#hero-url" onClick={(event) => { event.preventDefault(); const input = document.getElementById("hero-url"); input?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }); input?.focus({ preventScroll: true }); }} className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-7 py-4 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">Analyze your site <ArrowRight className="h-4 w-4" /></a></div></section>
     </main>
   );
 }
