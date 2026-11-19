@@ -187,9 +187,9 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto space-y-10 py-12 px-6">
+    <div className="w-full max-w-lg mx-auto space-y-7">
       <div className="space-y-3 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
           {mode === 'signin' ? 'Welcome back' : 'Create your account'}
         </h1>
         <p className="text-gray-500 text-base md:text-lg">
@@ -225,8 +225,9 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
           {mode === 'signup' && (
             <input
               type="text"
+              aria-label="Full name"
               placeholder="Full name"
-              className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all text-black text-base placeholder:text-gray-400"
+              className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none transition-all text-black text-base placeholder:text-gray-400"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               autoComplete="name"
@@ -235,16 +236,20 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
           )}
           <input
             type="email"
+            aria-label="Email address"
+            autoComplete="email"
             placeholder="email@example.com"
-            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all text-black text-base placeholder:text-gray-400"
+            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none transition-all text-black text-base placeholder:text-gray-400"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           <input
             type="password"
-            placeholder="password"
-            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all text-black text-base placeholder:text-gray-400"
+            aria-label="Password"
+            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+            placeholder="Password"
+            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none transition-all text-black text-base placeholder:text-gray-400"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -253,7 +258,7 @@ export default function AuthForm({ mode }: { mode: 'signin' | 'signup' }) {
 
         <button
           disabled={loading}
-          className="w-full bg-black text-white py-4 rounded-2xl font-bold text-base hover:bg-gray-800 transition-all disabled:opacity-50 active:scale-[0.98]"
+          className="w-full bg-blue-600 text-white py-4 rounded-full font-semibold text-base hover:bg-blue-700 transition-all disabled:opacity-50 active:scale-[0.98]"
         >
           {loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
         </button>
