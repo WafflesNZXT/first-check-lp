@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 
 
 export const metadata: Metadata = {
-  title: "audo",
-  description: "Dashboard-first website auditing for startup teams. Run audits, prioritize fixes, and track progress in one place.",
+  title: "Audo | Landing Page Audits for Founders",
+  description: "Review your landing page’s messaging and usability, find practical improvements, and turn findings into a brief for your coding tool.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
