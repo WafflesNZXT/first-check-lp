@@ -3,8 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --audo-page: #fcfcfb;
+  --audo-ink: #16191f;
+  --audo-border: #e2e8f0;
+  --background: var(--audo-page);
+  --foreground: var(--audo-ink);
 }
 
 @theme inline {
@@ -27,13 +30,13 @@ html.dark {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   transition: background-color 180ms ease, color 180ms ease;
 }
 
 .audo-dashboard-surface {
-  background: #f7f7f5;
-  color: #111111;
+  background: var(--audo-page);
+  color: var(--audo-ink);
 }
 
 .dark .audo-dashboard-surface {
@@ -43,8 +46,8 @@ body {
 
 .audo-panel {
   background: #ffffff;
-  border-color: rgb(0 0 0 / 0.1);
-  color: #111111;
+  border-color: var(--audo-border);
+  color: var(--audo-ink);
 }
 
 .dark .audo-panel {
@@ -83,6 +86,32 @@ body {
 .dark .audo-dashboard-surface .bg-gray-50,
 .dark .audo-dashboard-surface .bg-gray-100 {
   background-color: #1e293b;
+}
+
+.audo-public-surface {
+  background: var(--audo-page);
+  color: var(--audo-ink);
+}
+
+.audo-auth-surface {
+  background: radial-gradient(ellipse at 50% 0%, #eff6ff, transparent 36rem), var(--audo-page);
+}
+
+.audo-dashboard-surface .print-shell {
+  background: var(--audo-page);
+}
+
+.dark .audo-dashboard-surface .print-shell {
+  background: #020617;
+}
+
+/* Keep the dashboard's existing dark-mode controls and use the public accent in light mode. */
+.audo-dashboard-surface:not(.dark *) :is(a, button).bg-black.text-white {
+  background-color: #155dfb;
+}
+
+.audo-dashboard-surface:not(.dark *) :is(a, button).bg-black.text-white:hover {
+  background-color: #1447e6;
 }
 
 /* Ensure clickable elements show pointer cursor across the site */
@@ -400,5 +429,32 @@ a[href],
   span,
   div {
     color: #000 !important;
+  }
+}
+
+
+/* Subtle section entrances where scroll-driven animations are supported. */
+@supports (animation-timeline: view()) {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    main section,
+    .audo-dashboard-surface section {
+      animation: audo-section-enter linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+
+@keyframes audo-section-enter {
+  from { opacity: 0.12; translate: 0 36px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media print {
+  main section,
+  .audo-dashboard-surface section {
+    animation: none !important;
+    opacity: 1 !important;
+    translate: none !important;
   }
 }

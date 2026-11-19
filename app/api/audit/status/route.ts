@@ -1,5 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { getServerSupabase } from '@/utils/supabase/server'
 
 function isMissingColumnError(error: unknown, columnName: string) {
   const message = String((error as { message?: string })?.message || '').toLowerCase()
@@ -18,26 +17,7 @@ export async function GET(req: Request) {
       return new Response(JSON.stringify({ error: 'missing_audit_id' }), { status: 400 })
     }
 
-    const cookieStore = await cookies()
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-          set(_name: string, _value: string) {
-            void _name
-            void _value
-          },
-          remove(_name: string) {
-            void _name
-          },
-        },
-      }
-    )
+    const supabase = await getServerSupabase()
 
     const { data: authData } = await supabase.auth.getUser()
     const user = authData.user
@@ -45,14 +25,19 @@ export async function GET(req: Request) {
       return new Response(JSON.stringify({ error: 'not_authenticated' }), { status: 401 })
     }
 
-    const statusOnly = await supabase
+    const readStatus = (columns: string) => supabase
       .from('audits')
-      .select('status,error_message,report_content')
+      .select(columns)
       .eq('id', auditId)
       .eq('user_id', user.id)
       .maybeSingle()
 
-    const data = statusOnly.data as {
+    const statusWithProgress = await readStatus('status,error_message,report_content')
+    const statusResult = isMissingColumnError(statusWithProgress.error, 'error_message')
+      ? await readStatus('status,report_content')
+      : statusWithProgress
+
+    const data = statusResult.data as unknown as {
       status: string
       error_message?: string | null
       report_content?: {
@@ -63,7 +48,7 @@ export async function GET(req: Request) {
         } | null
       } | null
     } | null
-    const error = statusOnly.error
+    const error = statusResult.error
 
     if (error) {
       return new Response(
@@ -79,29 +64,14 @@ export async function GET(req: Request) {
       )
     }
 
-    const progressMessage = typeof data?.error_message === 'string' ? data.error_message : null
-    let errorMessage: string | null = null
-    if (data.status === 'failed' || data.status === 'cancelled') {
-      const withErrorMessage = await supabase
-        .from('audits')
-        .select('error_message')
-        .eq('id', auditId)
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (!withErrorMessage.error && withErrorMessage.data) {
-        const value = (withErrorMessage.data as { error_message?: string | null }).error_message
-        errorMessage = typeof value === 'string' ? value : null
-      } else if (withErrorMessage.error && !isMissingColumnError(withErrorMessage.error, 'error_message')) {
-        errorMessage = null
-      }
-    }
+    const message = typeof data.error_message === 'string' ? data.error_message : null
+    const hasFailed = data.status === 'failed' || data.status === 'cancelled'
 
     return new Response(
       JSON.stringify({
         status: data.status,
-        error: errorMessage,
-        progress_message: progressMessage,
+        error: hasFailed ? message : null,
+        progress_message: hasFailed ? null : message,
         agent: data?.report_content?.agent_supplement
           ? {
               ok: Boolean(data.report_content.agent_supplement.ok),

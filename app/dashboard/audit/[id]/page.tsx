@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import ConversionHandoff from '@/components/ConversionHandoff'
 import AuditChecklist from '../../../../components/AuditChecklist'
 import AuditStatus from '../../../../components/AuditStatus'
 import EmailAuditButton from '../../../../components/EmailAuditButton'
@@ -366,6 +367,11 @@ function AuditDetail({
   const isPro = profile?.plan_type === 'pro' || profile?.plan_type === 'admin'
   const isLocked = viewerIsOwner && !isPro && auditSequenceNumber === 3
   const collaborationLocked = viewerIsOwner && !isPro && auditSequenceNumber > 2
+  const checklist = audit.report_content?.checklist;
+  const conversionFinding = Array.isArray(checklist) ? checklist.find((item) =>
+    !item?.completed && typeof item?.issue === 'string' && typeof item?.fix === 'string' && item.fix.trim() &&
+    /\b(copy|messaging|conversion|cta|headline|trust|value proposition)\b/i.test(`${item.category} ${item.issue}`)
+  ) : undefined;
   const criticalIssueCount = Array.isArray(audit.report_content?.wcag_issues)
     ? audit.report_content.wcag_issues.filter((entry) => entry.severity === 'critical').length
     : 0
@@ -415,6 +421,21 @@ function AuditDetail({
       </aside>
 
       <div className="space-y-6 sm:space-y-8">
+        {!isLocked && conversionFinding && (
+          <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-900 dark:bg-slate-900 sm:p-6" aria-labelledby="conversion-idea">
+            <h2 id="conversion-idea" className="text-lg font-semibold text-slate-900 dark:text-white">A conversion change to try</h2>
+            <p className="mt-3 font-medium text-slate-900 dark:text-slate-100">{conversionFinding.issue}</p>
+            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700 dark:text-slate-300">{conversionFinding.fix}</p>
+            {viewerIsOwner && (
+              <ConversionHandoff
+                page={audit.website_url.replace(/[?#].*$/, '')}
+                finding={conversionFinding.issue}
+                suggestion={conversionFinding.fix}
+                selector={conversionFinding.selector}
+              />
+            )}
+          </section>
+        )}
         <div className={`relative print-break-before ${isLocked ? 'max-h-[28rem] overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]' : ''}`}>
           {isLocked && (
             <div className="print-hide absolute inset-0 z-10 flex flex-col items-center justify-start bg-white/60 dark:bg-slate-900/65 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 p-6 pt-8 sm:p-12 sm:pt-10 text-center">
@@ -427,7 +448,7 @@ function AuditDetail({
                 href="/pricing"
                 className="bg-black dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full max-w-xs"
               >
-                Unlock All Fixes — $29/mo
+                View Pro pricing
               </Link>
             </div>
           )}

@@ -30,8 +30,8 @@ export default function SiteFooter() {
 
   return (
     <>
-      <footer className="w-full border-t border-black/10 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors">
-        <div className="max-w-7xl mx-auto px-6 py-16">
+      <footer className="w-full border-t border-black/10 dark:border-slate-800 bg-[#fcfcfb] dark:bg-slate-950 transition-colors">
+        <div className="max-w-7xl mx-auto px-6 pt-16 pb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
 
             <div className="md:col-span-2 space-y-4">
@@ -39,7 +39,7 @@ export default function SiteFooter() {
                 <Logo size={44} className="text-black dark:text-white" />
               </Link>
               <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
-                Dashboard-first website auditing for startup teams. Run audits, prioritize fixes, and keep progress visible in one place.
+                Website audits that help you understand what to improve and what to fix first.
               </p>
               {/* <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
                 By Wafi Syed
@@ -47,7 +47,7 @@ export default function SiteFooter() {
             </div>
 
             <div className="space-y-4">
-              <p className="text-black dark:text-white font-black text-xs uppercase tracking-widest">Product</p>
+              <p className="text-black dark:text-white font-semibold text-sm">Product</p>
               <ul className="space-y-3">
                 {[
                   { label: 'How it Works', href: '/#how-it-works' },
@@ -85,16 +85,16 @@ export default function SiteFooter() {
 
           </div>
 
-          <button onClick={() => setIsOpen(true)} className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
+          <button onClick={() => setIsOpen(true)} className="mt-8 text-sm font-semibold text-blue-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
             Give Feedback
           </button>
           
-          <div className="mt-16 pt-8 border-t border-black/10 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest font-black">
-              © 2026 audo · The Pre-Launch Standard
+          <div className="mt-12 pt-6 border-t border-black/10 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+              © {new Date().getFullYear()} audo
             </p>
             <p className="text-gray-500 dark:text-gray-400 text-xs">
-              Built by a founder, for founders.
+              Website audits for founders.
             </p>
           </div>
         </div>

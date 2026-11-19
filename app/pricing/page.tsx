@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Zap, ArrowRight, X, FileText, BarChart3, Sparkles, ChevronRight, Loader2, CheckCircle, Layout, LayoutGrid, History as HistoryIcon, Repeat2, Share2, FileDown, Users } from 'lucide-react';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
+import AuditExample from '@/components/AuditExample';
 import { createClient } from '@/utils/supabase/client';
 // Removed submitLead and client-side lead logic — checkout handled server-side
 
@@ -122,6 +123,7 @@ const INITIAL_PREVIEW_WORKFLOW_TASKS: PreviewWorkflowTask[] = [
 ];
 
 export default function Pricing() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [shouldAutoCheckout, setShouldAutoCheckout] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [hasAutoCheckoutStarted, setHasAutoCheckoutStarted] = useState(false);
@@ -296,6 +298,7 @@ export default function Pricing() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setShouldAutoCheckout(params.get('checkout') === '1');
+    if (params.get('demo') === '1') setIsPreviewModalOpen(true);
   }, []);
 
   useEffect(() => {
@@ -306,366 +309,66 @@ export default function Pricing() {
   }, [shouldAutoCheckout, hasAutoCheckoutStarted, isRedirecting, startCheckout]);
 
   return (
-    <main className="min-h-screen bg-white text-black">
+    <main className="min-h-screen bg-[#fcfcfb] text-[#16191f]">
       <Nav useHomeStyleTop />
 
-      {/* Spring Sale Banner */}
-      <div className="max-w-5xl mx-auto px-6 pt-8">
-        <div className="relative overflow-hidden bg-white border border-black/10 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
-          
-          {/* Decorative blur */}
-          <div className="absolute left-0 top-0 w-32 h-full bg-blue-100 blur-2xl pointer-events-none" />
-          <div className="absolute right-0 top-0 w-32 h-full bg-blue-100 blur-2xl pointer-events-none" />
-      
-          <div className="relative flex items-center gap-3 flex-wrap justify-center sm:justify-start">
-            <span className="bg-blue-500 text-white text-[13px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-              🌸 Spring Sale
-            </span>
-            <p className="text-black font-bold text-sm">
-              Save 40% before it ends
-            </p>
-          </div>
-      
-          <div className="relative flex items-center gap-3 flex-shrink-0">
-            <div className="text-right">
-              <div className="flex items-baseline gap-2">
-                <span className="text-gray-500 line-through text-sm font-bold">$49</span>
-                <span className="text-black font-black text-2xl">$29/month</span>
-              </div>
-              {/* <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">beta access</p> */}
-            </div>
-          </div>
+      <section id="get-audit" className="scroll-mt-28 relative overflow-hidden px-5 pb-16 pt-16 sm:pt-24">
+        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-80 w-[760px] max-w-full -translate-x-1/2 rounded-full bg-blue-100/60 blur-[100px]" />
+        <div className="relative mx-auto max-w-4xl text-center">
+          <h1 className="text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">Simple plans for your site.</h1>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">Start with two free audits. Upgrade when you need more ways to review and share your work.</p>
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-24">
-
-        {/* Header */}
-        <div className="text-center space-y-4 mb-20">
-          {/* <span className="px-4 py-1.5 text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-700 rounded-full inline-flex items-center gap-2 uppercase tracking-[0.2em]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            Simple Pricing
-          </span> */}
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">Simple pricing. No surprises.</h1>
-          {/* <p className="text-gray-700 text-lg max-w-xl mx-auto">Get access to the audo dashboard to run audits, prioritize fixes, and track progress in one place.</p> */}
-          <p className="text-blue-700 text-lg max-w-xl mx-auto">
-            Every week you wait, you keep paying for the same drop-offs. Fix the bottleneck once, then compound.
-          </p>
+        <div className="relative mx-auto mt-10 flex max-w-5xl flex-col gap-2 rounded-2xl border border-blue-100 bg-blue-50/70 px-6 py-5 text-left sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Black Friday</p><p className="mt-1 text-base font-semibold text-slate-900">Get more from your site for less.</p></div>
+          <p className="text-sm font-medium text-blue-700">Audo Pro · $9/month for 12 months</p>
         </div>
+        <div className="relative mx-auto mt-5 grid max-w-5xl gap-5 md:grid-cols-2">
+          <article className="flex flex-col rounded-[28px] border border-slate-200 bg-white p-8 sm:p-10">
+            <h2 className="text-2xl font-semibold tracking-tight">Free</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Get started and see what Audo finds.</p>
+            <p className="mt-8 text-5xl font-semibold tracking-tight">$0</p>
+            <p className="mt-2 text-sm text-slate-500">No credit card required</p>
+            <Link href="/signup" className="mt-8 inline-flex justify-center rounded-full border border-slate-300 px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:border-slate-500">Start free</Link>
+            <button type="button" onClick={openPreviewModal} className="mt-4 text-sm font-semibold text-blue-700 hover:text-blue-900">Explore the dashboard demo</button>
+            <div className="mt-8 border-t border-slate-100 pt-6"><p className="text-sm font-semibold">Included</p><ul className="mt-5 space-y-4">{['2 full audits','Audit details and prioritized findings','Audit history and re-runs count toward the free limit','Sharing and collaboration for your first 2 audits'].map(item=><li key={item} className="flex gap-3 text-sm leading-6 text-slate-600"><Check className="mt-1 h-4 w-4 shrink-0 text-blue-600" />{item}</li>)}</ul></div>
+          </article>
+          <article className="flex flex-col rounded-[28px] border border-blue-200 bg-white p-8 shadow-[0_18px_50px_rgba(37,99,235,0.08)] sm:p-10">
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-2xl font-semibold tracking-tight">Pro</h2><span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Black Friday offer</span></div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">For teams and founders who ship changes regularly. Re-audit after a release, watch browser walkthroughs, and share findings with a teammate.</p>
+            <p className="mt-8 flex items-baseline gap-3"><span className="text-5xl font-semibold tracking-tight">$9</span><span className="text-base font-normal text-slate-500">/ month</span><span className="text-base text-slate-400 line-through">$20</span></p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">$9/month for the first 12 months, then $20/month.</p>
+            <button type="button" onClick={startCheckout} disabled={isRedirecting} className="mt-8 inline-flex justify-center rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">{isRedirecting ? 'Opening checkout…' : 'Get Pro'}</button>
+            <div className="mt-8 border-t border-slate-100 pt-6"><p className="text-sm font-semibold">Everything in Free, plus</p><ul className="mt-5 space-y-4">{['Ongoing audits and re-audits during beta','Live browser agent walkthroughs and screenshot replays','Predict tool for before-and-after copy','Sharing, developer invitations, and task assignment'].map(item=><li key={item} className="flex gap-3 text-sm leading-6 text-slate-600"><Check className="mt-1 h-4 w-4 shrink-0 text-blue-600" />{item}</li>)}</ul></div>
+          </article>
+        </div>
+      </section>
+      <AuditExample />
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-
-          {/* Free Tier */}
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 to-gray-100 rounded-[2rem] opacity-80 blur transition duration-500" />
-            <div className="relative bg-white border border-black/10 rounded-[1.75rem] p-8 space-y-8 shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
-
-              <div className="flex items-center justify-between">
-                <div className="bg-gray-100 border border-gray-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-700" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                  Free Plan
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-3xl font-extrabold tracking-tight">Free</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Create an account free and run 2 full audits before upgrading.</p>
-              </div>
-
-              <div className="flex items-end gap-2 pb-2 border-b border-black/10">
-                <span className="text-6xl font-black tracking-tighter">$0</span>
-                <div className="pb-2 space-y-0.5">
-                  <span className="text-gray-600 font-medium text-sm block">to start</span>
-                </div>
-              </div>
-
-              <ul className="space-y-4">
-                {[
-                  { icon: CheckCircle, text: '2 free audits with full dashboard functionality', muted: false },
-                  { icon: FileText, text: 'Full audit detail pages with issue breakdowns', muted: false },
-                  { icon: Layout, text: 'Audit History and re-run Workflow', muted: false },
-                  { icon: Users, text: 'Sharing + collaboration tools (first 2 audits only)', muted: false },
-                  { icon: X, text: 'Site Copy Predict Tool', muted: true },
-                ].map((item, i) => (
-                  <li key={i} className={`flex items-center gap-4 text-sm ${item.muted ? 'text-gray-500' : 'text-gray-700'}`}>
-                    <div className={`w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0 ${item.muted ? 'bg-gray-100 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
-                      <item.icon className={`w-4 h-4 ${item.muted ? 'text-gray-500' : 'text-blue-700'}`} />
-                    </div>
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
-
-              <p className="-mt-3 text-xs text-gray-500">
-                After your first 2 audits, collaboration features require Pro.
-              </p>
-
-              <button
-                type="button"
-                onClick={openPreviewModal}
-                className="w-full inline-flex items-center justify-center gap-2 border border-blue-200 bg-blue-50 text-blue-700 font-black py-3 rounded-2xl hover:bg-blue-100 transition-colors"
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-              >
-                Try Demo
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              <div className="-mt-2">
-                <Link
-                  href="/signup"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-white border border-black/15 text-black font-black py-4 rounded-2xl hover:bg-black hover:text-white transition-all"
-                  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-                >
-                  Start Free
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-
-              <p className="text-center text-gray-500 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
-                No credit card required.
-              </p>
-            </div>
-          </div>
-
-          {/* Free Score Card — full width on top
-          <FreeScoreCard onUpgrade={() => setModalOpen(true)} /> */}
-
-          {/* Main Tier */}
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-200 to-blue-100 rounded-[2rem] opacity-80 blur transition duration-500" />
-            <div className="relative bg-white border border-black/10 rounded-[1.75rem] p-8 space-y-8 shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
-              
-              <div className="flex items-center justify-between">
-                <div className="bg-gradient-to-r from-green-200 to-pink-100 border border-gray-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-700" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                  Spring Discount
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-3xl font-extrabold text-blue-700 tracking-tight">Pro</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Run structured audits inside your dashboard and unlock Predict for pre-ship forecasting.</p>
-              </div>
-
-              <div className="flex flex-col md:flex-row md:items-end gap-2 pb-2 border-b border-black/10">
-              <div className="space-y-1 min-w-0">
-                <span className="text-gray-600 line-through text-lg font-bold">$49</span>
-                <div className="flex items-end gap-2">
-                  <span className="text-6xl font-black tracking-tighter">$29/month</span>
-                  {/* <div className="pb-2 space-y-0.5">
-                    <span className="text-gray-700 font-medium text-sm block">(One-time payment for Beta access)</span>
-                  </div> */}
-                </div>
-              </div>
-              <div className="mt-2 md:mt-0 md:ml-auto">
-                <span className="bg-green-50 border border-green-200 text-green-700 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full whitespace-nowrap">
-                  40% off
-                </span>
-              </div>
-            </div>
-
-              <ul className="space-y-4">
-              {[
-                { icon: FileText, text: "Full audit detail pages with issue breakdowns" },
-                { icon: Sparkles, text: "Prioritized quick wins for conversion and UX" },
-                { icon: BarChart3, text: "Site Copy Predict Tool access for before/after content forecasting" },
-                { icon: Zap, text: "Performance, SEO, and accessibility insights" },
-                { icon: Layout, text: "Dashboard workflow to manage what to fix next" },
-                { icon: CheckCircle, text: "Clear interactive checklist per run" },
-                { icon: Users, text: "Unlimited sharing, developer invites, and task assigning" },
-              ].map((item, i) => (
-                <li key={i} className="flex items-center gap-4 text-sm text-gray-700">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-4 h-4 text-blue-700" />
-                  </div>
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-
-              <button
-                type="button"
-                onClick={openPreviewModal}
-                className="w-full inline-flex items-center justify-center gap-2 border border-blue-200 bg-blue-50 text-blue-700 font-black py-3 rounded-2xl hover:bg-blue-100 transition-colors"
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-              >
-                What am I getting?
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              <div className="-mt-2">
-                <button
-                  onClick={startCheckout}
-                  disabled={isRedirecting}
-                  className="w-full bg-black text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group/btn shadow-xl shadow-black/20 disabled:opacity-60"
-                  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-                >
-                  {isRedirecting ? (
-                    <>
-                      Redirecting...
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    </>
-                  ) : (
-                    <>
-                      Get Pro
-                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </>
-                  )}
+      <section className="mx-auto max-w-5xl px-5 pb-24">
+        <div className="rounded-[28px] bg-[#f4f6fa] p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold tracking-tight">Questions about Audo?</h2>
+          <div className="mt-6 divide-y divide-slate-200">
+            {[
+              { question: 'Why use Audo alongside Codex or Claude Code?', answer: 'Coding agents can build and change your site. Audo reviews your published page for opportunities to improve things like your headline, call to action, and user experience. When a report includes a conversion finding, you can copy a focused brief into your coding tool to help implement it.' },
+              { question: 'Can Audo tell me why visitors are not converting?', answer: 'Audo suggests possible issues to investigate, such as unclear messaging or a confusing next step. Its findings are starting points to test, not proof of why visitors leave. Analytics and customer feedback can help you measure what happens after a change.' },
+              { question: 'Do I need to know how to code?', answer: 'No. You can enter a website URL and review the findings in your dashboard. If you use a coding agent, you can copy an implementation brief for an eligible conversion finding and ask your agent to help make the change.' },
+              { question: 'What does an audit include?', answer: 'A dashboard report with findings covering areas such as messaging, UX, SEO, performance, and accessibility. Findings depend on what Audo can access and observe on your site.' },
+              { question: 'Can I try Audo for free?', answer: 'Yes. Create a free account for two full audits, or explore the dashboard demo above. Re-runs count toward the free audit limit.' },
+              { question: 'When is Pro useful?', answer: 'Pro is for founders who revisit their site regularly and want ongoing audits, browser walkthroughs, and collaboration features. Review the plan details above for what is included.' },
+            ].map((item, index) => (
+              <div key={item.question}>
+                <button type="button" aria-expanded={openFaq === index} aria-controls={`faq-answer-${index}`} onClick={() => setOpenFaq(openFaq === index ? null : index)} className="flex w-full items-center justify-between gap-5 py-5 text-left text-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">
+                  {item.question}
+                  <ChevronRight aria-hidden="true" className={`h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 ease-out motion-reduce:transition-none ${openFaq === index ? '-rotate-90' : 'rotate-90'}`} />
                 </button>
-              </div>
-
-              {/* <p className="text-center text-gray-500 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
-                No subscription. No credit card required to start.
-              </p> */}
-            </div>
-          </div>
-
-          {/* Coming Soon Tier
-          <div className="relative opacity-70">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-[2rem] opacity-10 blur" />
-            <div className="relative bg-[#0f0f0f] border border-white/5 rounded-[1.75rem] p-8 space-y-8 overflow-hidden">
-              
-              <div className="absolute z-20 right-[-28px] top-[28px] rotate-45 bg-yellow-400 text-black text-[9px] font-black uppercase tracking-widest px-10 py-1.5 shadow-lg">
-                Coming Soon
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="bg-purple-600/20 border border-purple-500/20 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-purple-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> Investor Ready
+                <div id={`faq-answer-${index}`} aria-hidden={openFaq !== index} className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${openFaq === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                  <div className="overflow-hidden"><p className="max-w-2xl pb-5 text-sm leading-6 text-slate-600">{item.answer}</p></div>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <h3 className="text-3xl font-extrabold tracking-tight italic">The "Full Send"</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">Everything in Deep-Dive, plus competitor analysis, pitch-deck alignment, and a roadmap to your first $1k MRR.</p>
-              </div>
-
-              <div className="flex items-end gap-2 pb-2 border-b border-white/5">
-                <span className="text-6xl font-black tracking-tighter">$99</span>
-                <div className="pb-2 space-y-0.5">
-                  <span className="text-gray-500 font-medium text-sm block">/audit</span>
-                  <span className="text-gray-700 text-xs block">beta access pricing</span>
-                </div>
-              </div>
-
-              <ul className="space-y-4">
-                {[
-                  { icon: Check, text: "Everything in Deep-Dive" },
-                  { icon: Check, text: "Investor Pitch-Deck Alignment" },
-                  { icon: Check, text: "Mobile Performance Deep-Scan" },
-                  { icon: Check, text: "Competitor Positioning Analysis" },
-                  { icon: Check, text: "Priority 24hr Turnaround" },
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-4 text-sm text-gray-500">
-                    <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-4 h-4 text-gray-600" />
-                    </div>
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pointer-events-none">
-                <button className="w-full bg-white/5 text-gray-600 font-black py-4 rounded-2xl border border-white/5 cursor-not-allowed">
-                  Coming Soon
-                </button>
-              </div>
-            </div>
-          </div> */}
-        </div> 
-
-        <section className="mt-14 overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-[0_20px_55px_rgba(0,0,0,0.06)]">
-          <div className="border-b border-black/10 p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700">Plan comparison</p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-black sm:text-3xl">What is included</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
-              Free is for trying the workflow. Pro is for teams that want repeatable audits, live walkthrough evidence, and a prioritized fix loop.
-            </p>
+            ))}
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-black/10 bg-gray-50 text-left">
-                  <th className="w-[42%] px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-gray-500">Feature</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-gray-500">Free</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">Pro</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/10">
-                {[
-                  { feature: 'Full AI website audits', free: '2 total audits', pro: 'Unlimited during beta' },
-                  { feature: 'Dashboard history and audit detail pages', free: 'Included', pro: 'Included' },
-                  { feature: 'Interactive checklist and prioritized fixes', free: 'Included', pro: 'Included with ongoing tracking' },
-                  { feature: 'Live browser agent walkthrough', free: 'Demo preview', pro: 'Full agent runs' },
-                  { feature: 'Agent replay recordings', free: 'Not included', pro: 'Screenshot replay for each live run' },
-                  { feature: 'Free-score and modal interaction testing', free: 'Basic audit notes', pro: 'Agent tests safe public widgets' },
-                  { feature: 'Predict tool', free: 'Locked', pro: 'Included' },
-                  { feature: 'Sharing, developer invites, and task assignment', free: 'First 2 audits only', pro: 'Unlimited collaboration' },
-                  { feature: 'Re-audits after fixes', free: 'Counts toward free limit', pro: 'Unlimited during beta' },
-                ].map((row) => (
-                  <tr key={row.feature} className="align-top">
-                    <td className="px-6 py-4 font-bold text-black">{row.feature}</td>
-                    <td className="px-6 py-4 text-gray-600">{row.free}</td>
-                    <td className="px-6 py-4 font-semibold text-gray-900">{row.pro}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Auditor Trust Strip */}
-        {/* <div className="mt-16 bg-[#fafafa] border border-black/10 rounded-3xl p-10 md:p-12 md:min-h-[180px] flex flex-col md:flex-row items-center justify-between gap-8">
-          {/* <div className="flex items-center gap-6">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-blue-500/50 overflow-hidden flex-shrink-0">
-              <img src="/1770612376028.jfif" alt="Wafi Syed" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <p className="text-black font-bold italic text-lg">I built audo so founders can run clear, repeatable audits in one tool.</p>
-              <p className="text-gray-600 text-sm mt-0.5">Wafi Syed, Founder of audo</p>
-              <div className="mt-2">
-                <a href="https://www.linkedin.com/in/wafisyed/" target="_blank" rel="noopener noreferrer" aria-label="Wafi Syed on LinkedIn" className="inline-flex items-center">
-                  <span className="inline-flex items-center justify-center rounded-full bg-blue-600 p-2.5 hover:bg-blue-500 transition-colors">
-                    <Linkedin className="w-5 h-5 text-white" />
-                  </span>
-                </a>
-              </div>
-            </div>
-          </div> */}
-          {/* <div className="flex gap-6 flex-shrink-0">
-            <div className="text-center">
-              <div className="text-2xl font-bold">8+</div>
-              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Audits Done</div>
-            </div>
-            <div className="text-center border-l border-black/10 pl-6">
-              <div className="text-2xl font-bold">4/5</div>
-              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Avg Rating</div>
-            </div>
-            <div className="text-center border-l border-black/10 pl-6">
-              <div className="text-2xl font-bold">24hr</div>
-              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Dashboard-First</div>
-            </div>
-          </div> 
-        </div> */}
-
-        {/* FAQ Strip */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { q: "What do I actually get?", a: "Dashboard access plus full audit detail views with prioritized fixes for SEO, performance, accessibility, and UX." },
-            { q: "How does it work?", a: "Add your URL in the dashboard, run an audit, then track and re-run as you ship improvements." },
-            { q: "Is this built for teams?", a: "Yes, both teams and solo users can benefit. The dashboard keeps audit history and priorities in one place so everyone can align on what to fix next." },
-          ].map((item, i) => (
-            <div key={i} className="bg-white border border-black/10 rounded-2xl p-6 space-y-2">
-              <p className="text-black font-bold text-sm">{item.q}</p>
-              <p className="text-gray-600 text-xs leading-relaxed">{item.a}</p>
-            </div>
-          ))}
         </div>
-
-      </div>
+      </section>
 
       {isPreviewModalOpen && (
         <div className="fixed inset-0 z-[260] p-3 sm:p-4 md:p-6">

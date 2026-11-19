@@ -2,6 +2,7 @@ import { google } from '@ai-sdk/google';
 import { generateObject, generateText } from 'ai'; 
 import { z } from 'zod'; 
 import { createClient } from '@supabase/supabase-js';
+import { getServerSupabase } from '@/utils/supabase/server';
 
 // Use the SERVICE_ROLE_KEY if you have it, to bypass RLS for administrative updates
 // If not, ensure your RLS policy allows updates for authenticated users
@@ -17,7 +18,7 @@ const auditSchema = z.object({
   ux_score: z.number().int().min(40).max(100).describe('Integer score 40-100 for UX'),
   checklist: z.array(z.object({
     title: z.string().describe("A short, punchy name for the bug (e.g., 'Hero Image Layout Shift')"),
-    issue_description: z.string().describe('A 1-sentence explanation of what is wrong'),
+    issue_description: z.string().describe('Observed evidence and why it may matter to a visitor'),
     recommendation: z.string().describe("The exact technical or design step to fix it"),
     task: z.string().describe("Duplicate of title for UI safety"),
     selector: z.string().describe("Most specific CSS selector targeting the affected element (e.g. #header, .btn-primary, nav > ul > li:nth-child(2))"),
@@ -30,13 +31,13 @@ const auditSchema = z.object({
     type: z.enum(['image', 'script', 'font', 'other']),
     estimated_impact_ms: z.number().describe('Estimated load-time impact in milliseconds'),
     recommendation: z.string().describe('Actionable optimization recommendation such as Convert to WebP or Defer Script')
-  })).length(5).describe('Top 5 heaviest assets observed in the scraped page data'),
+  })).max(5).describe('Up to five observed heavy assets'),
   third_party_tax: z.array(z.object({
     asset: z.string().describe('Third-party script or stylesheet URL'),
     category: z.enum(['analytics', 'ads', 'chat', 'marketing', 'other']),
     estimated_fcp_impact_ms: z.number().describe('Estimated impact on First Contentful Paint in milliseconds'),
     recommendation: z.enum(['remove', 'keep']).describe('Whether this third-party asset should be removed or kept')
-  })).min(1).describe('Categorized list of third-party scripts and stylesheets with FCP impact'),
+  })).describe('Categorized list of third-party scripts and stylesheets with FCP impact'),
   total_third_party_weight_ms: z.number().describe('Total estimated FCP weight added by third-party assets in milliseconds'),
   wcag_issues: z.array(z.object({
     issue: z.string().describe('Accessibility issue that violates WCAG 2.1'),
@@ -44,12 +45,12 @@ const auditSchema = z.object({
     wcag_criterion: z.string().describe('WCAG 2.1 criterion reference, e.g. 1.1.1 Non-text Content'),
     severity: z.enum(['critical', 'high', 'medium', 'low']),
     fix: z.string().describe('Concrete fix recommendation')
-  })).min(1).describe('WCAG 2.1 compliance issues extracted from the checklist and page analysis'),
+  })).describe('WCAG 2.1 compliance issues extracted from the checklist and page analysis'),
   accessibility_fix_all: z.array(z.object({
     selector: z.string().describe('Element selector that needs accessibility metadata'),
     aria_label: z.string().optional().describe('Suggested aria-label when relevant'),
     alt_text: z.string().optional().describe('Suggested alt text when relevant')
-  })).min(1).describe('Fix-all accessibility metadata suggestions for failing elements'),
+  })).describe('Fix-all accessibility metadata suggestions for failing elements'),
 })
 
 function buildPrompt(url: string, siteContent: string, thirdPartyResources: string[]) {
@@ -60,7 +61,7 @@ function buildPrompt(url: string, siteContent: string, thirdPartyResources: stri
   return `Analyze ${url} based on this content: ${siteContent.substring(0, 20000)}. 
            Provide a brief 2-3 sentence roast. 
            Then, generate a high-clarity checklist of the most critical fixes. 
-           Each fix must be specific and actionable.
+           Rank findings by likely usefulness and strength of available evidence. For a messaging or CTA issue, quote the visible copy or describe its observed placement, explain the potential effect on a visitor, and propose a concrete rewrite or test. Treat conversion effects as hypotheses, not measured outcomes. Do not invent a finding when evidence is missing.
            For EACH checklist item provide a "title" (the bug name), an "issue_description" (what is breaking), and a "recommendation" (how to fix it).
            For EVERY checklist item also include:
            - selector: the exact CSS selector where the issue exists.
@@ -90,10 +91,10 @@ function buildPrompt(url: string, siteContent: string, thirdPartyResources: stri
              1. DO NOT use Markdown headers (###) or tables (|---|) inside JSON strings.
              2. Provide RAW TEXT only for descriptions (no markdown, no headings, no tables).
              3. You MUST provide integer numeric scores between 40 and 100 for 'performance_score', 'seo_score', and 'ux_score'.
-             4. Fill EVERY array. If no third-party assets are found, invent a logical performance fix and include it in 'third_party_tax' or 'top_heaviest_assets'.
+             4. Include only observed assets and supported accessibility findings. Use empty arrays when there is no evidence and use zero for the total estimate when there are no third-party entries.
              5. Structure the 'checklist' with exactly 5 distinct objects. DO NOT merge multiple fixes into a single object.
              6. Return only a single top-level JSON object — no surrounding markdown, explanations, or headings.
-             7. If a field is unknown, return an explicit null, but keep arrays present and non-empty.
+             7. Keep arrays present. If a selector or the implementation stack cannot be confirmed, use an empty string for the selector or code example instead of guessing.
             `
 }
 
@@ -281,13 +282,13 @@ function toIntegerScore(value: unknown) {
   return Math.max(0, Math.min(100, Math.round(numeric)))
 }
 
-async function updateAuditById(auditId: string, payload: Record<string, unknown>) {
-  const firstAttempt = await supabase.from('audits').update(payload).eq('id', auditId)
+async function updateProcessingAudit(auditId: string, userId: string, payload: Record<string, unknown>) {
+  const firstAttempt = await supabase.from('audits').update(payload).eq('id', auditId).eq('user_id', userId).eq('status', 'processing')
   if (!firstAttempt.error) return
 
   if (isMissingColumnError(firstAttempt.error, 'error_message') && 'error_message' in payload) {
     const fallbackPayload = withoutErrorMessage(payload)
-    await supabase.from('audits').update(fallbackPayload).eq('id', auditId)
+    await supabase.from('audits').update(fallbackPayload).eq('id', auditId).eq('user_id', userId).eq('status', 'processing')
   }
 }
 
@@ -423,39 +424,77 @@ async function runAuditGeneration(url: string, siteContent: string, modelName: s
 export async function POST(request: Request) {
   let url = ''
   let auditId: string | null = null
+  let userId: string | null = null
+  let agentProgressTimer: ReturnType<typeof setInterval> | null = null
   try {
     const body = await request.json()
-    url = String(body?.url ?? body?.target ?? '').startsWith('http') ? String(body?.url ?? body?.target ?? '') : `https://${String(body?.url ?? body?.target ?? '')}`
-    auditId = body?.auditId ?? null
+    if (typeof body?.auditId !== 'string' || !body.auditId.trim()) {
+      return Response.json({ error: 'An audit ID is required.' }, { status: 400 })
+    }
+
+    const signedInClient = await getServerSupabase()
+    const { data: { user } } = await signedInClient.auth.getUser()
+    if (!user) {
+      return Response.json({ error: 'Sign in to run an audit.' }, { status: 401 })
+    }
+
+    const { data: audit, error: lookupError } = await signedInClient
+      .from('audits')
+      .select('id,website_url,status')
+      .eq('id', body.auditId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (lookupError) {
+      console.error('Unable to look up audit:', lookupError.message)
+      return Response.json({ error: 'Unable to look up audit.' }, { status: 500 })
+    }
+    if (!audit) {
+      return Response.json({ error: 'Audit not found.' }, { status: 404 })
+    }
+    if (audit.status !== 'processing') {
+      return Response.json({ error: 'This audit is no longer processing.' }, { status: 409 })
+    }
+
+    auditId = audit.id
+    const ownerId = user.id
+    userId = ownerId
+    const target = String(audit.website_url ?? '').trim()
+    if (!target) throw new Error('Enter a website URL before running an audit.')
+    const targetUrl = new URL(/^https?:\/\//i.test(target) ? target : `https://${target}`)
+    url = targetUrl.href
 
     console.log(`🚀 Starting audit for: ${url} (ID: ${auditId})`);
 
     if (auditId) {
-      await updateAuditById(auditId, { status: 'processing', error_message: 'Initializing audit pipeline and preparing crawl...' })
+      await updateProcessingAudit(auditId, ownerId, { status: 'processing', error_message: 'Initializing audit pipeline and preparing crawl...' })
     }
 
     // 1. SCRAPE THE CONTENT (Crucial: This is how the AI "sees" the site)
-    const jinaResponse = await fetch(`https://r.jina.ai/${url}`);
+    const jinaResponse = await fetch(`https://r.jina.ai/${url}`, { signal: AbortSignal.timeout(25_000) });
+    if (!jinaResponse.ok) {
+      throw new Error('Unable to read this website. Check that the URL is public and try again.')
+    }
     const siteContent = await jinaResponse.text();
+    if (!siteContent.trim()) throw new Error('No readable content was found on this website.')
 
     if (auditId) {
-      await updateAuditById(auditId, { status: 'processing', error_message: 'Crawler complete. Analyzing SEO, UX hierarchy, and conversion signals...' })
+      await updateProcessingAudit(auditId, ownerId, { status: 'processing', error_message: 'Crawler complete. Analyzing SEO, UX hierarchy, and conversion signals...' })
     }
 
     // 2. Generate the Screenshot URL
-    const screenshotUrl = `https://image.thum.io/get/width/1200/crop/800/noScroll/https://${url.replace('https://', '')}`;
+    const screenshotUrl = `https://image.thum.io/get/width/1200/crop/800/noScroll/${url}`;
 
     // 3. Run the AI with Structured Output + retries/fallback
     const fallbackNotice = 'High demand in primary model, switching to lighter analysis model.'
     const auditData = await runAuditGenerationWithRetry(url, siteContent, async () => {
       if (!auditId) return
-      await updateAuditById(auditId, { error_message: fallbackNotice, status: 'processing' })
+      await updateProcessingAudit(auditId, ownerId, { error_message: fallbackNotice, status: 'processing' })
     })
 
     const agentSupplementEnabled = isAgentSupplementEnabled()
 
     if (auditId && agentSupplementEnabled) {
-      await updateAuditById(auditId, { status: 'processing', error_message: 'Primary audit complete. Agent opening homepage and mapping sections...' })
+      await updateProcessingAudit(auditId, ownerId, { status: 'processing', error_message: 'Primary audit complete. Agent opening homepage and mapping sections...' })
     }
 
     const agentProgressSteps = [
@@ -466,13 +505,12 @@ export async function POST(request: Request) {
       'Agent: found footer and finalizing findings...',
     ]
 
-    let agentProgressTimer: ReturnType<typeof setInterval> | null = null
     if (auditId && agentSupplementEnabled) {
       let stepIndex = 0
       agentProgressTimer = setInterval(() => {
         const message = agentProgressSteps[Math.min(stepIndex, agentProgressSteps.length - 1)]
         stepIndex += 1
-        void updateAuditById(auditId as string, { status: 'processing', error_message: message }).catch(() => undefined)
+        void updateProcessingAudit(auditId as string, ownerId, { status: 'processing', error_message: message }).catch(() => undefined)
       }, 3200)
     }
 
@@ -485,9 +523,9 @@ export async function POST(request: Request) {
       const supplementMessage = agentSupplement?.ok
         ? `Agent supplement completed (${String(agentSupplement.model || 'agent')}). Finalizing report...`
         : 'Agent supplement unavailable for this run. Finalizing core report...'
-      await updateAuditById(auditId, { status: 'processing', error_message: supplementMessage })
+      await updateProcessingAudit(auditId, ownerId, { status: 'processing', error_message: supplementMessage })
     } else if (auditId) {
-      await updateAuditById(auditId, { status: 'processing', error_message: 'Audit analysis complete. Finalizing report...' })
+      await updateProcessingAudit(auditId, ownerId, { status: 'processing', error_message: 'Audit analysis complete. Finalizing report...' })
     }
 
     const performanceScore = toIntegerScore(auditData.performance_score)
@@ -557,7 +595,7 @@ export async function POST(request: Request) {
     let { data, error } = await supabase
       .from('audits')
       .update(completionPayload)
-      .eq('id', auditId)
+      .eq('id', auditId).eq('user_id', ownerId).eq('status', 'processing')
       .select('id, user_id')
       .maybeSingle();
 
@@ -565,7 +603,7 @@ export async function POST(request: Request) {
       const retry = await supabase
         .from('audits')
         .update(withoutErrorMessage(completionPayload))
-        .eq('id', auditId)
+        .eq('id', auditId).eq('user_id', ownerId).eq('status', 'processing')
         .select('id, user_id')
         .maybeSingle()
 
@@ -576,12 +614,16 @@ export async function POST(request: Request) {
     if (error) {
       console.error("❌ Supabase Update Error:", error.message);
       if (auditId) {
-        await updateAuditById(auditId, { status: 'failed', error_message: error.message })
+        await updateProcessingAudit(auditId, ownerId, { status: 'failed', error_message: error.message })
       }
       throw new Error(error.message);
     }
 
-    if (data?.user_id) {
+    if (!data) {
+      return Response.json({ error: 'This audit is no longer processing.' }, { status: 409 })
+    }
+
+    if (data.user_id) {
       const { data: profile, error: profileReadError } = await supabase
         .from('profiles')
         .select('audit_count')
@@ -608,14 +650,16 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error("🚨 AUDIT ERROR:", error.message);
-    if (auditId) {
+    if (auditId && userId) {
       try {
-        await updateAuditById(auditId, { status: 'failed', error_message: error.message })
+        await updateProcessingAudit(auditId, userId, { status: 'failed', error_message: error.message })
       } catch (e) {
         console.error('failed to mark audit failed in DB', e)
       }
     }
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  } finally {
+    if (agentProgressTimer) clearInterval(agentProgressTimer)
   }
 }
 

@@ -1,6 +1,6 @@
 export default function AuditDetailLoading() {
   return (
-    <div className="min-h-screen bg-[#fcfcfc] p-4 sm:p-6 lg:p-12 xl:p-24">
+    <div className="min-h-screen audo-dashboard-surface p-4 sm:p-6 lg:p-12 xl:p-24">
       <div className="max-w-5xl mx-auto animate-pulse space-y-8">
         <div className="h-4 w-36 rounded bg-gray-200" />
         <div className="space-y-3 text-center">
