@@ -91,7 +91,7 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
 
   function handleSectionClick(
     e: React.MouseEvent<HTMLAnchorElement>,
-    sectionId: '#how-it-works' | '#comparison',
+    sectionId: '#how-it-works',
     fromMobileMenu = false
   ) {
     if (fromMobileMenu) closeMenu();
@@ -123,7 +123,6 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
             <div className="hidden lg:flex items-center justify-center gap-10 text-lg font-semibold text-black/55 dark:text-slate-300">
               <Link href="/pricing" className="hover:text-black dark:hover:text-white transition-colors">Pricing</Link>
               <Link href="/#how-it-works" onClick={(e) => handleSectionClick(e, '#how-it-works')} className="hover:text-black dark:hover:text-white transition-colors">How it Works</Link>
-              <Link href="/#comparison" onClick={(e) => handleSectionClick(e, '#comparison')} className="hover:text-black dark:hover:text-white transition-colors">Comparison</Link>
               <Link href="/case-studies" className="hover:text-black dark:hover:text-white transition-colors">Case Studies</Link>
             </div>
 
@@ -189,7 +188,6 @@ export default function Nav({ useHomeStyleTop = false }: NavProps) {
             <nav className="mt-6 flex flex-col gap-4 px-1">
               <Link href="/" onClick={closeMenu} className="text-black dark:text-slate-100 text-lg">Home</Link>
               <Link href="/#how-it-works" onClick={(e) => handleSectionClick(e, '#how-it-works', true)} className="text-black dark:text-slate-100 text-lg">How it Works</Link>
-              <Link href="/#comparison" onClick={(e) => handleSectionClick(e, '#comparison', true)} className="text-black dark:text-slate-100 text-lg">Comparison</Link>
               <Link href="/pricing" onClick={closeMenu} className="text-black dark:text-slate-100 text-lg">Pricing</Link>
               <Link href="/case-studies" onClick={closeMenu} className="text-black dark:text-slate-100 text-lg">Case Studies</Link>
               {isAuthenticated ? (
