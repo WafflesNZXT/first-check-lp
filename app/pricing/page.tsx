@@ -349,9 +349,12 @@ export default function Pricing() {
           <h2 className="text-2xl font-semibold tracking-tight">Questions about Audo?</h2>
           <div className="mt-6 divide-y divide-slate-200">
             {[
-              { question: 'What is included in an audit?', answer: 'A dashboard report with findings covering areas such as UX, SEO, performance, and accessibility.' },
-              { question: 'Can I try it first?', answer: 'Yes. Create a free account for two full audits, or explore the dashboard demo above.' },
-              { question: 'Can I run another audit?', answer: 'Yes. Re-runs count toward the free plan limit. Pro supports ongoing audits during beta.' },
+              { question: 'Why use Audo alongside Codex or Claude Code?', answer: 'Coding agents can build and change your site. Audo reviews your published page for opportunities to improve things like your headline, call to action, and user experience. When a report includes a conversion finding, you can copy a focused brief into your coding tool to help implement it.' },
+              { question: 'Can Audo tell me why visitors are not converting?', answer: 'Audo suggests possible issues to investigate, such as unclear messaging or a confusing next step. Its findings are starting points to test, not proof of why visitors leave. Analytics and customer feedback can help you measure what happens after a change.' },
+              { question: 'Do I need to know how to code?', answer: 'No. You can enter a website URL and review the findings in your dashboard. If you use a coding agent, you can copy an implementation brief for an eligible conversion finding and ask your agent to help make the change.' },
+              { question: 'What does an audit include?', answer: 'A dashboard report with findings covering areas such as messaging, UX, SEO, performance, and accessibility. Findings depend on what Audo can access and observe on your site.' },
+              { question: 'Can I try Audo for free?', answer: 'Yes. Create a free account for two full audits, or explore the dashboard demo above. Re-runs count toward the free audit limit.' },
+              { question: 'When is Pro useful?', answer: 'Pro is for founders who revisit their site regularly and want ongoing audits, browser walkthroughs, and collaboration features. Review the plan details above for what is included.' },
             ].map((item, index) => (
               <div key={item.question}>
                 <button type="button" aria-expanded={openFaq === index} aria-controls={`faq-answer-${index}`} onClick={() => setOpenFaq(openFaq === index ? null : index)} className="flex w-full items-center justify-between gap-5 py-5 text-left text-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">
