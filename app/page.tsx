@@ -82,10 +82,10 @@ export default function Home() {
       <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:pt-24 md:pb-28">
         <div className="relative mx-auto max-w-4xl text-center">
           <h1 className="mx-auto max-w-4xl text-5xl font-semibold leading-[1.06] tracking-[-0.055em] sm:text-6xl md:text-7xl">
-            You built the product.<br /><span className="text-blue-600">Make the message click.</span>
+            Find what your landing page<br className="hidden sm:block" /> <span className="text-blue-600">should say more clearly.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-            Audo reviews your website and helps you find clearer ways to turn interested visitors into customers.
+            Paste a published URL to review your headline, calls to action, and site usability. A full audit can turn a messaging finding into a brief for Codex, Replit, or your preferred coding tool.
           </p>
           <form onSubmit={handleSubmit} className="mx-auto mt-10 flex max-w-2xl flex-col gap-2 rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_18px_60px_rgba(37,73,129,0.12)] sm:flex-row sm:rounded-full">
             <label htmlFor="hero-url" className="sr-only">Your website URL</label>
@@ -94,10 +94,10 @@ export default function Home() {
               <input id="hero-url" value={url} onChange={(event) => { setUrl(event.target.value); setError(''); setResult(null); }} disabled={loading} placeholder="Enter your website URL" autoComplete="url" inputMode="url" className="scroll-mt-28 min-w-0 flex-1 bg-transparent py-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500" />
             </div>
             <button type="submit" disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">
-              {loading ? 'Analyzing…' : 'Get your free score'} <ArrowRight className="h-4 w-4" />
+              {loading ? 'Analyzing…' : 'Review my page'} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
-          <p className="mt-4 text-xs text-slate-500">No signup required for a quick score</p>
+          <p className="mt-4 text-xs text-slate-500">Free quick review · no account required</p>
           {error && <p role="alert" className="mx-auto mt-4 max-w-xl rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
           {result && (
             <div aria-live="polite" className="mx-auto mt-8 max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm sm:p-8">
