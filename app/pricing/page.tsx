@@ -298,6 +298,7 @@ export default function Pricing() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setShouldAutoCheckout(params.get('checkout') === '1');
+    if (params.get('demo') === '1') setIsPreviewModalOpen(true);
   }, []);
 
   useEffect(() => {
@@ -311,7 +312,7 @@ export default function Pricing() {
     <main className="min-h-screen bg-[#fcfcfb] text-[#16191f]">
       <Nav useHomeStyleTop />
 
-      <section id="get-audit" className="relative overflow-hidden px-5 pb-16 pt-16 sm:pt-24">
+      <section id="get-audit" className="scroll-mt-28 "relative overflow-hidden px-5 pb-16 pt-16 sm:pt-24">
         <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-80 w-[760px] max-w-full -translate-x-1/2 rounded-full bg-blue-100/60 blur-[100px]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <h1 className="text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">Simple plans for your site.</h1>
