@@ -173,7 +173,7 @@ export default function Home() {
 
       <AuditExample />
 
-      <section id="how-it-works" className="scroll-mt-28 "mx-auto max-w-6xl px-6 pb-24 md:pb-32">
+      <section id="how-it-works" className="scroll-mt-28 mx-auto max-w-6xl px-6 pb-24 md:pb-32">
         <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">How it works</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">From website to next step.</h2><p className="mt-4 text-slate-600">Run an audit and decide what to fix first.</p></div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[{n:'01', title:'Share your site', text:'Enter your URL for a quick score, or create an account for the full audit.', icon:Globe},{n:'02', title:'Review the findings', text:'See suggestions for your content, usability, and technical health.', icon:Search},{n:'03', title:'Make changes', text:'Prioritize the issues, make changes, and run another audit when you are ready.', icon:MousePointer2}].map((step) => (
@@ -182,7 +182,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="comparison" className="scroll-mt-28 "mx-auto max-w-6xl px-6 pb-24">
+      <section id="comparison" className="scroll-mt-28 mx-auto max-w-6xl px-6 pb-24">
         <div className="grid gap-10 rounded-[32px] bg-[#f4f5f7] p-8 sm:p-12 md:grid-cols-2">
           <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Your audit</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Decide what to fix first.</h2><p className="mt-5 text-sm leading-7 text-slate-600">Keep audit findings and follow-up work together in your dashboard.</p></div>
           <div className="space-y-3">{['Review prioritized audit findings','Explore messaging, UX, SEO and performance','Re-run audits and track your progress'].map(item => <div key={item} className="flex items-center gap-3 rounded-2xl bg-white px-5 py-4 text-sm font-medium"><Check className="h-4 w-4 shrink-0 text-blue-600" />{item}</div>)}</div>
